@@ -1,0 +1,13 @@
+# Change the ARP from a slow division to a fast one during a live phrase.
+# The next note should adopt the new clock promptly instead of waiting for
+# the previously scheduled long interval.
+10 hold 10 1
+200 keys 0x4880
+760 hold 10 0
+820 btn 10
+850 enc 2 -50
+860 enc 4 1
+870 enc 4 1
+3350 enc 4 1
+4500 keys 0
+4700 end

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96">
+  <rect width="320" height="96" rx="8" fill="#100e12"/>
+  <path d="M20 68h18l8-40 12 56 10-48 10 32h24" fill="none" stroke="#be4a3c" stroke-width="4"/>
+  <text x="114" y="53" fill="#e4dbe3" font-family="monospace" font-size="23" font-weight="bold">TERKINSTEIN</text>
+  <text x="115" y="73" fill="#897b8b" font-family="monospace" font-size="10">CORRODED HARMONICS / FM-1</text>
+</svg>

@@ -1,0 +1,13 @@
+# REC clears the seed pattern and captures a physical-key melody live.
+# Stop playback, then SAVE waits until the release tail is fully silent.
+100 btn 13
+220 keys 0x80
+380 keys 0
+580 keys 0x400
+740 keys 0
+1000 keys 0x40000
+1200 keys 0
+1600 btn 13
+4300 btn 12
+4400 btn 9
+9000 end

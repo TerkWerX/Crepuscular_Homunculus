@@ -1,0 +1,5 @@
+# Sustain a pad; its release and waveform must fade after the key is lifted.
+100 btn 8
+1200 keys 0x80
+5200 keys 0
+12000 end

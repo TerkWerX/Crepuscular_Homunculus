@@ -1,0 +1,9 @@
+# On SEQ, Knob 4 sets Ghost Mask depth. Zero is OFF. Two screenshots at each
+# setting verify reversible display changes before saving the nonzero value.
+100 btn 11
+100 btn 12
+1200 enc 5 64
+2200 enc 5 -64
+3200 enc 5 64
+4300 btn 9
+15000 end

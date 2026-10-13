@@ -1,0 +1,5 @@
+# Show the persisted Ghost Mask depth on SEQ without touching Knob 4.
+100 btn 11
+100 btn 12
+1400 btn 12
+1600 end

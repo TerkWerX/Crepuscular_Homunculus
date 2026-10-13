@@ -1,0 +1,8 @@
+# LFO uses a triangle/pulse/ramp wave to animate SHADE outside the audio ISR.
+100 btn 5
+200 enc 0 45
+250 enc 1 45
+400 btn 6
+600 keys 0x4480
+3800 keys 0
+5000 end

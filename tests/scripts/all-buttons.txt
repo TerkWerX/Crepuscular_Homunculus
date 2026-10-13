@@ -1,0 +1,28 @@
+# Touch every labeled button at least once without changing the startup art.
+100 btn 0
+200 btn 1
+300 btn 2
+400 btn 3
+500 btn 6
+600 btn 4
+700 btn 6
+800 btn 5
+900 btn 6
+1000 btn 7
+1100 btn 8
+1200 btn 10
+1300 keys 0x4880
+1600 btn 10
+1700 keys 0
+1800 btn 11
+1800 btn 12
+1900 btn 12
+2000 btn 12
+2100 btn 13
+2200 keys 0x80
+2300 keys 0
+2500 btn 13
+2600 btn 4
+2650 btn 6
+2700 btn 9
+7000 end

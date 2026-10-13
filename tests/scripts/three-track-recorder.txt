@@ -1,0 +1,40 @@
+# Build three independent live loops with panel keys. Default panel key 7 is C3.
+# SEQ opens on MELODY; PLAY starts the loop; SELECT chooses DRUM, MELODY and ATMOS in turn.
+# REC captures only the selected track. PRESETS changes the live sound before
+# each recording so melody is METAL and atmosphere is PAD; drum REC chooses KIT.
+100 btn 11
+100 btn 12
+200 enc 0 -1
+300 btn 13
+450 keys 0x80
+520 keys 0
+# A turn during REC must not redirect the still-recording drum track.
+600 enc 0 1
+700 keys 0x200
+770 keys 0
+1000 btn 13
+1100 enc 0 1
+# The 36-slot bank wraps from KIT (30) to IRON PSALM (11) in 17 turns.
+1200 enc 6 17
+1300 btn 13
+1460 keys 0x80000
+1540 keys 0
+1720 keys 0x800000
+1800 keys 0
+2050 btn 13
+2150 enc 0 1
+2250 enc 6 -8
+2350 btn 13
+2510 keys 0x80000
+2590 keys 0
+2770 keys 0x800000
+2850 keys 0
+3100 btn 13
+# Return the live sound to METAL while the three captured track patches play.
+3200 enc 6 8
+# Select DRUM and mute it for a full 16-step bar, then unmute it.
+6000 enc 0 2
+6200 btn 3
+9000 btn 3
+12000 btn 9
+22000 end

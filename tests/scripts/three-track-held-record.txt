@@ -1,0 +1,14 @@
+# Capture two melody notes with deliberately long key holds at 90 BPM.
+# MIDI C is held for about five 1/16 steps, panel C3 for about four, and
+# MIDI E starts late in the bar and releases after the transport wraps.
+100 btn 13
+200 midi 0x90 60 100
+1050 midi 0x80 60 0
+1300 keys 0x80
+1950 keys 0
+2200 midi 0x90 64 110
+3100 midi 0x80 64 0
+3300 btn 13
+6800 btn 12
+7000 btn 9
+15000 end

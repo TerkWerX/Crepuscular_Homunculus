@@ -1,0 +1,7 @@
+# A key just after the 166 ms step boundary belongs to the new step.
+100 btn 13
+267 keys 0x80
+400 keys 0
+800 btn 13
+3200 btn 12
+4500 end

@@ -1,0 +1,11 @@
+# TERKINSTEIN: C minor pad with slow tonal changes. Times in milliseconds.
+# Encoders 2..5: shade, fracture, drift, bloom. Other events preserve held keys.
+300 keys 0x4480
+2200 enc 3 22
+3400 enc 4 12
+4600 enc 2 -18
+5200 midi 0x91 70 90
+6600 midi 0x81 70 0
+7000 enc 5 16
+8000 keys 0
+12000 end

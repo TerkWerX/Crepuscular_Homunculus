@@ -1,0 +1,18 @@
+# SCRAP FORGE's four controls, then GRAFT's mix and compatible target selection.
+# At one FPS: frames 1-5 FORGE, 6-9 GRAFT, 10 onward HOME sound visual.
+100 btn 8
+200 enc 6 30
+300 btn 6
+1200 enc 2 20
+2200 enc 3 -24
+3200 enc 4 40
+4200 enc 5 45
+5200 enc 6 -26
+6200 enc 0 64
+7200 enc 1 1
+8200 enc 0 127
+9200 btn 6
+10100 keys 0x4880
+11500 keys 0
+12500 btn 9
+22000 end

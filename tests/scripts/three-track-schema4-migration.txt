@@ -1,0 +1,6 @@
+# Load the installed 0.6 settings layout with three captured patches and save
+# its upgraded duration-capable schema after all three release tails finish.
+100 btn 11
+100 btn 12
+3100 btn 9
+15000 end

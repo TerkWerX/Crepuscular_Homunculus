@@ -1,0 +1,15 @@
+# Press C4 at octave -1, change octave, then press the second physical key for C4.
+# Duplicate physical ownership must send only one note-on and the final note-off.
+# ENV opens the envelope page; EDIT toggles panel HOLD. SAVE waits through HOLD.
+100 midi 0xB0 24 0
+200 keys 0x80000
+1000 btn 1
+1400 keys 0x80080
+2000 keys 0x80
+2300 btn 4
+2301 btn 6
+2800 keys 0
+3000 btn 9
+5000 btn 4
+5001 btn 6
+10000 end

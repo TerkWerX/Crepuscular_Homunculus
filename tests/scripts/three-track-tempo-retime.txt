@@ -1,0 +1,7 @@
+# At 500 ms, Knob 1 changes SEQ from 90 to 180 BPM while the step-0
+# melody note is held and the step-3 onset is still pending.
+100 btn 11
+100 btn 12
+500 enc 2 90
+1200 btn 12
+1400 end

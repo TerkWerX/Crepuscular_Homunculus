@@ -1,0 +1,6 @@
+# A held kit key has a finite audio tail. HOME must not animate it forever.
+100 btn 8
+200 enc 6 30
+1200 keys 0x80
+10500 keys 0
+12000 end

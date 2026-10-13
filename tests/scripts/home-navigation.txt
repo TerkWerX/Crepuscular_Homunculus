@@ -1,0 +1,10 @@
+# HOME is visual; EDIT opens/closes sound parameters without changing notes.
+# One frame per second: HOME, EDIT, HOME, changed HOME, changed EDIT, HOME.
+100 btn 8
+1100 btn 6
+2100 btn 6
+3100 enc 2 12
+4100 btn 6
+5100 btn 8
+6500 btn 9
+8500 end

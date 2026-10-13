@@ -1,0 +1,5 @@
+# Load a schema-3 record, play its legacy melody loop, then save as schema 4.
+100 btn 11
+100 btn 12
+3100 btn 9
+8000 end

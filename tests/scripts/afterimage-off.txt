@@ -1,0 +1,28 @@
+# Compare with afterimage-on.txt: only MEMORY differs, all musical events match.
+# MEMORY=0 is the fresh pad reference for this progression.
+100 midi 0xB0 24 0
+100 btn 3
+200 midi 0x90 48 105
+200 midi 0x90 51 99
+200 midi 0x90 55 113
+2500 midi 0x80 48 0
+2500 midi 0x80 51 0
+2500 midi 0x80 55 0
+2800 midi 0xB0 20 18
+2800 midi 0xB0 21 20
+3300 midi 0x90 50 105
+3300 midi 0x90 53 99
+3300 midi 0x90 57 113
+6500 midi 0x80 50 0
+6500 midi 0x80 53 0
+6500 midi 0x80 57 0
+6800 midi 0xB0 20 70
+6800 midi 0xB0 21 80
+7400 midi 0x90 45 105
+7400 midi 0x90 48 99
+7400 midi 0x90 52 113
+10000 midi 0x80 45 0
+10000 midi 0x80 48 0
+10000 midi 0x80 52 0
+11000 btn 6
+16000 end

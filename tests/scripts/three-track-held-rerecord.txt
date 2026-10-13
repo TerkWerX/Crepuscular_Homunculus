@@ -1,0 +1,10 @@
+# Start from the held-note save. Re-record while a saved note is sounding;
+# old generated note must release immediately and old steps must vanish.
+100 btn 11
+100 btn 12
+500 btn 13
+600 midi 0x90 67 100
+1600 midi 0x80 67 0
+1700 btn 13
+4400 btn 12
+4700 end

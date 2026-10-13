@@ -1,0 +1,10 @@
+# Stress the shortest ARP period/gate without changing the held chord.
+10 hold 10 1
+200 keys 0x4880
+760 hold 10 0
+780 btn 10
+810 enc 2 90
+820 enc 4 1
+830 enc 5 1
+2600 keys 0
+2800 end

@@ -1,0 +1,9 @@
+# Three live voices plus a sustained ATMOS note leave two generated slots.
+# Dense DRUM and MELODY steps should each receive one of those slots while
+# ATMOS remains on through several later sixteenth-note boundaries.
+10 keys 0x4880
+100 btn 11
+100 btn 12
+1600 keys 0
+1700 btn 12
+2000 end

@@ -1,0 +1,3 @@
+# Same preset and note timeline as home-panel/midi, without notes.
+100 btn 8
+12000 end

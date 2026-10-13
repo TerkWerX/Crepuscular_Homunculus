@@ -1,0 +1,8 @@
+# Three physical keys remain protected while three generated notes sustain.
+# A drum at step 1 must displace a generated note, never a held live key.
+10 keys 0x4880
+100 btn 11
+100 btn 12
+1300 keys 0
+1400 btn 12
+1600 end

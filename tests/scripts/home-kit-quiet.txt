@@ -1,0 +1,4 @@
+# Silent comparison for the same kit/preset timeline.
+100 btn 8
+200 enc 6 30
+12000 end

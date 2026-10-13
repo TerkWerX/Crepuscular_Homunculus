@@ -1,0 +1,13 @@
+# Panel C4 and channel-1 C4 coexist; releasing channel 1 leaves the panel held.
+100 btn 1
+200 keys 0x80
+1000 midi 0x90 60 100
+1600 enc 3 12
+2000 midi 0x80 60 0
+2800 keys 0
+# Same pitch on two MIDI channels, each has an independent note-off.
+3800 midi 0x90 60 100
+3800 midi 0x91 60 100
+4500 midi 0x80 60 0
+5200 midi 0x81 60 0
+9500 end

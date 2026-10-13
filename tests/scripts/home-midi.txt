@@ -1,0 +1,5 @@
+# Incoming MIDI also drives HOME while HOME has no held panel keys.
+100 btn 8
+1200 midi 0x90 48 100
+5200 midi 0x80 48 0
+12000 end

@@ -1,0 +1,12 @@
+# Hold a kit kick across several steps. The generated MIDI gate may last,
+# but the drum itself should remain a short struck voice, not a drone.
+100 btn 11
+100 btn 12
+150 btn 3
+200 enc 0 -1
+250 btn 13
+400 keys 0x80
+1750 keys 0
+1850 btn 13
+4500 btn 12
+4800 end

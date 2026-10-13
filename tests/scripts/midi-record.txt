@@ -1,0 +1,11 @@
+# Record a MIDI chord and later melody note into the 16-step loop.
+100 btn 13
+220 midi 0x90 48 90
+225 midi 0x90 55 100
+440 midi 0x80 48 0
+445 midi 0x80 55 0
+600 midi 0x90 58 110
+820 midi 0x80 58 0
+1200 btn 13
+3900 btn 12
+4500 end

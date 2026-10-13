@@ -1,0 +1,6 @@
+# Six sustained generated notes occupy every voice at step 0. A new drum
+# strike at step 1 must take a generated voice and send its matching MIDI off.
+100 btn 11
+100 btn 12
+1300 btn 12
+1500 end

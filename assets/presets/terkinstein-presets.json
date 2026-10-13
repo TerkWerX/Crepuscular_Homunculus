@@ -1,0 +1,2324 @@
+{
+  "version": 1,
+  "legacy_count": 36,
+  "default_drum_preset": 30,
+  "bank_version": "0.20.0-dev",
+  "authorship": "New slots 37\u00e2\u20ac\u201c64 independently authored for TERKINSTEIN from its own engine controls. No external patch data, sample files or bank dumps were imported.",
+  "presets": [
+    {
+      "id": 0,
+      "name": "ASH CHOIR",
+      "instrument": 0,
+      "macros": [
+        90,
+        28,
+        32,
+        94
+      ],
+      "memory": 64,
+      "fx": 1,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        36
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 1,
+      "name": "RUST HALO",
+      "instrument": 0,
+      "macros": [
+        100,
+        64,
+        52,
+        80
+      ],
+      "memory": 80,
+      "fx": 1,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        36
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 2,
+      "name": "BLACK GLASS",
+      "instrument": 0,
+      "macros": [
+        70,
+        96,
+        18,
+        48
+      ],
+      "memory": 48,
+      "fx": 1,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        36
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 3,
+      "name": "VEIL ENGINE",
+      "instrument": 0,
+      "macros": [
+        103,
+        18,
+        85,
+        124
+      ],
+      "memory": 120,
+      "fx": 1,
+      "attack": 105,
+      "release": 118,
+      "lfo": [
+        1,
+        0,
+        18,
+        18
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 4,
+      "name": "CHAPEL GLASS",
+      "instrument": 0,
+      "macros": [
+        45,
+        72,
+        30,
+        101
+      ],
+      "memory": 105,
+      "fx": 0,
+      "attack": 86,
+      "release": 92,
+      "lfo": [
+        1,
+        0,
+        32,
+        16
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 5,
+      "name": "WIRE HYMNS",
+      "instrument": 0,
+      "macros": [
+        52,
+        118,
+        16,
+        74
+      ],
+      "memory": 72,
+      "fx": 1,
+      "attack": 48,
+      "release": 82,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 6,
+      "name": "ASHEN TIDE",
+      "instrument": 0,
+      "macros": [
+        83,
+        62,
+        102,
+        112
+      ],
+      "memory": 114,
+      "fx": 1,
+      "attack": 94,
+      "release": 109,
+      "lfo": [
+        1,
+        2,
+        45,
+        35
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 7,
+      "name": "GRAVE CLOCK",
+      "instrument": 0,
+      "macros": [
+        67,
+        88,
+        8,
+        24
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 10,
+      "release": 8,
+      "lfo": [
+        1,
+        1,
+        108,
+        25
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 8,
+      "name": "NOCTURNE 13",
+      "instrument": 0,
+      "macros": [
+        94,
+        41,
+        52,
+        91
+      ],
+      "memory": 127,
+      "fx": 1,
+      "attack": 78,
+      "release": 121,
+      "lfo": [
+        1,
+        0,
+        12,
+        27
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 9,
+      "name": "SALT STATIC",
+      "instrument": 0,
+      "macros": [
+        38,
+        104,
+        96,
+        49
+      ],
+      "memory": 24,
+      "fx": 1,
+      "attack": 37,
+      "release": 47,
+      "lfo": [
+        1,
+        1,
+        98,
+        30
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 10,
+      "name": "CATHODE MOTH",
+      "instrument": 0,
+      "macros": [
+        61,
+        36,
+        116,
+        64
+      ],
+      "memory": 78,
+      "fx": 1,
+      "attack": 76,
+      "release": 67,
+      "lfo": [
+        1,
+        2,
+        72,
+        48
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 11,
+      "name": "IRON PSALM",
+      "instrument": 1,
+      "macros": [
+        89,
+        126,
+        10,
+        48
+      ],
+      "memory": 16,
+      "fx": 1,
+      "attack": 22,
+      "release": 55,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 12,
+      "name": "FURNACE VOW",
+      "instrument": 1,
+      "macros": [
+        109,
+        101,
+        61,
+        101
+      ],
+      "memory": 80,
+      "fx": 1,
+      "attack": 98,
+      "release": 108,
+      "lfo": [
+        1,
+        0,
+        16,
+        10
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 13,
+      "name": "SHARD CROWN",
+      "instrument": 1,
+      "macros": [
+        22,
+        121,
+        54,
+        30
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 5,
+      "release": 24,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 14,
+      "name": "ANVIL SERAPH",
+      "instrument": 1,
+      "macros": [
+        48,
+        92,
+        35,
+        55
+      ],
+      "memory": 22,
+      "fx": 1,
+      "attack": 0,
+      "release": 100,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 15,
+      "name": "VOLT TEETH",
+      "instrument": 1,
+      "macros": [
+        40,
+        117,
+        78,
+        66
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 10,
+      "release": 65,
+      "lfo": [
+        1,
+        1,
+        88,
+        47
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 16,
+      "name": "RUST TALON",
+      "instrument": 1,
+      "macros": [
+        67,
+        105,
+        0,
+        16
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 9,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 17,
+      "name": "BLADE REQUIEM",
+      "instrument": 1,
+      "macros": [
+        95,
+        112,
+        105,
+        119
+      ],
+      "memory": 54,
+      "fx": 1,
+      "attack": 105,
+      "release": 117,
+      "lfo": [
+        1,
+        2,
+        22,
+        18
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 18,
+      "name": "TOMB CURRENT",
+      "instrument": 1,
+      "macros": [
+        116,
+        32,
+        0,
+        46
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 7,
+      "release": 49,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 19,
+      "name": "SLAG PULSE",
+      "instrument": 1,
+      "macros": [
+        82,
+        115,
+        6,
+        24
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 21,
+      "lfo": [
+        1,
+        1,
+        101,
+        20
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 20,
+      "name": "QUAKE ENGINE",
+      "instrument": 1,
+      "macros": [
+        104,
+        120,
+        25,
+        80
+      ],
+      "memory": 20,
+      "fx": 1,
+      "attack": 32,
+      "release": 87,
+      "lfo": [
+        1,
+        0,
+        34,
+        14
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 21,
+      "name": "HOLLOW ROOT",
+      "instrument": 0,
+      "macros": [
+        71,
+        0,
+        0,
+        55
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 8,
+      "release": 67,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 22,
+      "name": "GRIT PILGRIM",
+      "instrument": 1,
+      "macros": [
+        52,
+        127,
+        20,
+        36
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 4,
+      "release": 34,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 23,
+      "name": "OBSIDIAN KEYS",
+      "instrument": 0,
+      "macros": [
+        56,
+        7,
+        19,
+        17
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 31,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 24,
+      "name": "SULFUR TONGUE",
+      "instrument": 1,
+      "macros": [
+        45,
+        108,
+        0,
+        15
+      ],
+      "memory": 8,
+      "fx": 1,
+      "attack": 0,
+      "release": 12,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 25,
+      "name": "TARNISH BELL",
+      "instrument": 1,
+      "macros": [
+        28,
+        84,
+        40,
+        72
+      ],
+      "memory": 20,
+      "fx": 1,
+      "attack": 0,
+      "release": 110,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 26,
+      "name": "SABLE NEEDLES",
+      "instrument": 1,
+      "macros": [
+        20,
+        43,
+        111,
+        35
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 1,
+      "release": 40,
+      "lfo": [
+        1,
+        2,
+        117,
+        22
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 27,
+      "name": "GRAVE HAMMER",
+      "instrument": 1,
+      "macros": [
+        100,
+        79,
+        3,
+        24
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 20,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 28,
+      "name": "PALLID CHOIR",
+      "instrument": 0,
+      "macros": [
+        116,
+        12,
+        24,
+        118
+      ],
+      "memory": 24,
+      "fx": 0,
+      "attack": 110,
+      "release": 124,
+      "lfo": [
+        1,
+        0,
+        8,
+        14
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 29,
+      "name": "MIRROR INK",
+      "instrument": 0,
+      "macros": [
+        33,
+        0,
+        114,
+        78
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 75,
+      "release": 77,
+      "lfo": [
+        1,
+        0,
+        30,
+        20
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 30,
+      "name": "SCRAP ALTAR",
+      "instrument": 2,
+      "macros": [
+        64,
+        64,
+        64,
+        64
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 31,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 31,
+      "name": "RIVEN SIGNAL",
+      "instrument": 1,
+      "macros": [
+        63,
+        72,
+        91,
+        84
+      ],
+      "memory": 31,
+      "fx": 1,
+      "attack": 55,
+      "release": 93,
+      "lfo": [
+        1,
+        2,
+        64,
+        43
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 32,
+      "name": "NERVE CHOIR",
+      "instrument": 3,
+      "macros": [
+        87,
+        20,
+        20,
+        80
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 20,
+      "release": 70,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": 0,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            108,
+            55,
+            58,
+            98,
+            83
+          ],
+          [
+            2,
+            72,
+            60,
+            63,
+            92,
+            79
+          ],
+          [
+            3,
+            38,
+            65,
+            68,
+            86,
+            75
+          ],
+          [
+            1,
+            85,
+            70,
+            73,
+            80,
+            71
+          ],
+          [
+            5,
+            46,
+            75,
+            78,
+            74,
+            67
+          ],
+          [
+            2,
+            27,
+            80,
+            83,
+            68,
+            63
+          ]
+        ],
+        "algorithm": 1,
+        "feedback": 12,
+        "pitch_depth": 24,
+        "pitch_time": 42
+      }
+    },
+    {
+      "id": 33,
+      "name": "CRUCIBLE",
+      "instrument": 3,
+      "macros": [
+        62,
+        90,
+        10,
+        55
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 70,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": 1,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            116,
+            0,
+            58,
+            74,
+            40
+          ],
+          [
+            3,
+            112,
+            0,
+            63,
+            74,
+            40
+          ],
+          [
+            7,
+            95,
+            0,
+            68,
+            74,
+            40
+          ],
+          [
+            2,
+            74,
+            0,
+            73,
+            74,
+            40
+          ],
+          [
+            5,
+            82,
+            0,
+            78,
+            74,
+            40
+          ],
+          [
+            11,
+            63,
+            0,
+            83,
+            74,
+            40
+          ]
+        ],
+        "algorithm": 7,
+        "feedback": 82,
+        "pitch_depth": 29,
+        "pitch_time": 42
+      }
+    },
+    {
+      "id": 34,
+      "name": "BONE WIRE",
+      "instrument": 3,
+      "macros": [
+        48,
+        35,
+        10,
+        40
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 70,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": 2,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            119,
+            0,
+            24,
+            12,
+            23
+          ],
+          [
+            2,
+            95,
+            0,
+            27,
+            12,
+            23
+          ],
+          [
+            4,
+            110,
+            0,
+            30,
+            12,
+            23
+          ],
+          [
+            3,
+            87,
+            0,
+            33,
+            12,
+            23
+          ],
+          [
+            8,
+            64,
+            0,
+            36,
+            12,
+            23
+          ],
+          [
+            13,
+            80,
+            0,
+            39,
+            12,
+            23
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 45,
+        "pitch_depth": 31,
+        "pitch_time": 18
+      }
+    },
+    {
+      "id": 35,
+      "name": "SPECTRAL GRAFT",
+      "instrument": 3,
+      "macros": [
+        99,
+        30,
+        45,
+        100
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 40,
+      "release": 100,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "legacy",
+      "description": "Original TERKINSTEIN factory sound; all existing settings preserved.",
+      "fm_index": 3,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            99,
+            78,
+            58,
+            98,
+            83
+          ],
+          [
+            1,
+            71,
+            73,
+            63,
+            92,
+            79
+          ],
+          [
+            2,
+            54,
+            68,
+            68,
+            86,
+            75
+          ],
+          [
+            3,
+            94,
+            63,
+            73,
+            80,
+            71
+          ],
+          [
+            5,
+            45,
+            58,
+            78,
+            74,
+            67
+          ],
+          [
+            7,
+            32,
+            53,
+            83,
+            68,
+            63
+          ]
+        ],
+        "algorithm": 5,
+        "feedback": 12,
+        "pitch_depth": 24,
+        "pitch_time": 42
+      }
+    },
+    {
+      "id": 36,
+      "name": "TAR MARROW",
+      "instrument": 1,
+      "macros": [
+        107,
+        69,
+        0,
+        20
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 18,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Immediate, dense corroded bass with a short tail and stable pitch; leaves room for the original long pads.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 37,
+      "name": "COIL BURROW",
+      "instrument": 3,
+      "macros": [
+        105,
+        22,
+        8,
+        40
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 35,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "A low fundamental under a brief branching FM growl; held notes settle into a supportive bass.",
+      "fm_index": 4,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            108,
+            0,
+            46,
+            84,
+            16
+          ],
+          [
+            1,
+            52,
+            0,
+            31,
+            18,
+            8
+          ],
+          [
+            2,
+            24,
+            0,
+            28,
+            12,
+            9
+          ],
+          [
+            3,
+            17,
+            0,
+            19,
+            6,
+            7
+          ],
+          [
+            1,
+            8,
+            0,
+            24,
+            0,
+            5
+          ],
+          [
+            4,
+            9,
+            0,
+            16,
+            0,
+            5
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 22,
+        "pitch_depth": 26,
+        "pitch_time": 12
+      }
+    },
+    {
+      "id": 38,
+      "name": "MOSS CAPACITOR",
+      "instrument": 0,
+      "macros": [
+        62,
+        17,
+        5,
+        23
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 24,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Rounded, clean bass with little drift and a quick release for legible busy patterns; enable FX for restrained folding.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 39,
+      "name": "CINDER PISTON",
+      "instrument": 1,
+      "macros": [
+        116,
+        98,
+        3,
+        32
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 26,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "A harder metallic bass strike with a controlled tail; the abrasive counterpart to MOSS CAPACITOR.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 40,
+      "name": "HUSK CURRENT",
+      "instrument": 3,
+      "macros": [
+        84,
+        9,
+        0,
+        31
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 22,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Three muted FM pairs decay into silence even while held, for woody syncopated bass plucks.",
+      "fm_index": 5,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            100,
+            0,
+            38,
+            0,
+            18
+          ],
+          [
+            2,
+            31,
+            0,
+            16,
+            0,
+            9
+          ],
+          [
+            1,
+            53,
+            0,
+            30,
+            0,
+            16
+          ],
+          [
+            3,
+            19,
+            0,
+            12,
+            0,
+            8
+          ],
+          [
+            2,
+            20,
+            0,
+            24,
+            0,
+            13
+          ],
+          [
+            7,
+            13,
+            0,
+            9,
+            0,
+            7
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 4,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      }
+    },
+    {
+      "id": 41,
+      "name": "ROOT TERMINAL",
+      "instrument": 0,
+      "macros": [
+        56,
+        4,
+        2,
+        38
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 1,
+      "release": 28,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Soft-edged, nearly clean low notes that support harsh drums without adding another distorted layer.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 42,
+      "name": "FANG RELAY",
+      "instrument": 1,
+      "macros": [
+        92,
+        85,
+        7,
+        38
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 43,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "Focused metallic melody with an immediate attack and a compact tail; distinct from the sprawling BLADE REQUIEM.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 43,
+      "name": "ION STITCH",
+      "instrument": 3,
+      "macros": [
+        102,
+        34,
+        20,
+        42
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 38,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "A wiry forked FM lead: a small pitch bite at the onset, then sustained harmonic tension.",
+      "fm_index": 6,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            100,
+            0,
+            92,
+            71,
+            29
+          ],
+          [
+            2,
+            45,
+            0,
+            84,
+            67,
+            27
+          ],
+          [
+            5,
+            54,
+            0,
+            41,
+            32,
+            30
+          ],
+          [
+            1,
+            24,
+            0,
+            89,
+            62,
+            25
+          ],
+          [
+            3,
+            23,
+            0,
+            52,
+            21,
+            23
+          ],
+          [
+            9,
+            16,
+            0,
+            29,
+            9,
+            17
+          ]
+        ],
+        "algorithm": 5,
+        "feedback": 37,
+        "pitch_depth": 29,
+        "pitch_time": 24
+      }
+    },
+    {
+      "id": 44,
+      "name": "VELVET FAULT",
+      "instrument": 0,
+      "macros": [
+        88,
+        25,
+        17,
+        35
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 7,
+      "release": 42,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "A softer, warm clean lead with restrained detune; an intimate melody against the broad existing choirs, with mild folding available through FX.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 45,
+      "name": "SCAR VOLTAGE",
+      "instrument": 1,
+      "macros": [
+        43,
+        117,
+        13,
+        48
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 1,
+      "release": 48,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "A narrow bright-edged cutting lead with deep corrosion, but less pitch scatter than SABLE NEEDLES.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 46,
+      "name": "MOTH CIRCUIT",
+      "instrument": 3,
+      "macros": [
+        71,
+        14,
+        23,
+        59
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 40,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "A gently arriving hollow FM lead with a half-frequency undertone and quiet upper modulations.",
+      "fm_index": 7,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            104,
+            12,
+            65,
+            75,
+            32
+          ],
+          [
+            0,
+            24,
+            7,
+            76,
+            36,
+            28
+          ],
+          [
+            2,
+            36,
+            17,
+            57,
+            31,
+            35
+          ],
+          [
+            5,
+            12,
+            3,
+            43,
+            14,
+            21
+          ],
+          [
+            9,
+            8,
+            21,
+            61,
+            8,
+            24
+          ],
+          [
+            13,
+            5,
+            9,
+            38,
+            3,
+            19
+          ]
+        ],
+        "algorithm": 3,
+        "feedback": 8,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      }
+    },
+    {
+      "id": 47,
+      "name": "NIGHT SUTURE",
+      "instrument": 0,
+      "macros": [
+        104,
+        34,
+        43,
+        46
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 12,
+      "release": 53,
+      "lfo": [
+        1,
+        0,
+        24,
+        9
+      ],
+      "role": "lead",
+      "description": "A slightly moving, open lead with a soft edge and measured release for melody over an atmospheric track.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 48,
+      "name": "BONE SPARKS",
+      "instrument": 3,
+      "macros": [
+        96,
+        13,
+        0,
+        28
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 28,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Three short FM pairs give a ceramic pitched strike with a flick of high harmonic brightness.",
+      "fm_index": 8,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            104,
+            0,
+            24,
+            0,
+            14
+          ],
+          [
+            7,
+            36,
+            0,
+            7,
+            0,
+            5
+          ],
+          [
+            3,
+            54,
+            0,
+            35,
+            0,
+            14
+          ],
+          [
+            11,
+            24,
+            0,
+            11,
+            0,
+            7
+          ],
+          [
+            5,
+            28,
+            0,
+            45,
+            0,
+            14
+          ],
+          [
+            17,
+            15,
+            0,
+            14,
+            0,
+            9
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 0,
+        "pitch_depth": 25,
+        "pitch_time": 9
+      }
+    },
+    {
+      "id": 49,
+      "name": "VELLUM PRONG",
+      "instrument": 0,
+      "macros": [
+        41,
+        22,
+        9,
+        9
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 17,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "A dry, papery short-release key sound; articulation follows your note length rather than an automatic pluck envelope.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 50,
+      "name": "OXIDE CHIMES",
+      "instrument": 3,
+      "macros": [
+        83,
+        31,
+        26,
+        97
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 91,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "A branching metallic chime with quickly fading upper modulation and a lingering pitched carrier.",
+      "fm_index": 9,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            108,
+            0,
+            88,
+            0,
+            72
+          ],
+          [
+            3,
+            63,
+            0,
+            56,
+            0,
+            51
+          ],
+          [
+            5,
+            42,
+            0,
+            43,
+            0,
+            39
+          ],
+          [
+            7,
+            24,
+            0,
+            35,
+            0,
+            32
+          ],
+          [
+            11,
+            14,
+            0,
+            29,
+            0,
+            25
+          ],
+          [
+            13,
+            8,
+            0,
+            23,
+            0,
+            19
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 31,
+        "pitch_depth": 26,
+        "pitch_time": 35
+      }
+    },
+    {
+      "id": 51,
+      "name": "WICKED FELT",
+      "instrument": 0,
+      "macros": [
+        74,
+        11,
+        3,
+        15
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 2,
+      "release": 29,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "A muted clean keyboard tone with a fast response and little detune; plays softly beside industrial percussion, with light grit available through FX.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 52,
+      "name": "GLASS VERTEBRA",
+      "instrument": 3,
+      "macros": [
+        115,
+        6,
+        14,
+        97
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 100,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Twin FM chains with long glassy carrier decays and shorter bright attacks; mostly decays away while held.",
+      "fm_index": 10,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            99,
+            0,
+            110,
+            4,
+            99
+          ],
+          [
+            5,
+            48,
+            0,
+            48,
+            0,
+            50
+          ],
+          [
+            9,
+            18,
+            0,
+            28,
+            0,
+            29
+          ],
+          [
+            2,
+            50,
+            0,
+            110,
+            4,
+            99
+          ],
+          [
+            3,
+            24,
+            0,
+            59,
+            0,
+            62
+          ],
+          [
+            7,
+            9,
+            0,
+            34,
+            0,
+            36
+          ]
+        ],
+        "algorithm": 1,
+        "feedback": 6,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      }
+    },
+    {
+      "id": 53,
+      "name": "LANTERN RATTLE",
+      "instrument": 1,
+      "macros": [
+        32,
+        67,
+        28,
+        63
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 79,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "A small ringing metallic key sound with moderate corrosion and a useful released-note tail.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 54,
+      "name": "RIVET WAKE",
+      "instrument": 2,
+      "macros": [
+        78,
+        40,
+        26,
+        28
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 31,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "kit",
+      "description": "Tight, short-decay mechanical kit for clear rhythmic scaffolding beneath sustained atmospheres.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 55,
+      "name": "BOILER TEETH",
+      "instrument": 2,
+      "macros": [
+        94,
+        101,
+        69,
+        103
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 31,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "kit",
+      "description": "Heavy wire-rich coarse percussion with longer ringing body; pairs with cleaner bass and restrained melodic keys.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 56,
+      "name": "DUST CASKET",
+      "instrument": 2,
+      "macros": [
+        56,
+        18,
+        32,
+        15
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 31,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "kit",
+      "description": "Muted, lower-bite kit with restrained wire noise and short decay; space for sharper FM lead attacks.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 57,
+      "name": "CHROME FUNERAL",
+      "instrument": 2,
+      "macros": [
+        60,
+        114,
+        92,
+        52
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 0,
+      "release": 31,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "kit",
+      "description": "Wire-rich, longer-decay metallic kit for sparse patterns and cymbal textures.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 58,
+      "name": "VEIN WEATHER",
+      "instrument": 0,
+      "macros": [
+        71,
+        28,
+        72,
+        112
+      ],
+      "memory": 20,
+      "fx": 1,
+      "attack": 94,
+      "release": 117,
+      "lfo": [
+        1,
+        0,
+        13,
+        17
+      ],
+      "role": "atmosphere",
+      "description": "A slow shaded pad with modest fracture and gentle filter motion; less spectral glare than the bright original choirs.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 59,
+      "name": "NOCTILUCE VAT",
+      "instrument": 3,
+      "macros": [
+        78,
+        10,
+        31,
+        96
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 78,
+      "release": 124,
+      "lfo": [
+        1,
+        0,
+        8,
+        22
+      ],
+      "role": "atmosphere",
+      "description": "Six softly arriving parallel harmonics form a dusky organ bed without a hard transient.",
+      "fm_index": 11,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            80,
+            65,
+            127,
+            108,
+            121
+          ],
+          [
+            1,
+            116,
+            76,
+            127,
+            116,
+            124
+          ],
+          [
+            1,
+            99,
+            54,
+            127,
+            106,
+            118
+          ],
+          [
+            2,
+            73,
+            84,
+            127,
+            79,
+            127
+          ],
+          [
+            3,
+            45,
+            59,
+            127,
+            55,
+            111
+          ],
+          [
+            5,
+            31,
+            93,
+            127,
+            41,
+            105
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      }
+    },
+    {
+      "id": 60,
+      "name": "LICHEN VECTOR",
+      "instrument": 0,
+      "macros": [
+        48,
+        39,
+        90,
+        103
+      ],
+      "memory": 28,
+      "fx": 1,
+      "attack": 91,
+      "release": 106,
+      "lfo": [
+        1,
+        2,
+        17,
+        13
+      ],
+      "role": "atmosphere",
+      "description": "A dim, drifting filtered layer with small afterimages; complements a clean held bass and short percussion.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 61,
+      "name": "SUTURE FOG",
+      "instrument": 1,
+      "macros": [
+        73,
+        76,
+        68,
+        107
+      ],
+      "memory": 12,
+      "fx": 1,
+      "attack": 98,
+      "release": 113,
+      "lfo": [
+        1,
+        0,
+        11,
+        12
+      ],
+      "role": "atmosphere",
+      "description": "A slowly blooming metallic mist with less extreme corrosion than BLADE REQUIEM and a long released tail.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 62,
+      "name": "HOLLOW EMBER",
+      "instrument": 0,
+      "macros": [
+        91,
+        49,
+        38,
+        121
+      ],
+      "memory": 16,
+      "fx": 1,
+      "attack": 111,
+      "release": 122,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "atmosphere",
+      "description": "A broad warm-corroded sustained pad with mild drift and no periodic LFO, leaving rhythms to the other tracks.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 63,
+      "name": "PHANTOM LOOM",
+      "instrument": 3,
+      "macros": [
+        91,
+        21,
+        76,
+        105
+      ],
+      "memory": 0,
+      "fx": 1,
+      "attack": 78,
+      "release": 119,
+      "lfo": [
+        1,
+        2,
+        12,
+        19
+      ],
+      "role": "atmosphere",
+      "description": "A slowly opening six-stage FM chain with quiet upper modulation and gentle ramped filter motion.",
+      "fm_index": 12,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            107,
+            78,
+            106,
+            87,
+            118
+          ],
+          [
+            1,
+            59,
+            71,
+            68,
+            64,
+            111
+          ],
+          [
+            2,
+            31,
+            99,
+            101,
+            49,
+            103
+          ],
+          [
+            3,
+            21,
+            67,
+            92,
+            32,
+            97
+          ],
+          [
+            5,
+            12,
+            114,
+            122,
+            19,
+            111
+          ],
+          [
+            7,
+            7,
+            95,
+            117,
+            9,
+            125
+          ]
+        ],
+        "algorithm": 0,
+        "feedback": 9,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      }
+    }
+  ]
+}

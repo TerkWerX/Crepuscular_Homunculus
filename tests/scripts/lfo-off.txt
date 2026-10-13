@@ -1,0 +1,4 @@
+# Matched notes for lfo-page.txt, without modulation.
+600 keys 0x4480
+3800 keys 0
+5000 end

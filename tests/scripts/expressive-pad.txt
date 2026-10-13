@@ -1,0 +1,28 @@
+# TERKINSTEIN: sustain a C minor pad, bend an independent melody, then a D minor pad.
+# MIDI sources 1/2 remain independent. Times are milliseconds; bend bytes are LSB/MSB.
+100 midi 0xB0 23 84
+100 midi 0xB0 24 64
+300 midi 0x90 48 105
+300 midi 0x90 51 99
+300 midi 0x90 55 113
+1500 midi 0xB0 64 127
+2200 midi 0x80 48 0
+2200 midi 0x80 51 0
+2200 midi 0x80 55 0
+3000 midi 0x91 70 88
+3400 midi 0xE1 127 127
+3900 midi 0xE1 0 64
+4700 midi 0x81 70 0
+5200 midi 0xB0 64 0
+5900 midi 0x90 50 105
+5900 midi 0x90 53 99
+5900 midi 0x90 57 113
+6200 midi 0xB0 64 127
+7000 midi 0x80 50 0
+7000 midi 0x80 53 0
+7000 midi 0x80 57 0
+7500 midi 0xE0 0 0
+9000 midi 0xE0 0 64
+10000 midi 0xB0 123 0
+11000 midi 0xB0 64 0
+16000 end

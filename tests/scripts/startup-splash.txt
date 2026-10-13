@@ -1,0 +1,11 @@
+# The art persists at both 1000 and 4200 ms despite encoder and MIDI events.
+# A physical GLO press at 6000 ms dismisses it and opens diagnostics at 8200 ms.
+1800 enc 6 1
+2200 midi 0x90 48 105
+2200 midi 0x90 51 99
+2200 midi 0x90 55 113
+5000 midi 0x80 48 0
+5000 midi 0x80 51 0
+5000 midi 0x80 55 0
+6000 btn 7
+9000 end

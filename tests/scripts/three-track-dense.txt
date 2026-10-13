@@ -1,0 +1,9 @@
+# Hold a live C-minor triad (three protected voices), then start a saved
+# schema-4 pattern with four notes on step 0 of each of the three loop tracks.
+# The checker injects that dense step into a normal saved settings record.
+10 keys 0x4880
+100 btn 11
+100 btn 12
+300 keys 0
+400 btn 12
+1000 end

@@ -1,0 +1,5 @@
+# Replay the saved melody for two full bars and stop mid-hold on the last bar.
+100 btn 11
+100 btn 12
+6200 btn 12
+6500 end

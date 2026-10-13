@@ -1,0 +1,7 @@
+# One-shot button followed by a held button for 750 ms.
+100 btn 3
+200 hold 5 1
+500 hold 5 1
+950 hold 5 0
+1000 hold 5 0
+1200 end

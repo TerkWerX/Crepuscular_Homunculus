@@ -1,0 +1,25 @@
+# Dismiss the latching splash and exercise the ARP page with a held triad.
+# Render at 1 FPS. Frames 1..10 show order, rate, and gate changes;
+# frames 11..14 reverse each knob and restore its original setting;
+# frame 15 shows that SEQ still opens after those ARP edits.
+100 hold 10 1
+200 keys 0x4880
+800 hold 10 0
+820 btn 10
+1500 enc 3 3
+2500 enc 3 1
+3500 enc 4 1
+4500 enc 4 1
+5500 enc 4 1
+6500 enc 5 1
+7500 enc 5 1
+8500 enc 5 1
+9500 enc 5 1
+10500 enc 4 -1
+11500 enc 5 -1
+12500 enc 4 1
+13500 enc 5 1
+14500 btn 11
+14500 btn 12
+16200 keys 0
+16500 end

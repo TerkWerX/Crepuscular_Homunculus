@@ -1,0 +1,11 @@
+# A long PLAY press is panic; a long HOME press restores the factory patch.
+100 btn 11
+100 btn 12
+300 keys 0x80
+500 hold 12 1
+1300 hold 12 0
+1600 keys 0
+1800 enc 2 25
+2000 hold 8 1
+2800 hold 8 0
+5000 end

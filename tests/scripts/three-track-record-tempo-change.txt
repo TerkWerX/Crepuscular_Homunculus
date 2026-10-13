@@ -1,0 +1,9 @@
+# Capture one held melody note while Knob 1 doubles SEQ BPM halfway through.
+# At each tempo, the recorded length should advance in musical step units.
+100 btn 13
+200 midi 0x90 60 100
+500 enc 2 90
+900 midi 0x80 60 0
+1000 btn 13
+1100 btn 9
+7000 end

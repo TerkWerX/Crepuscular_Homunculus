@@ -1,0 +1,6 @@
+# Return to HOME while generated notes play with no physical keys held.
+100 btn 11
+100 btn 12
+200 btn 8
+5200 btn 12
+12000 end

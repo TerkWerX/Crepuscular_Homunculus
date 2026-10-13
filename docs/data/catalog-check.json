@@ -1,0 +1,48 @@
+{
+  "checked_date": "2026-10-13",
+  "catalog_sha256": "dfb58c13944d88b0193d8243f546f394b3bffb6ebb38cf43abeec85bc24d628a",
+  "catalog_sound_count": 64,
+  "new_sound_count": 28,
+  "public_name_exact_matches": [],
+  "new_complete_sound_tuple_duplicates": [],
+  "new_fm_patch_duplicates": [],
+  "signature_fields": [
+    "instrument",
+    "macros",
+    "memory",
+    "fx",
+    "attack",
+    "release",
+    "lfo",
+    "fm_patch"
+  ],
+  "fm_patch_count": 13,
+  "new_fm_patch_count": 9,
+  "envelope_timing_estimates": [
+    {
+      "slot": 60,
+      "name": "NOCTILUCE VAT",
+      "operator_attack_full_scale_seconds": [
+        4.595,
+        6.282,
+        3.169,
+        7.666,
+        3.783,
+        9.408
+      ]
+    },
+    {
+      "slot": 64,
+      "name": "PHANTOM LOOM",
+      "operator_attack_full_scale_seconds": [
+        7.343,
+        6.081,
+        11.843,
+        5.416,
+        15.689,
+        10.889
+      ]
+    }
+  ],
+  "limits": "Internal tuple equality and names-only public comparison. Neither establishes globally unique audio. Envelope times model own fixed-point code, not hardware CPU timing."
+}

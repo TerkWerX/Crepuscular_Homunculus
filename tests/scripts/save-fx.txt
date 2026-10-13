@@ -1,0 +1,8 @@
+# Request SAVE during a held chord; write once only after the release is quiet.
+# Toggle FX off while the same notes remain held. The 4200ms shot shows SAVE WAIT.
+# The 8200ms shot shows the saved patch with FX OFF.
+300 keys 0x4480
+1200 btn 9
+2000 btn 2
+3000 keys 0
+10000 end

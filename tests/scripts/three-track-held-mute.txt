@@ -1,0 +1,7 @@
+# Mute an actively sustained melody, unmute, then stop during its next hold.
+100 btn 11
+100 btn 12
+500 btn 3
+1200 btn 3
+2800 btn 12
+3100 end

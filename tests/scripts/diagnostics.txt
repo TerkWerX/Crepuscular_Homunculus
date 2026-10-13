@@ -1,0 +1,10 @@
+# GLO diagnostics while playing, return to pad, then inspect release tails.
+300 keys 0x4480
+500 btn 7
+1500 enc 3 24
+2400 midi 0x91 70 90
+2800 midi 0x81 70 0
+3500 btn 7
+7000 keys 0
+7400 btn 7
+12000 end

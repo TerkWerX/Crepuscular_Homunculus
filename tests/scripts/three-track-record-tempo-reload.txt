@@ -1,0 +1,5 @@
+# Reopen the saved 180 BPM pattern long enough to hear its first held note.
+100 btn 11
+100 btn 12
+1100 btn 12
+1300 end

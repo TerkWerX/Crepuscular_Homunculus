@@ -1,0 +1,7 @@
+# Load a 0.7 schema-5 held-note melody, replay it across two bars, then save
+# the upgraded schema after the transport and its release tails have stopped.
+100 btn 11
+100 btn 12
+6200 btn 12
+6400 btn 9
+15000 end

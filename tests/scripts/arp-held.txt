@@ -1,0 +1,6 @@
+# ARP silences the held chord, emits pulses on channel 2, then restores it.
+100 keys 0x4880
+250 btn 10
+1200 btn 10
+1500 keys 0
+5000 end

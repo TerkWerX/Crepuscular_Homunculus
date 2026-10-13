@@ -1,0 +1,4 @@
+# Fresh host process reads the saved 3-track settings and plays all loops.
+100 btn 11
+100 btn 12
+4500 end

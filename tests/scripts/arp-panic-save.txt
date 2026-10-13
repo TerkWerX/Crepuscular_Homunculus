@@ -1,0 +1,15 @@
+# Long PLAY panic and SAVE both leave ARP mode, so keys can sound directly.
+100 btn 10
+200 keys 0x4880
+400 hold 12 1
+1150 hold 12 0
+1300 keys 0
+1500 keys 0x80
+1600 keys 0
+1900 btn 10
+2100 keys 0x4880
+2400 btn 9
+2600 keys 0
+3000 keys 0x400
+3100 keys 0
+7500 end

@@ -1,0 +1,15 @@
+# Open SEQ before EDIT; HOME EDIT now opens the sound parameter menu.
+50 btn 11
+50 btn 12
+75 btn 12
+100 btn 6
+200 enc 0 4
+300 keys 0x80
+450 keys 0
+600 btn 13
+700 keys 0x400
+850 keys 0
+1000 btn 6
+1200 btn 12
+4400 btn 12
+5000 end

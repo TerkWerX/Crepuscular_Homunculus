@@ -1,0 +1,30 @@
+# Play the named controls: LFO filter motion, ENV page/HOLD, ARP, then SEQ/REC.
+# 1000 ENV, 4200 ARP, 8200 live recorder screenshots.
+100 btn 5
+150 enc 0 16
+200 enc 1 20
+250 btn 6
+600 btn 4
+650 enc 0 24
+700 enc 1 -16
+850 btn 6
+1000 keys 0x40080
+1300 keys 0
+1600 btn 6
+2000 btn 10
+2100 keys 0x4880
+2400 enc 1 1
+4300 keys 0
+4600 btn 11
+4600 btn 12
+6000 btn 12
+6200 btn 13
+6400 keys 0x80
+6600 keys 0
+6900 keys 0x400
+7150 keys 0
+7400 keys 0x40000
+7650 keys 0
+7900 btn 13
+9600 btn 12
+11000 end
