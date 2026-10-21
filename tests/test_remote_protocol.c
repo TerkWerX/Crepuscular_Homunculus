@@ -6,8 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "terkinstein_transport.h"
+#include "terkinstein_section_mutes.h"
 #include "terkinstein_protocol.h"
 #include "terkinstein_lfo.h"
+#include "terkinstein_metronome.h"
 #ifdef _MSC_VER
 #define __attribute__(x) /* target-timing mock uses ordinary desktop storage */
 #endif
@@ -23,7 +25,8 @@
 static volatile uint32_t tk_render_last_ticks, tk_render_max_ticks, tk_render_late_blocks;
 #endif
 #define TK_TRACKS 4u
-#define TK_VOICES 6u
+#define TK_BANK_COUNT 4u
+#define TK_VOICES 8u
 #define TK_PRESET_COUNT 40u
 #define TK_INSTRUMENT_DRUM_KIT 2u
 #define TK_INSTRUMENT_FM 3u
@@ -31,6 +34,11 @@ static volatile uint32_t tk_render_last_ticks, tk_render_max_ticks, tk_render_la
 enum { TK_TRACK_DRUM, TK_TRACK_MELODY, TK_TRACK_ATMOS, TK_TRACK_BASS };
 enum { TK_MODE_OFF, TK_MODE_ARP, TK_MODE_SEQ };
 typedef struct { uint8_t shade, fracture, drift, bloom; } tk_params_t;
+#include "terkinstein_drums.h"
+#include "terkinstein_arrangement_data.h"
+static tk_drum_mix_t tk_drum_mix[TK_DRUM_LANES];
+static void tk_set_drum_mix(uint32_t lane,const tk_drum_mix_t *mix) { (void)lane; (void)mix; }
+static void publish_drum_mix(void) {}
 typedef struct { uint8_t ratio, level, attack, decay, sustain, release; } mock_operator_t;
 typedef struct { mock_operator_t op[6]; uint8_t algorithm, feedback, pitch_depth, pitch_time; } mock_fm_t;
 typedef mock_fm_t tk_fm_patch_t;
@@ -40,10 +48,38 @@ typedef struct {
     tk_params_t p;
     uint8_t tempo, preset, track_mute, length[4], memory, graft_target, graft_amount;
     uint8_t ghost_mask, fx, attack, release, mono;
+    int8_t octave;
+    uint8_t metro_enabled, metro_level, metro_beats, metro_unit;
+    uint16_t section_mutes;
     tk_pattern_t pattern[4]; tk_track_patch_t track[4]; mock_fm_t fm[6];
 } tk_settings_t;
 typedef struct { uint8_t mode, running, recording, editing, selected, shown_step, edit_step, next_step, record_length;
-    uint32_t next_ms; tk_pattern_t *record_pattern; uint8_t phase_origin[4], bank_changed; } tk_transport_t;
+    uint32_t next_ms; tk_pattern_t *record_pattern; uint8_t phase_origin[4], bank_changed, solo_track; } tk_transport_t;
+static tk_metronome_clock_t metro_clock;
+static uint32_t midi_live_drum_enabled;
+static void midi_live_drum_set(tk_transport_t *t, tk_settings_t *s, uint32_t enabled)
+{ (void)t; (void)s; midi_live_drum_enabled = !!enabled; }
+/* Protocol fixture only; real owner/PCM/lease checks are in test_pad_route_app.c. */
+static uint8_t midi_fire_mask;
+static uint32_t tk_fire_track[4] = {0u,1u,2u,3u};
+static void midi_fire_set(tk_transport_t *t,const tk_settings_t *s,uint32_t mask,const uint8_t *tracks)
+{ uint32_t i; (void)t; (void)s; midi_fire_mask=(uint8_t)mask; for(i=0;i<4u;i++) tk_fire_track[i]=tracks[i]; }
+static void midi_fire_disable(tk_transport_t *t,const tk_settings_t *s)
+{ (void)t; (void)s; midi_fire_mask=0u; }
+static uint8_t midi_keyboard_mask, midi_keyboard_channel[2] = {0u,1u};
+static uint32_t tk_keyboard_track[2] = {1u,2u};
+static void midi_keyboard_set(tk_transport_t *t,const tk_settings_t *s,uint32_t mask,const uint8_t *routes)
+{ uint32_t i; (void)t; (void)s; midi_keyboard_mask=(uint8_t)mask;
+  for(i=0;i<2u;i++) { midi_keyboard_channel[i]=routes[i*2u]-1u; tk_keyboard_track[i]=routes[i*2u+1u]; } }
+static void midi_keyboard_disable(tk_transport_t *t,const tk_settings_t *s)
+{ (void)t; (void)s; midi_keyboard_mask=0u; }
+static int transport_solo_set(tk_transport_t *t, const tk_settings_t *s, uint32_t track, uint32_t now)
+{
+    uint8_t next = track < TK_TRACKS ? (uint8_t)(track + 1u) : 0u;
+    (void)s; (void)now;
+    if (next == t->solo_track) return 0;
+    t->solo_track = next; return 1;
+}
 static struct { uint8_t instrument; } PRESETS[40];
 static const uint8_t TRACK_SOURCE[4] = {34,33,35,37};
 static uint32_t fm1_ms, releases, kills, starts, finishes, patches, forgets, bakes, mono_calls;
@@ -65,7 +101,7 @@ static void transport_stop(tk_transport_t *t) { if (t->recording) transport_capt
 static void transport_start(tk_transport_t *t, uint32_t now) { starts++; t->running = 1; t->shown_step = t->next_step = 0; t->next_ms = now; memset(t->phase_origin,0,sizeof t->phase_origin); }
 static void transport_mode(tk_transport_t *t, uint8_t mode, uint32_t now) { transport_stop(t); t->mode = mode; if (mode) transport_start(t,now); }
 static void preset_apply(tk_settings_t *s, uint32_t preset) { s->preset = (uint8_t)preset; s->p.shade = (uint8_t)(10u + preset); }
-static void tk_forget_memory(void) { forgets++; }
+static void tk_forget_live_memory(void) { forgets++; }
 static void track_factory_apply(tk_settings_t *s, uint32_t track, uint32_t preset)
 { s->track[track].preset = (uint8_t)preset; s->track[track].instrument = PRESETS[preset].instrument; s->track[track].p.shade = 64; }
 static void track_capture_apply(tk_settings_t *s, uint32_t track)
@@ -104,6 +140,18 @@ static int tk_fm_valid(const tk_fm_patch_t *p)
     return 1;
 }
 #include "terkinstein_banks.h"
+#include "terkinstein_arrangement.h"
+/* Main ownership is tested against the real application separately. */
+static int transport_section_mute_set(tk_transport_t *t, tk_settings_t *s,
+                                      uint32_t track, uint32_t section, uint32_t muted)
+{
+    int changed = tk_section_mutes_set(&s->section_mutes,track,section,muted);
+    if (changed == 1 && muted && t->mode == TK_MODE_SEQ &&
+        tk_transport_local_step(t,track,t->shown_step,s->length[track]) / 16u == section) {
+        transport_release_part(t,track); tk_all_sound_off(TRACK_SOURCE[track]);
+    }
+    return changed;
+}
 
 static uint8_t mock_input[TK_REMOTE_DATA_MAX], mock_output[TK_REMOTE_WIRE_MAX];
 static uint32_t mock_in_length, mock_out_length, mock_generation, mock_tx_calls;
@@ -151,6 +199,8 @@ static void initialize(void)
     uint32_t i;
     memset(&settings,0,sizeof settings); memset(&transport,0,sizeof transport);
     settings.tempo = 90; for(i=0;i<4;i++) settings.length[i]=16;
+    settings.metro_level = 32; settings.metro_beats = settings.metro_unit = 4;
+    tk_metronome_init(); tk_metronome_clock_init(&metro_clock);
     transport.selected = 1;
     PRESETS[30].instrument = TK_INSTRUMENT_DRUM_KIT;
     for(i=32;i<40;i++) PRESETS[i].instrument = TK_INSTRUMENT_FM;
@@ -195,7 +245,8 @@ static void app_checks(void)
     initialize();
     m=command(TK_REMOTE_HELLO,NULL,0);
     expect(m.payload[0]==0&&m.payload[1]==1&&m.payload[4]==4&&m.payload[8]==40,"hello capabilities and expanded bank");
-    expect(m.payload[2]==127&&m.payload[3]==15,"HELLO advertises macros, banks/song, screen and opt-in palette/burst explicitly");
+    expect(m.payload[7]==8u,"HELLO advertises the eight-voice pool");
+    expect(m.payload[2]==127&&m.payload[3]==127,"HELLO advertises macros, banks/song, mirror, UI, metronome and panel explicitly");
 #ifdef TK_REMOTE_TIMING_TEST
     tk_render_last_ticks=24u*1379u;tk_render_max_ticks=24u*2890u;tk_render_late_blocks=0xFFFFFFFFu;
     m=command(TK_REMOTE_LOAD,NULL,0);
@@ -216,6 +267,7 @@ static void app_checks(void)
 #endif
     m=command(TK_REMOTE_STATE,NULL,0);
     expect(m.length==79&&m.payload[0]==0&&m.payload[2]==TK_MODE_OFF,"query does not start sequence");
+    expect(m.payload[73]==8u,"GET_STATE agrees with the advertised eight-voice pool");
     expect(m.payload[4]==1&&m.payload[7]==90&&m.payload[76]==0,"confirmed settings offsets");
     revision=m.payload[30]|m.payload[31]<<7;
     pattern_revision=m.payload[77]|m.payload[78]<<7;
@@ -510,9 +562,30 @@ static void screen_command_checks(void)
     enabled = 2; m = command(TK_REMOTE_SCREEN_SUBSCRIBE, &enabled, 1);
     expect(!m.payload[0] && !tk_screen.advanced, "legacy client explicitly selects compatible codecs");
 }
+static void section_command_checks(void)
+{
+    tk_remote_message_t m;
+    static const uint8_t set[] = {3u,2u,1u};
+    uint32_t starts_before, kills_before;
+    initialize(); starts_before=starts;
+    m=command(TK_REMOTE_SECTION_MUTES,NULL,0u);
+    expect(m.length==6u && !m.payload[0] && m.payload[1]==1u && !m.payload[5],
+           "section query has a MIDI-safe versioned mask body");
+    m=command(TK_REMOTE_SET_SECTION_MUTE,set,3u);
+    expect(m.length==6u && !m.payload[0] && m.payload[5]==4u && settings.section_mutes==0x4000u,
+           "absolute section set acknowledges the accepted mask");
+    expect(last_flags==(TK_REMOTE_CHANGED|TK_REMOTE_DIRTY) && starts==starts_before,
+           "section write is saved but cannot start transport");
+    kills_before=kills;
+    enqueue(TK_REMOTE_SET_SECTION_MUTE,sequence,set,3u); service(); m=output();
+    expect(!m.payload[0] && kills==kills_before && starts==starts_before,
+           "exact framed retry replays mask acknowledgement without new release or start");
+    m=command(TK_REMOTE_SET_SECTION_MUTE,set,3u);
+    expect(!last_flags && !m.payload[0],"fresh identical set is also idempotent");
+}
 int main(void)
 {
-    wire_checks();app_checks();track_macro_checks();preserved_record_checks();bank_checks();screen_command_checks();
+    wire_checks();app_checks();track_macro_checks();preserved_record_checks();bank_checks();screen_command_checks();section_command_checks();
     printf("PASS remote protocol: %u checks\n",checks);
     return 0;
 }

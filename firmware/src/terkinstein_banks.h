@@ -13,6 +13,9 @@ typedef struct {
     uint8_t length[TK_TRACKS][TK_BANK_COUNT];
     uint8_t tempo, mute, selected, active[TK_TRACKS], ghost_mask, fx;
     uint8_t metro_enabled, metro_level, metro_beats, metro_unit;
+    uint16_t section_mutes;
+    tk_drum_mix_t drum_mix[TK_DRUM_LANES];
+    tk_arr_song_t arrangement;
 } tk_song_stage_t;
 typedef struct {
     tk_pattern_t alternate[TK_TRACKS][TK_BANK_COUNT - 1u];
@@ -45,6 +48,7 @@ static tk_pattern_t *tk_bank_pattern(tk_settings_t *s, uint32_t track, uint32_t 
 }
 static void tk_bank_changed(uint32_t track, uint32_t bank)
 {
+    tk_arr.dirty = 1; /* Physical SAVE now covers inactive banks as well. */
     tk_banks.bank_revision[track][bank] = (uint16_t)((tk_banks.bank_revision[track][bank] + 1u) & 16383u);
     tk_banks.revision = (uint16_t)((tk_banks.revision + 1u) & 16383u);
     tk_banks.dirty[track] |= (uint8_t)(1u << bank);
@@ -67,6 +71,7 @@ static void tk_banks_init(tk_settings_t *s, tk_transport_t *t)
     uint32_t track, bank;
     memset(&tk_banks, 0, sizeof tk_banks);
     memset(&tk_bank_pool, 0, sizeof tk_bank_pool);
+    tk_arr_defaults(); tk_drums_defaults(tk_drum_mix);
     tk_banks.settings = s;
     for (track = 0; track < TK_TRACKS; track++) {
         tk_banks.pending[track] = TK_BANK_NONE;
@@ -101,6 +106,7 @@ static int tk_bank_activate(tk_settings_t *s, tk_transport_t *t,
     tk_banks.map[track][old] = (uint8_t)buffer;
     tk_banks.map[track][bank] = 0;
     tk_banks.active[track] = (uint8_t)bank;
+    tk_arr.cycle[track] = 0; tk_arr.seen[track] = 0;
     tk_banks.head_pending[track] = 1;
     s->length[track] = tk_banks.length[track][bank];
     t->phase_origin[track] = (uint8_t)global_step;
@@ -145,6 +151,9 @@ static void tk_song_clone(tk_settings_t *s, const tk_transport_t *t)
     stage->ghost_mask = s->ghost_mask; stage->fx = s->fx;
     stage->metro_enabled = s->metro_enabled; stage->metro_level = s->metro_level;
     stage->metro_beats = s->metro_beats; stage->metro_unit = s->metro_unit;
+    stage->section_mutes = s->section_mutes;
+    memcpy(stage->drum_mix, tk_drum_mix, sizeof tk_drum_mix);
+    stage->arrangement = tk_arr_song;
 }
 static int tk_song_valid(const tk_song_stage_t *stage)
 {
@@ -153,7 +162,8 @@ static int tk_song_valid(const tk_song_stage_t *stage)
         || stage->selected >= TK_TRACKS || stage->ghost_mask > 127u || stage->fx > 1u
         || stage->metro_enabled > 1u || stage->metro_level > 127u
         || stage->metro_beats < 1u || stage->metro_beats > 12u
-        || (stage->metro_unit != 4u && stage->metro_unit != 8u)) return 0;
+        || (stage->metro_unit != 4u && stage->metro_unit != 8u)
+        || !tk_drums_valid(stage->drum_mix) || !tk_arr_song_valid(&stage->arrangement)) return 0;
     for (track = 0; track < TK_TRACKS; track++) {
         if (stage->active[track] >= TK_BANK_COUNT || !track_patch_valid(&stage->patch[track])
             || !tk_fm_valid(&stage->fm[track])) return 0;
@@ -187,6 +197,11 @@ static void tk_song_commit(tk_settings_t *s, tk_transport_t *t)
     s->ghost_mask = stage->ghost_mask; s->fx = stage->fx;
     s->metro_enabled = stage->metro_enabled; s->metro_level = stage->metro_level;
     s->metro_beats = stage->metro_beats; s->metro_unit = stage->metro_unit;
+    s->section_mutes = stage->section_mutes;
+    memcpy(tk_drum_mix, stage->drum_mix, sizeof tk_drum_mix);
+    tk_arr_song = stage->arrangement;
+    memset(&tk_arr, 0, sizeof tk_arr); tk_arr.scene = tk_arr.pending_scene = TK_SCENE_NONE; tk_arr.rng = 0x13DFA965u;
+    publish_drum_mix();
     tk_metronome_cancel();
     tk_metronome_clock_configure(&metro_clock, s->metro_beats, s->metro_unit);
     tk_metronome_clock_reset(&metro_clock);

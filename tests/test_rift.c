@@ -209,7 +209,7 @@ static void extremes_and_reset_midframe(void)
         sound.mono[i] = (int16_t)(i & 1u ? INT16_MIN : INT16_MAX);
         sound.side[i] = (int16_t)(i & 1u ? INT16_MAX : INT16_MIN);
     }
-    for (i = 0u; i < 6u; i++) sound.voice[i] = UINT32_MAX;
+    for (i = 0u; i < TK_VIS_VOICES; i++) sound.voice[i] = UINT32_MAX;
     for (iteration = 0u; iteration < 4u; iteration++) {
         sound.peak = (uint16_t)(iteration & 1u ? UINT16_MAX : 0u);
         tk_rift_reset();
@@ -241,6 +241,33 @@ static void extremes_and_reset_midframe(void)
     expect(frame(&sound, 5000u, 5u) == TK_RIFT_W * TK_RIFT_H, "reset during upload repairs the complete viewport");
 }
 
+static void final_voice_stitches_and_wakes(void)
+{
+    tk_visual_snapshot_t silent, sound;
+    uint32_t t, base, lines;
+    memset(&silent, 0, sizeof silent);
+    expect(TK_VIS_VOICES == TK_VOICES && TK_VOICES == 8u,
+           "rift metadata capacity matches all eight engine voices");
+    tk_rift_reset();
+    frame(&silent, 0u, 0u);
+    for (t = 500u; t <= 5000u; t += 500u) frame(&silent, t, 0u);
+    expect(tk_rift_asleep, "fixture settles before testing the last voice alone");
+    sound = silent;
+    sound.voice[7] = 67u | (220u << 8) | (TK_SOURCE_ATMOS << 16) | (1u << 24);
+    expect(frame(&sound, 6000u, 0u) > 0u && !tk_rift_asleep,
+           "voice eight's envelope wakes the rift even when sampled PCM is zero");
+    sound.peak = 6000u;
+    base = independent_picture(&sound);
+    lines = tk_rift_line_count;
+    sound.voice[7] = 0u;
+    expect(independent_picture(&sound) != base, "voice eight contributes a visible pitch stitch");
+    expect(tk_rift_line_count + 5u == lines,
+           "the final voice adds its complete five-line stitch without overflowing geometry");
+    base = independent_picture(&sound);
+    sound.voice[6] = 71u | (220u << 8) | (TK_SOURCE_BASS << 16) | (1u << 24);
+    expect(independent_picture(&sound) != base, "voice seven independently contributes its own stitch");
+}
+
 int main(void)
 {
     uint32_t i;
@@ -249,6 +276,7 @@ int main(void)
     quiet_and_reentry();
     sound_inputs();
     extremes_and_reset_midframe();
+    final_voice_stitches_and_wakes();
     printf("THORN RIFT checks passed: %u checks; %u bounded tile batches\n", checks, lcd_batches);
     return 0;
 }

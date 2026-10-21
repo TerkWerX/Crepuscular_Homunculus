@@ -51,7 +51,7 @@ static void reset_and_failed_reads(void)
 {
     tk_visual_snapshot_t snapshot, sentinel;
     int32_t pcm[2] = {16000, -8000};
-    uint32_t voices[TK_VIS_VOICES] = {60u, 61u, 62u, 63u, 64u, 65u};
+    uint32_t voices[TK_VIS_VOICES] = {60u, 61u, 62u, 63u, 64u, 65u, 66u, 67u};
     uint32_t i;
     memset(&sentinel, 0xA5, sizeof sentinel);
     snapshot = sentinel;
@@ -188,7 +188,7 @@ static void energy_and_voices(void)
     expect(tk_visual_read(&silence), "silence still publishes valid visualization data");
     expect(silence.peak == 0u && silence.rough == 0u, "silence has no waveform energy");
     for (i = 0; i < TK_VIS_VOICES; i++)
-        expect(silence.voice[i] == voices[i], "voice publication is bounded to six complete atomic words");
+        expect(silence.voice[i] == voices[i], "voice publication retains all eight complete atomic words");
 
     pcm[20u] = pcm[21u] = 24000;
     tk_visual_capture(pcm, TK_VIS_SAMPLES, voices, 2u);
@@ -226,6 +226,33 @@ static void energy_and_voices(void)
                "waveform data cannot remain stale when sound becomes silent");
 }
 
+static void eight_voice_snapshot_bounds(void)
+{
+    const uint32_t guard = 0x7193A5C6u;
+    int32_t pcm[2] = {8000, -4000};
+    uint32_t voices[8], original[8], i;
+    struct {
+        uint32_t before;
+        tk_visual_snapshot_t snapshot;
+        uint32_t after;
+    } captured;
+    expect(TK_VIS_VOICES == 8u, "visual tap has room for the complete eight-voice pool");
+    captured.before = captured.after = guard;
+    for (i = 0u; i < 8u; i++)
+        voices[i] = (48u + i) | ((200u - i) << 8) | ((33u + i) << 16) | (1u << 24);
+    memcpy(original, voices, sizeof original);
+    tk_visual_init();
+    /* The input has exactly eight words. An excessive count must be clamped
+     * before reading it; AddressSanitizer also checks the source boundary. */
+    tk_visual_capture(pcm, 1u, voices, UINT32_MAX);
+    expect(tk_visual_read(&captured.snapshot), "eight-voice publication reads successfully");
+    for (i = 0u; i < 8u; i++)
+        expect(captured.snapshot.voice[i] == original[i], "each of eight voice words survives publication intact");
+    expect(memcmp(voices, original, sizeof original) == 0, "capture never modifies the eight-word source");
+    expect(captured.before == guard && captured.after == guard,
+           "eight-voice snapshot writes stay inside the caller's guarded destination");
+}
+
 int main(void)
 {
     reset_and_failed_reads();
@@ -233,6 +260,7 @@ int main(void)
     sampling_and_pcm_preservation();
     invalid_capture_preserves_publication();
     energy_and_voices();
+    eight_voice_snapshot_bounds();
     printf("PASS: %lu visual tap checks\n", (unsigned long)checks);
     return 0;
 }

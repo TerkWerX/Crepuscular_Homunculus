@@ -93,7 +93,7 @@ def playback(exe: Path, prefix: Path, directory: Path, base: bytearray) -> None:
     assert first == {(0x99, 48), (0x91, 60), (0x92, 72), (0x93, 36)}, first
     assert all(ms == 1300 for ms, status, _, _ in dense if status == 0x80)
     assert 10 < c.active_peak(dense_out, 200, 500) < 32767
-    print("Two live keys and one note from each of four tracks fit the six-voice budget")
+    print("Two live keys and one note from each of four tracks fit the shared voice pool")
 
 
 def recordings(exe: Path, prefix: Path, directory: Path, base: bytearray) -> None:

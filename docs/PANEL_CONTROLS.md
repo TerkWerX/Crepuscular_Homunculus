@@ -1,5 +1,15 @@
 # Page controls — TERKINSTEIN 0.22.0-dev
 
+## Homunculus HOME choice — 0.26.10-dev
+
+GLO → SEL opens CONTROL FEEL. Knob 1 keeps LINEAR/ACCEL; Knob 2 selects
+HOMUNCULUS (left/default) or THORN RIFT (right). HOME returns; SAVE remembers
+after complete silence. The creator splash is unchanged.
+
+In SEQ, select one of the four tracks and press HOME to edit its captured
+sound independently; HOME again returns to LIVE. In step editing, hold SEL
+for the piano roll to edit individual note lengths/velocities.
+
 The FM-1's detented Knobs 1–4 have distinct jobs on each parameter page.
 SELECT chooses the sequencer track, ALGORITHM chooses its A–D bank, and
 PRESETS chooses the live sound. Captured track patches stay independent of

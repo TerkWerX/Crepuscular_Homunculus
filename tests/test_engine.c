@@ -28,7 +28,9 @@ static void block(const tk_params_t *params, int32_t *samples)
     tk_render(guarded + 1, FRAMES, params);
     expect(guarded[0] == GUARD && guarded[FRAMES * 2u + 1u] == GUARD, "render stays inside its stereo buffer");
     for (i = 1; i <= FRAMES * 2u; i++)
-        expect(guarded[i] >= -24384 && guarded[i] <= 24384, "six-voice output retains PCM headroom");
+        expect(guarded[i] >= -(int32_t)(TK_VOICES * TK_VOICE_PCM_BOUND) &&
+               guarded[i] <= (int32_t)(TK_VOICES * TK_VOICE_PCM_BOUND),
+               "shared voice output remains inside its proven PCM bound");
     if (samples) memcpy(samples, guarded + 1, FRAMES * 2u * sizeof(int32_t));
 }
 
@@ -172,12 +174,15 @@ static void sustain_controls(void)
     tk_note_on(62, 127, 1); tk_note_on(64, 127, 1); tk_note_on(65, 127, 1);
     block(&NORMAL, NULL); tk_note_on(67, 127, 1);
     tk_note_on(69, 127, 1); tk_note_on(71, 127, 1);
+    tk_note_on(72, 127, 1); tk_note_on(74, 127, 1);
     expect(tk_active_notes(60) == ((1u << 2) | (1u << 4) | (1u << 5) |
-                                   (1u << 7) | (1u << 9) | (1u << 11)),
-           "a seventh note steals the old pedal-held voice within the six-voice budget");
+                                   (1u << 7) | (1u << 9) | (1u << 11) |
+                                   (1u << 12) | (1u << 14)),
+           "a ninth note steals the old pedal-held voice within the eight-voice budget");
     tk_note_off(60, 1); tk_sustain(1, 0);
     expect(tk_active_notes(60) == ((1u << 2) | (1u << 4) | (1u << 5) |
-                                   (1u << 7) | (1u << 9) | (1u << 11)),
+                                   (1u << 7) | (1u << 9) | (1u << 11) |
+                                   (1u << 12) | (1u << 14)),
            "the stolen key's note-off and pedal lift cannot release its physically held replacement");
     tk_all_notes_off(1);
     release_to_silence(&NORMAL);
@@ -383,7 +388,7 @@ static void timbre_history(void)
     shade = 17; fracture = 23;
     expect(!tk_memory_pick(&memory, 62, 2, &shade, &fracture) && shade == 17 && fracture == 23,
            "timbre lookup never borrows another MIDI channel's history");
-    tk_memory_remember(&memory, 128, 1, 0, 0); tk_memory_remember(&memory, 60, 18, 0, 0);
+    tk_memory_remember(&memory, 128, 1, 0, 0); tk_memory_remember(&memory, 60, TK_MEMORY_SOURCES, 0, 0);
     expect(tk_memory_pick(&memory, 60, 1, &shade, &fracture) && shade == 3000 && fracture == 3500,
            "invalid notes and sources cannot modify the history");
     tk_memory_remember(&memory, 60, TK_SOURCE_SEQUENCE, 4500, 5500);
@@ -955,7 +960,7 @@ static void new_instruments(void)
     block(&NORMAL, NULL);
     expect(tk_quiet(), "stopping all four generated sources leaves no stale note");
 
-    /* Deliberately stress the six-voice output limit with coincident strikes
+    /* Deliberately stress the shared-voice output limit with coincident strikes
      * and a maximum-corrosion metal chord. block() checks every PCM sample. */
     for (other = TK_INSTRUMENT_METAL; other <= TK_INSTRUMENT_DRUM_KIT; other++) {
         tk_init();
@@ -964,7 +969,7 @@ static void new_instruments(void)
         for (lane = 0; lane < 64u; lane++) block(&EXTREME, NULL);
         tk_panic();
         block(&EXTREME, NULL);
-        expect(tk_quiet(), "extreme six-voice instruments stop promptly on panic");
+        expect(tk_quiet(), "extreme eight-voice instruments stop promptly on panic");
     }
 }
 
@@ -976,7 +981,7 @@ static void source_priority(void)
            !tk_note_on(60u, 100u, TK_SOURCES),
            "invalid pitches and sources report a dropped note-on");
     for (i = 0; i < TK_VOICES; i++)
-        expect(tk_note_on(60u + i, 100u, i), "six live notes fill the voice pool");
+        expect(tk_note_on(60u + i, 100u, i), "eight live notes fill the voice pool");
     expect(tk_live_voice_count() == TK_VOICES,
            "live voice count includes every held panel/MIDI note");
     expect(!tk_note_on(72u, 100u, TK_SOURCE_DRUM),
@@ -990,6 +995,8 @@ static void source_priority(void)
     tk_note_on(65u, 100u, TK_SOURCE_SEQUENCE);
     tk_note_on(67u, 100u, TK_SOURCE_ATMOS);
     tk_note_on(69u, 100u, TK_SOURCE_ARP);
+    tk_note_on(70u, 100u, TK_SOURCE_ATMOS);
+    tk_note_on(71u, 100u, TK_SOURCE_BASS);
     expect(tk_live_voice_count() == 2u, "live count excludes generated loop notes");
     expect(tk_note_on(72u, 100u, 0u),
            "new live key can take a generated voice when the pool is full");
@@ -1149,15 +1156,15 @@ static void ghost_mask(void)
     tk_set_source_patch(TK_SOURCE_ATMOS, &NORMAL, 64u, 64u);
     expect(tk_note_on(60u, 112u, TK_SOURCE_ATMOS), "atmosphere takes one voice");
     for (i = 0; i < TK_VOICES - 1u; i++)
-        expect(tk_note_on(58u + i, 112u, i), "five live keys fit beside ATMOS");
+        expect(tk_note_on(58u + i, 112u, i), "seven live keys fit beside ATMOS");
     for (i = 0; i < 64u; i++) block(&EXTREME, samples);
     expect(source_held(60u, TK_SOURCE_ATMOS),
-           "Ghost Mask does not allocate a seventh voice or steal ATMOS");
+           "Ghost Mask does not allocate a ninth voice or steal ATMOS");
     for (i = 0; i < TK_VOICES - 1u; i++)
         expect(source_held(58u + i, i),
-               "Ghost Mask does not steal any of the five held live keys");
+               "Ghost Mask does not steal any of the seven held live keys");
     expect(tk_live_voice_count() == TK_VOICES - 1u,
-           "Ghost Mask leaves the six-voice live/track budget unchanged");
+           "Ghost Mask leaves the eight-voice live/track budget unchanged");
 }
 
 int main(void)

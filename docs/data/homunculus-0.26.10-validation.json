@@ -1,0 +1,86 @@
+{
+  "product": "Crepuscular Homunculus",
+  "version": "0.26.10-dev",
+  "repository": "TerkWerX/Crepuscular_Homunculus",
+  "tracks": 4,
+  "presets": 64,
+  "voices": 8,
+  "FM_voice_cap": 4,
+  "settings_schema": 12,
+  "settings_bytes": 3700,
+  "target_package_sha256": "68a86887d6202d2f79e1eb7d4ad12f39da0f1dc244350b50daed789b5ebf834f",
+  "exact_pre_export_package": true,
+  "target_used_bytes": {
+    "image": 216368,
+    "static_ram": 79096,
+    "pool": 319868,
+    "ramtext": 2888
+  },
+  "target_limits_bytes": {
+    "image": 581564,
+    "static_ram": 98304,
+    "pool": 344064,
+    "ramtext": 24576
+  },
+  "host_groups_per_mode": 16,
+  "host_modes": [
+    "optimized",
+    "AddressSanitizer"
+  ],
+  "host_results": {
+    "optimized": {
+      "engine": "PASS: 11769180 DSP checks; deterministic render C738051D",
+      "controllers": "PASS: 722318 external controller checks",
+      "transport": "transport: 499 checks passed",
+      "fm": "PASS: 3952019 FM checks; six operators, eight routings, ADSR/PIT and expressive owners",
+      "home_visual_choice": "0 ms  settings saved (3700 B)\nHOME choice: 51596 checks passed; controls, compatibility, SAVE, bounded renderers",
+      "homunculus_intro": "homunculus intro: crop/palette, DMA-buffer lifetime, title retention, 4-row budget, continuous A-B-C-B, no timed dismissal and timer wrap passed",
+      "homunculus_visual": "Homunculus visual passed: 1532966 checks; 1220 bounded tile batches",
+      "song_persistence": "0 ms  settings saved (3700 B)\n     0 ms  settings saved (3700 B)\n     0 ms  settings saved (3700 B)\nsong persistence: 22 checks passed; 23548-byte payload",
+      "panel_input_app": "Panel input: 42 checks passed",
+      "panel_track_edit_app": "0 ms  MIDI out 90 60 100\n     0 ms  MIDI out 80 60 0\nPASS: 137 captured-track panel checks (host only)",
+      "piano_app": "PASS: 459112 piano geometry/ownership/render checks (host only)",
+      "remote_protocol": "PASS remote protocol: 6282 checks",
+      "screen": "PASS main-owned LCD capture, exact raw/RLE/palette, legacy compatibility, bounded advanced burst, priority/backpressure, lease/wrap/disconnect\n68499 screen checks",
+      "visual": "PASS: 1633 visual tap checks",
+      "solo_app": "0 ms  MIDI out 89 36 0\n     0 ms  MIDI out 99 48 100\n     0 ms  MIDI out 92 54 100\n     0 ms  MIDI out 93 57 100\n     0 ms  MIDI out 89 48 0\n     0 ms  MIDI out 82 54 0\n     0 ms  MIDI out 83 57 0\n     0 ms  MIDI out 92 54 100\nPASS: 22 solo app checks (host only)",
+      "metronome_app": "23080 ms  MIDI out B0 64 0\n 23080 ms  MIDI out B0 120 0\nPASS metronome app: 1611 settings, MIDI, transport and pixel checks; host only"
+    },
+    "asan": {
+      "engine": "PASS: 11769180 DSP checks; deterministic render C738051D",
+      "controllers": "PASS: 722318 external controller checks",
+      "transport": "transport: 499 checks passed",
+      "fm": "PASS: 3952019 FM checks; six operators, eight routings, ADSR/PIT and expressive owners",
+      "home_visual_choice": "0 ms  settings saved (3700 B)\nHOME choice: 51596 checks passed; controls, compatibility, SAVE, bounded renderers",
+      "homunculus_intro": "homunculus intro: crop/palette, DMA-buffer lifetime, title retention, 4-row budget, continuous A-B-C-B, no timed dismissal and timer wrap passed",
+      "homunculus_visual": "Homunculus visual passed: 1532966 checks; 1220 bounded tile batches",
+      "song_persistence": "0 ms  settings saved (3700 B)\n     0 ms  settings saved (3700 B)\n     0 ms  settings saved (3700 B)\nsong persistence: 22 checks passed; 23548-byte payload",
+      "panel_input_app": "Panel input: 42 checks passed",
+      "panel_track_edit_app": "0 ms  MIDI out 90 60 100\n     0 ms  MIDI out 80 60 0\nPASS: 137 captured-track panel checks (host only)",
+      "piano_app": "PASS: 459112 piano geometry/ownership/render checks (host only)",
+      "remote_protocol": "PASS remote protocol: 6282 checks",
+      "screen": "PASS main-owned LCD capture, exact raw/RLE/palette, legacy compatibility, bounded advanced burst, priority/backpressure, lease/wrap/disconnect\n68499 screen checks",
+      "visual": "PASS: 1633 visual tap checks",
+      "solo_app": "0 ms  MIDI out 89 36 0\n     0 ms  MIDI out 99 48 100\n     0 ms  MIDI out 92 54 100\n     0 ms  MIDI out 93 57 100\n     0 ms  MIDI out 89 48 0\n     0 ms  MIDI out 82 54 0\n     0 ms  MIDI out 83 57 0\n     0 ms  MIDI out 92 54 100\nPASS: 22 solo app checks (host only)",
+      "metronome_app": "23080 ms  MIDI out B0 64 0\n 23080 ms  MIDI out B0 120 0\nPASS metronome app: 1611 settings, MIDI, transport and pixel checks; host only"
+    }
+  },
+  "exact_PCM_MIDI_SAVE_export_parity": {
+    "pad": true,
+    "metal": true,
+    "kit": true,
+    "fm": true
+  },
+  "artwork_generators": "checked",
+  "isolated_free_source_scope": true,
+  "companion_included": false,
+  "specialist_products_included": false,
+  "creator_splash_unchanged": true,
+  "original_catalog_unchanged": true,
+  "installed": false,
+  "hardware_qualified": false,
+  "new_release_published": false,
+  "hub_submitted": false,
+  "historical_release": "v0.22.0-dev retained unchanged",
+  "remaining": "Attended exact-build startup/display/SAVE/restart, dense four-track listening/timing, normal mirroring, USB audio and working margins before new release."
+}

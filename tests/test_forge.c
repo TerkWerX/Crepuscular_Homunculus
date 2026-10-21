@@ -31,7 +31,8 @@ static void block(const tk_params_t *params, int32_t *samples)
     expect(guarded[0] == 0x13579BDF && guarded[FORGE_FRAMES * 2u + 1u] == 0x13579BDF,
            "forge render stays inside its buffer");
     for (i = 1u; i <= FORGE_FRAMES * 2u; ++i)
-        expect(guarded[i] >= -24384 && guarded[i] <= 24384, "forge keeps six-voice headroom");
+        expect(guarded[i] >= -(int32_t)(TK_VOICES * TK_VOICE_PCM_BOUND) &&
+               guarded[i] <= (int32_t)(TK_VOICES * TK_VOICE_PCM_BOUND), "forge keeps bounded eight-voice headroom");
     if (samples) memcpy(samples, guarded + 1, FORGE_FRAMES * 2u * sizeof(int32_t));
 }
 
@@ -270,7 +271,7 @@ static void extreme_and_isolation(void)
            !tk_note_is_held(60u, 1u), "kit CC120 preserves matching panel and captured-source hits");
     tk_panic(); block(&NEUTRAL, NULL);
     expect(tk_quiet(), "kit panic releases all independent owners");
-    /* Repeated six-voice mixtures exercise table ends, steals and live changes. */
+    /* Repeated full-pool mixtures exercise table ends, steals and live changes. */
     tk_init(); tk_set_instrument(TK_INSTRUMENT_DRUM_KIT);
     for (i = 0u; i < 240u; ++i) {
         tk_params_t varied;

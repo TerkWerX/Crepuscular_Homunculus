@@ -1,0 +1,52 @@
+{
+  "generator": "tools/make_homunculus_gif.py",
+  "sources": [
+    {
+      "file": "homunculus_A.png",
+      "sha256": "ced94fbfe854a00a835f9dd258572d845148bc3a910e0b4ca0acddd0409af8fe"
+    },
+    {
+      "file": "homunculus_B.png",
+      "sha256": "ef2c53c3e5651541c4cbc71189f7f092017bd22c36f196ca14ca889561a9498b"
+    },
+    {
+      "file": "homunculus_C.png",
+      "sha256": "50badfb221fe66eb1494709cd9cc6f40e21d89badbb80be06c4dca38bd5e4c54"
+    }
+  ],
+  "background": "black",
+  "sequence": [
+    "A",
+    "B",
+    "C",
+    "B"
+  ],
+  "frame_duration_ms": 200,
+  "loop_duration_ms": 800,
+  "loop": "forever",
+  "palette": "shared 256-color median-cut palette from the original full-color source frames; no dithering",
+  "scale": "240px original canvas; 480px nearest-neighbor 2x enlargement",
+  "files": [
+    {
+      "file": "crepuscular-homunculus-bubbling-240.gif",
+      "size": [
+        240,
+        240
+      ],
+      "bytes": 59311,
+      "sha256": "a18354b229a6f0f41d01590469ce4af4f24a955c5b1755b26a1fa4fcabe33f86",
+      "decoded_frames_verified": 4
+    },
+    {
+      "file": "crepuscular-homunculus-bubbling-480.gif",
+      "size": [
+        480,
+        480
+      ],
+      "bytes": 137433,
+      "sha256": "adba53e7210bcde8d7152879c9bdf05d7764cd7dea803ab3996438906c8f0d8f",
+      "decoded_frames_verified": 4
+    }
+  ],
+  "note": "Website artwork only. No logo, title, firmware installation or source-image edits."
+}

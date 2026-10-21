@@ -4,31 +4,45 @@
 
 #include <stdint.h>
 #include "terkinstein_memory.h"
+#include "terkinstein_drums.h"
 
 /* Seed engine, 44100 Hz. Suggested start: {88, 40, 32, 80}.
  * SHADE closes the lowpass; FRACTURE folds each voice; DRIFT spreads the
  * oscillators; BLOOM lengthens attack/release. Every macro is 0..127.
- * Each stereo voice is bounded by 4064; six voices <= 24384 (~2.6 dB headroom).
- * No limiter is needed at this voice count.
+ * Each stereo voice is bounded by 4064; eight voices <= 32512 (~0.07 dB
+ * instrument-only headroom). Per-note gain is unchanged from six voices.
+ * The separate metronome uses saturating addition when its click overlaps.
  * FRACTURE=0 bypasses both drive/folding and saturation after macro smoothing.
  * KIT uses the same four bytes as BODY/WIRE/DECAY/BITE; all 64 is its exact
  * original sound. Its coefficients slew at the same 32-frame control rate.
  * Folded high notes can alias: oversampling is deliberately a later DSP task.
  * Include once, call tk_init before publishing the app's audio-ready flag.
  */
-#define TK_VOICES 6u
+#define TK_VOICES 8u
+#define TK_VOICE_PCM_BOUND 4064u
+#if TK_VOICES * TK_VOICE_PCM_BOUND > 32767u
+#error "Shared voice gain exceeds Q15 mix headroom; review mixer before expanding"
+#endif
 #define TK_SOURCE_SEQUENCE 33u
 #define TK_SOURCE_DRUM 34u
 #define TK_SOURCE_ATMOS 35u
 #define TK_SOURCE_ARP 36u
 #define TK_SOURCE_BASS 37u
 #define TK_SOURCE_LIVE_DRUM 38u /* negotiated USB pads; captured DRUM sound, live ownership */
-#define TK_SOURCES 40u
+#define TK_SOURCE_FIRE0 39u /* four leased live owners, independent of generated tracks */
+#define TK_SOURCE_KEYBOARD0 43u /* two leased captured-track keyboards with independent pedals */
+#define TK_SOURCES 45u
+/* Main changes these only after releasing the corresponding live owner. */
+static volatile uint32_t tk_fire_track[4] = {0u, 1u, 2u, 3u};
+static volatile uint32_t tk_keyboard_track[2] = {1u, 2u};
+/* Optional panel audition of a captured track. Zero retains the original live
+ * path; otherwise this is an existing FM bank, published after panel release. */
+static volatile uint32_t tk_panel_patch_bank;
 #define TK_INSTRUMENT_PAD 0u
 #define TK_INSTRUMENT_METAL 1u
 #define TK_INSTRUMENT_DRUM_KIT 2u
 #define TK_INSTRUMENT_FM 3u
-#define TK_FM_VOICE_LIMIT 4u /* provisional CPU qualification cap inside six total voices */
+#define TK_FM_VOICE_LIMIT 4u /* provisional CPU qualification cap inside eight total voices */
 typedef struct tk_params_t {
     uint8_t shade, fracture, drift, bloom;
 } tk_params_t;
@@ -65,7 +79,8 @@ typedef struct tk_params_t {
  * to generated sequencing. Sources 0..32 retain their original behavior. */
 static uint32_t tk_source_is_live(uint32_t source)
 {
-    return source < TK_SOURCE_SEQUENCE || source == TK_SOURCE_LIVE_DRUM;
+    return source < TK_SOURCE_SEQUENCE || source == TK_SOURCE_LIVE_DRUM ||
+        (source >= TK_SOURCE_FIRE0 && source < TK_SOURCE_KEYBOARD0 + 2u);
 }
 
 typedef struct {
@@ -86,10 +101,12 @@ typedef struct {
     int32_t forge_wire_q8, forge_bite_q8, forge_tone_gain, forge_noise_gain;
     int32_t forge_filter_l, forge_filter_r;
     uint32_t forge_latched;
+    int32_t drum_gain_q15;
+    uint32_t drum_pan;
     int32_t forge_bite_target_q8;
     uint32_t frozen_patch, patch_drift, patch_bloom, patch_attack, patch_release;
     int32_t patch_drift_q8, patch_bloom_q8;
-    uint32_t patch_metal_attack;
+    uint32_t patch_metal_attack, patch_fracture;
     int32_t ghost_gain_q15, ghost_target_q15;
     uint32_t sostenuto_latched;           /* main-owned physical capture */
     volatile uint32_t poly_pressure;     /* main publishes one atomic scalar */
@@ -111,6 +128,12 @@ static int32_t tk_forge_fx_q15;
  * The compact history and all voice color offsets belong to audio only. */
 static volatile uint32_t tk_memory_control;
 static uint32_t tk_memory_seen;
+/* Preset audition clears only live afterimages. Explicit FORGET/panic still
+ * clears every source, including recorded tracks. Main publishes one scalar. */
+static volatile uint32_t tk_live_forget_revision;
+static uint32_t tk_live_forget_seen;
+static volatile uint32_t tk_panel_forget_revision;
+static uint32_t tk_panel_forget_seen;
 static int32_t tk_memory_amount_q8;
 static tk_memory_state_t tk_history;
 /* Main publishes one depth scalar. Audio owns short melody-event pulses and
@@ -137,6 +160,29 @@ static volatile uint32_t tk_source_macro_control[TK_SOURCES];
 /* Main's per-track LFO publishes only SHADE. Audio smooths that independent
  * target alongside the captured source's atomically packed macro word. */
 static volatile uint32_t tk_source_shade_control[TK_SOURCES];
+static volatile uint32_t tk_source_memory_control[TK_SOURCES];
+static uint32_t tk_source_has_patch(uint32_t source)
+{
+    return source >= TK_SOURCE_SEQUENCE ||
+        (!source && (tk_source_patch_timing[0] & 0x80000000u));
+}
+static uint32_t tk_source_instrument(uint32_t source)
+{
+    return tk_source_has_patch(source) ? tk_source_instrument_control[source] : tk_instrument_control;
+}
+static volatile uint32_t tk_drum_mix_control[TK_DRUM_LANES];
+static void tk_set_drum_mix(uint32_t lane, const tk_drum_mix_t *mix)
+{
+    if (lane < TK_DRUM_LANES && mix && mix->level <= 127u && mix->decay <= 127u && mix->tune <= 127u && mix->pan <= 127u)
+        tk_drum_mix_control[lane] = mix->level | ((uint32_t)mix->decay << 8) |
+            ((uint32_t)mix->tune << 16) | ((uint32_t)mix->pan << 24);
+}
+typedef char tk_history_sources_match[(TK_MEMORY_SOURCES == TK_SOURCES) ? 1 : -1];
+static void tk_set_source_memory(uint32_t source, uint32_t amount)
+{
+    if (source >= TK_SOURCE_SEQUENCE && source < TK_SOURCES)
+        tk_source_memory_control[source] = amount > 127u ? 127u : amount;
+}
 
 static void tk_set_instrument(uint32_t mode)
 {
@@ -193,6 +239,7 @@ static void tk_clear_source_patch(uint32_t source)
 {
     if (source >= TK_SOURCE_SEQUENCE && source < TK_SOURCES) {
         tk_source_patch_timing[source] = 0u;
+        tk_source_memory_control[source] = 0u;
         tk_source_macro_control[source] = 0u;
     }
 }
@@ -217,6 +264,8 @@ static void tk_forget_memory(void)
 {
     tk_memory_control += 256u;
 }
+static void tk_forget_live_memory(void) { tk_live_forget_revision++; }
+static void tk_forget_panel_memory(void) { tk_panel_forget_revision++; }
 
 /* One main writer, one atomic word per source: bend[13:0], sustain[14],
  * sostenuto[15], controller-reset revision[31:16]. Audio snapshots at control ticks.
@@ -240,6 +289,7 @@ static int32_t tk_brightness_q8[TK_SOURCES], tk_texture_q8[TK_SOURCES];
 static uint32_t tk_performance_seen[TK_SOURCES], tk_timbre_seen[TK_SOURCES];
 static uint32_t tk_performance_slewing[TK_SOURCES];
 static uint32_t tk_performance_phase;
+static int32_t tk_color_smooth(int32_t current, int32_t target);
 #include "terkinstein_mono.h"
 
 /* Quarter-semitone factors from -2 to +2 semitones, rounded in Q24.
@@ -299,7 +349,11 @@ static void tk_forge_control(tk_voice_t *s)
     uint32_t body = neutral ? 16384u : (uint32_t)(s->frozen_patch ? s->color_shade : tk_macro[0]);
     uint32_t decay = neutral ? 16384u : s->frozen_patch ? s->patch_drift << 8 : (uint32_t)tk_macro[2];
     uint32_t index = body >> 11, fraction = body & 2047u, factor, base;
+    uint32_t mix = tk_drum_mix_control[s->drum_lane], lane_decay = (mix >> 8) & 127u;
+    uint32_t tune = (mix >> 16) & 127u, lane_factor;
     int32_t difference;
+    s->drum_gain_q15 = tk_color_smooth(s->drum_gain_q15, (mix & 127u) << 9);
+    s->drum_pan = mix >> 24;
     if (!s->frozen_patch && !neutral && s->drum_elapsed &&
         tk_instrument_control != TK_INSTRUMENT_DRUM_KIT) s->forge_latched = 1u;
     if (s->forge_latched) {
@@ -309,6 +363,11 @@ static void tk_forge_control(tk_voice_t *s)
     }
     factor = body_factor[index] +
         (((body_factor[index + 1u] - body_factor[index]) * fraction) >> 11);
+    if (tune != 64u) {
+        index = tune >> 3; fraction = (tune & 7u) << 8;
+        lane_factor = body_factor[index] + (((body_factor[index + 1u] - body_factor[index]) * fraction) >> 11);
+        factor = (factor * lane_factor) >> 12;
+    }
     base = (uint32_t)(((uint64_t)tk_drum_pitch[s->drum_lane] * factor) >> 12);
     difference = (int32_t)base - (int32_t)s->base_inc;
     if (s->drum_lane <= 1u || s->drum_lane == 7u || s->drum_lane == 8u)
@@ -321,6 +380,11 @@ static void tk_forge_control(tk_voice_t *s)
     index = decay >> 11; fraction = decay & 2047u;
     s->forge_decay_q8 = decay_factor[index] -
         (((decay_factor[index] - decay_factor[index + 1u]) * fraction) >> 11);
+    if (lane_decay != 64u) {
+        index = lane_decay >> 3; fraction = (lane_decay & 7u) << 8;
+        lane_factor = decay_factor[index] - (((decay_factor[index] - decay_factor[index + 1u]) * fraction) >> 11);
+        s->forge_decay_q8 = (s->forge_decay_q8 * lane_factor) >> 8;
+    }
     s->forge_wire_q8 = neutral ? 0 : (s->frozen_patch ? s->color_fracture : tk_macro[1]) - 16384;
     s->forge_bite_target_q8 = neutral ? 0 :
         (s->frozen_patch ? (int32_t)s->patch_bloom << 8 : tk_macro[3]) - 16384;
@@ -495,15 +559,14 @@ static void tk_start(tk_voice_t *v, uint32_t cmd, uint32_t slot)
     static const uint8_t drum_decay[12] = {
         10u, 10u, 9u, 9u, 8u, 10u, 8u, 10u, 9u, 7u, 10u, 8u
     };
-    uint32_t note = cmd & 127u, patch, timing;
+    uint32_t note = cmd & 127u, patch, timing, amount;
     int32_t shade = tk_macro[0], fracture = tk_macro[1];
     v->base_inc = tk_inc_c9[note % 12u] >> (10u - note / 12u);
     v->level = ((cmd >> 7) & 127u) * 32u;
     v->source = (cmd >> 14) & 63u;
     v->audio_note = note;
-    v->instrument = v->source >= TK_SOURCE_SEQUENCE ?
-        tk_source_instrument_control[v->source] : tk_instrument_control;
-    timing = v->source >= TK_SOURCE_SEQUENCE ? tk_source_patch_timing[v->source] : 0u;
+    v->instrument = tk_source_instrument(v->source);
+    timing = tk_source_has_patch(v->source) ? tk_source_patch_timing[v->source] : 0u;
     v->frozen_patch = !!(timing & 0x80000000u);
     if (v->frozen_patch) {
         uint32_t attack, release, bloom;
@@ -518,29 +581,34 @@ static void tk_start(tk_voice_t *v, uint32_t cmd, uint32_t slot)
         v->patch_attack = ((72u + (128u - bloom) * 10u) * tk_envelope_rate(attack)) >> 8;
         v->patch_release = ((20u + (127u - bloom) * 3u) * tk_envelope_rate(release)) >> 8;
         v->patch_metal_attack = tk_metal_attack_step(attack);
+        v->patch_fracture = (patch >> 8) & 127u;
     } else {
         v->patch_drift = v->patch_bloom = v->patch_attack = v->patch_release = 0u;
         v->patch_drift_q8 = v->patch_bloom_q8 = 0;
         v->patch_metal_attack = 0u;
+        v->patch_fracture = 0u;
         patch = 0u;
     }
     v->remembered = 0;
     v->memory_colored = 0;
     v->memory_shade = v->memory_fracture = 0;
-    if (!v->frozen_patch && v->instrument == TK_INSTRUMENT_PAD &&
-        (tk_memory_control & 255u) &&
+    if (v->frozen_patch) {
+        shade = (int32_t)(v->instrument == TK_INSTRUMENT_PAD ?
+            tk_source_shade_control[v->source] : patch & 127u) << 8;
+        fracture = (int32_t)v->patch_fracture << 8;
+    }
+    v->color_shade = shade; v->color_fracture = fracture;
+    amount = v->frozen_patch ? tk_source_memory_control[v->source] : (tk_memory_control & 255u);
+    if (v->instrument == TK_INSTRUMENT_PAD && amount &&
         tk_memory_pick(&tk_history, note, v->source, &shade, &fracture)) {
-        v->memory_shade = shade - tk_macro[0];
-        v->memory_fracture = fracture - tk_macro[1];
+        v->memory_shade = shade - v->color_shade;
+        v->memory_fracture = fracture - v->color_fracture;
         v->memory_colored = !!(v->memory_shade || v->memory_fracture);
     }
-    v->color_shade = tk_memory_mix_q8(tk_macro[0], tk_macro[0] + v->memory_shade, (uint32_t)tk_memory_amount_q8 >> 8);
-    v->color_fracture = tk_macro[1] ? tk_memory_mix_q8(tk_macro[1], tk_macro[1] + v->memory_fracture, (uint32_t)tk_memory_amount_q8 >> 8) : 0;
-    if (v->frozen_patch) {
-        v->color_shade = (int32_t)(v->instrument == TK_INSTRUMENT_PAD ?
-            tk_source_shade_control[v->source] : (patch & 255u)) << 8;
-        v->color_fracture = (int32_t)((patch >> 8) & 255u) << 8;
-    }
+    if (!v->frozen_patch) amount = (uint32_t)tk_memory_amount_q8 >> 8;
+    v->color_shade = tk_memory_mix_q8(v->color_shade, v->color_shade + v->memory_shade, amount);
+    v->color_fracture = v->color_fracture ? tk_memory_mix_q8(v->color_fracture,
+        v->color_fracture + v->memory_fracture, amount) : 0;
     shade = 127 - (v->color_shade >> 8);
     v->color_alpha = 512 + ((shade * shade) >> 1);
     v->color_drive = 4096 + (v->color_fracture >> 1);
@@ -566,6 +634,8 @@ static void tk_start(tk_voice_t *v, uint32_t cmd, uint32_t slot)
                     ((cmd >> 22) << 21);
     if (!v->drum_noise) v->drum_noise = 1u;
     v->drum_decay = drum_decay[v->drum_lane];
+    v->drum_gain_q15 = (int32_t)(tk_drum_mix_control[v->drum_lane] & 127u) << 9;
+    v->drum_pan = tk_drum_mix_control[v->drum_lane] >> 24;
     v->forge_filter_l = v->forge_filter_r = 0;
     v->forge_latched = 0u;
     if (v->instrument == TK_INSTRUMENT_DRUM_KIT) {
@@ -612,6 +682,14 @@ static void tk_track_macro_control(tk_voice_t *s)
          * Its independent SHADE LFO remains live as before. */
         if (s->instrument == TK_INSTRUMENT_PAD || s->instrument == TK_INSTRUMENT_FM) {
             target_shade = (int32_t)tk_source_shade_control[s->source] << 8;
+            if (s->instrument == TK_INSTRUMENT_PAD && s->memory_colored) {
+                uint32_t amount = tk_source_memory_control[s->source];
+                int32_t fracture = (int32_t)s->patch_fracture << 8;
+                target_shade = tk_memory_mix_q8(target_shade, target_shade + s->memory_shade, amount);
+                s->color_fracture = tk_color_smooth(s->color_fracture, fracture ?
+                    tk_memory_mix_q8(fracture, fracture + s->memory_fracture, amount) : 0);
+                s->color_drive = 4096 + (s->color_fracture >> 1);
+            }
             s->color_shade = tk_color_smooth(s->color_shade, target_shade);
             target_shade = 127 - (s->color_shade >> 8);
             s->color_alpha = 512 + ((target_shade * target_shade) >> 1);
@@ -621,8 +699,17 @@ static void tk_track_macro_control(tk_voice_t *s)
     patch &= 0x7FFFFFFFu;
     target_shade = (int32_t)(s->instrument == TK_INSTRUMENT_PAD || s->instrument == TK_INSTRUMENT_FM ?
         tk_source_shade_control[s->source] : patch & 127u) << 8;
-    s->color_shade = tk_color_smooth(s->color_shade, target_shade);
-    s->color_fracture = tk_color_smooth(s->color_fracture, (int32_t)((patch >> 8) & 127u) << 8);
+    s->patch_fracture = (patch >> 8) & 127u;
+    { int32_t target_fracture = (int32_t)s->patch_fracture << 8;
+      if (s->instrument == TK_INSTRUMENT_PAD && s->memory_colored) {
+          uint32_t amount = tk_source_memory_control[s->source];
+          target_shade = tk_memory_mix_q8(target_shade, target_shade + s->memory_shade, amount);
+          target_fracture = target_fracture ? tk_memory_mix_q8(target_fracture,
+              target_fracture + s->memory_fracture, amount) : 0;
+      }
+      s->color_shade = tk_color_smooth(s->color_shade, target_shade);
+      s->color_fracture = tk_color_smooth(s->color_fracture, target_fracture);
+    }
     s->patch_drift_q8 = tk_color_smooth(s->patch_drift_q8, (int32_t)((patch >> 16) & 127u) << 8);
     s->patch_bloom_q8 = tk_color_smooth(s->patch_bloom_q8, (int32_t)(patch >> 24) << 8);
     s->patch_drift = (uint32_t)s->patch_drift_q8 >> 8;
@@ -673,7 +760,7 @@ static void tk_fm_control_voice(tk_voice_t *s)
     timing=s->frozen_patch ? tk_source_patch_timing[s->source] : tk_envelope_control;
     bloom_scale=tk_envelope_rate(s->frozen_patch?s->patch_bloom:(uint32_t)(tk_macro[3]>>8));
     drift=s->frozen_patch?s->patch_drift:(uint32_t)(tk_macro[2]>>8);
-    refresh=s->source>=TK_SOURCE_SEQUENCE || tk_instrument_control==TK_INSTRUMENT_FM;
+    refresh=s->source>=TK_SOURCE_SEQUENCE || s->frozen_patch || tk_instrument_control==TK_INSTRUMENT_FM;
     if (!tk_fm_tick(&s->fm,s->gate,s->inc_a,refresh,
         (tk_envelope_rate(timing&127u)*bloom_scale)>>8,bloom_scale,
         (tk_envelope_rate((timing>>7)&127u)*bloom_scale)>>8,drift)) s->env=0;
@@ -689,12 +776,15 @@ static uint32_t tk_envelope_rate(uint32_t value)
 static void tk_remember_voice(tk_voice_t *v)
 {
     int32_t shade, fracture;
-    uint32_t amount = (uint32_t)tk_memory_amount_q8 >> 8;
-    if (v->instrument != TK_INSTRUMENT_PAD || v->frozen_patch || v->remembered || !v->env) return;
+    uint32_t amount = v->frozen_patch ? tk_source_memory_control[v->source] : (uint32_t)tk_memory_amount_q8 >> 8;
+    int32_t base_shade = v->frozen_patch ? (int32_t)tk_source_shade_control[v->source] << 8 : tk_macro[0];
+    int32_t base_fracture = v->frozen_patch ? (int32_t)v->patch_fracture << 8 : tk_macro[1];
+    if (v->instrument != TK_INSTRUMENT_PAD || v->remembered || !v->env) return;
+    if (v->frozen_patch && !amount) return; /* disabled tracks cannot evict live history */
     /* Derive from current macros/offsets, not a stale color coefficient after
      * FORGET. Mature envelopes leave a small darkness/corrosion imprint. */
-    shade = tk_memory_mix_q8(tk_macro[0], tk_macro[0] + v->memory_shade, amount);
-    fracture = tk_macro[1] ? tk_memory_mix_q8(tk_macro[1], tk_macro[1] + v->memory_fracture, amount) : 0;
+    shade = tk_memory_mix_q8(base_shade, base_shade + v->memory_shade, amount);
+    fracture = base_fracture ? tk_memory_mix_q8(base_fracture, base_fracture + v->memory_fracture, amount) : 0;
     tk_memory_imprint_q8(shade, fracture, (uint32_t)v->env, &shade, &fracture);
     tk_memory_remember(&tk_history, v->audio_note, v->source, shade, fracture);
     v->remembered = 1;
@@ -829,6 +919,13 @@ static void tk_control(const tk_params_t *p)
         }
         tk_pitch(s, v);
         if (s->frozen_patch) {
+            if (s->instrument == TK_INSTRUMENT_PAD && s->memory_colored) {
+                s->memory_shade = tk_memory_decay_q8(s->memory_shade);
+                s->memory_fracture = tk_memory_decay_q8(s->memory_fracture);
+                if (!s->memory_shade && !s->memory_fracture &&
+                    s->color_shade == (int32_t)tk_source_shade_control[s->source] << 8 &&
+                    s->color_fracture == (int32_t)s->patch_fracture << 8) s->memory_colored = 0u;
+            }
             tk_voice_performance(s);
             tk_fm_control_voice(s);
             continue;
@@ -859,6 +956,8 @@ static void tk_control(const tk_params_t *p)
 static void tk_init(void)
 {
     uint32_t v;
+    tk_panel_patch_bank = 0u;
+    tk_panel_forget_seen = tk_panel_forget_revision = 0u;
     tk_fm_init();
     tk_mono_init();
     for (v = 0; v < TK_VOICES; ++v) {
@@ -881,11 +980,13 @@ static void tk_init(void)
         s->forge_tone_gain = s->forge_noise_gain = 4096;
         s->forge_filter_l = s->forge_filter_r = 0;
         s->forge_latched = 0u;
+        s->drum_gain_q15 = 32768; s->drum_pan = 64u;
         s->forge_bite_target_q8 = 0;
         s->frozen_patch = s->patch_drift = s->patch_bloom = 0;
         s->patch_drift_q8 = s->patch_bloom_q8 = 0;
         s->patch_attack = s->patch_release = 0;
         s->patch_metal_attack = 0u;
+        s->patch_fracture = 0u;
         s->ghost_gain_q15 = s->ghost_target_q15 = 32768;
         s->sostenuto_latched = s->poly_pressure = 0u;
         s->pressure_q8 = 0;
@@ -894,6 +995,7 @@ static void tk_init(void)
     }
     for (v = 0; v < TK_VOICES; ++v)
         tk_ghost_pulse[v].ticks = tk_ghost_pulse[v].pitch = 0u;
+    for (v = 0; v < TK_DRUM_LANES; v++) tk_drum_mix_control[v] = 0x40404040u;
     for (v = 0; v < TK_SOURCES; ++v) {
         tk_source_control[v] = tk_source_seen[v] = TK_BEND_CENTER;
         tk_bend_target[v] = tk_bend_current[v] = TK_PITCH_ONE;
@@ -910,10 +1012,12 @@ static void tk_init(void)
         tk_source_patch_word[v] = tk_source_patch_timing[v] = 0u;
         tk_source_macro_control[v] = 0u;
         tk_source_shade_control[v] = 0u;
+        tk_source_memory_control[v] = 0u;
     }
     tk_age = tk_control_phase = tk_lfo = 0;
     tk_performance_phase = 0u;
     tk_memory_control = tk_memory_seen = 0;
+    tk_live_forget_revision = tk_live_forget_seen = 0;
     tk_ghost_control = 0;
     tk_instrument_control = TK_INSTRUMENT_PAD;
     tk_fx_control = 1u;
@@ -966,7 +1070,7 @@ static int tk_note_on_raw(uint32_t note, uint32_t vel, uint32_t source)
     if (note > 127u || source >= TK_SOURCES) return 0;
     if (!vel) { tk_note_off_raw(note, source); return 0; }
     if (vel > 127u) vel = 127u;
-    instrument=source>=TK_SOURCE_SEQUENCE?tk_source_instrument_control[source]:tk_instrument_control;
+    instrument=tk_source_instrument(source);
     limit=instrument==TK_INSTRUMENT_FM && tk_fm_voice_count()>=TK_FM_VOICE_LIMIT;
     for (v = 0; v < TK_VOICES; ++v) {
         uint32_t c = tk_voice[v].command;
@@ -1387,6 +1491,33 @@ static void tk_render(int32_t *out, uint32_t frames, const tk_params_t *p)
     uint32_t v, i;
     if (!out || !frames) return;
     if (!p) p = &defaults;
+    if (tk_panel_forget_seen != tk_panel_forget_revision) {
+        uint32_t read, write = 0u;
+        tk_panel_forget_seen = tk_panel_forget_revision;
+        for (read = 0; read < tk_history.count; read++)
+            if (tk_history.cell[read].source) tk_history.cell[write++] = tk_history.cell[read];
+        tk_history.count = write;
+        for (v = 0; v < TK_VOICES; v++) if (!tk_voice[v].source) {
+            tk_voice[v].memory_shade = tk_voice[v].memory_fracture = 0;
+            tk_voice[v].remembered = 1u;
+        }
+    }
+    if (tk_live_forget_seen != tk_live_forget_revision) {
+        uint32_t read, write = 0u;
+        tk_live_forget_seen = tk_live_forget_revision;
+        for (read = 0; read < tk_history.count; read++) {
+            uint32_t source = tk_history.cell[read].source;
+            if (source == TK_SOURCE_SEQUENCE || source == TK_SOURCE_DRUM ||
+                source == TK_SOURCE_ATMOS || source == TK_SOURCE_BASS || source == TK_SOURCE_LIVE_DRUM ||
+                (source >= TK_SOURCE_FIRE0 && source < TK_SOURCE_KEYBOARD0 + 2u))
+                tk_history.cell[write++] = tk_history.cell[read];
+        }
+        tk_history.count = write;
+        for (v = 0; v < TK_VOICES; v++) if (!tk_voice[v].frozen_patch) {
+            tk_voice[v].memory_shade = tk_voice[v].memory_fracture = 0;
+            tk_voice[v].remembered = 1;
+        }
+    }
     {
         uint32_t control = tk_memory_control;
         if ((control & ~255u) != (tk_memory_seen & ~255u)) {
@@ -1415,9 +1546,7 @@ static void tk_render(int32_t *out, uint32_t frames, const tk_params_t *p)
         s->seen = cmd;
         if (cmd & TK_GATE) {
             uint32_t source = (cmd >> 14) & 63u;
-            if (source <= TK_SOURCE_SEQUENCE &&
-                (source == TK_SOURCE_SEQUENCE ? tk_source_instrument_control[source] :
-                    tk_instrument_control) != TK_INSTRUMENT_DRUM_KIT)
+            if (source <= TK_SOURCE_SEQUENCE && tk_source_instrument(source) != TK_INSTRUMENT_DRUM_KIT)
                 tk_ghost_trigger(cmd & 127u);
             if (s->env) {
                 s->pending = cmd;
@@ -1478,10 +1607,20 @@ static void tk_render(int32_t *out, uint32_t frames, const tk_params_t *p)
             }
             if (s->instrument == TK_INSTRUMENT_FM) {
                 a=tk_fm_wave(&s->fm);
-                l=r=tk_fold_color(a,s->performance_drive,s->performance_fracture);
+                l=tk_fold_color(a,s->performance_drive,s->performance_fracture);
                 s->filter_l+=((l-s->filter_l)*s->performance_alpha)>>15;
-                s->filter_r+=((r-s->filter_r)*s->performance_alpha)>>15;
-                l=s->filter_l; r=s->filter_r;
+                /* FM starts both filters at zero and feeds them identical
+                 * samples/coefficient updates. Keep its stereo state equal,
+                 * and perform the identical output gain chain only once. */
+                s->filter_r=s->filter_l;
+                l=(s->filter_l*(s->env>>8))>>15;
+                if (s->source==TK_SOURCE_ATMOS && s->ghost_gain_q15<32768)
+                    l=(l*s->ghost_gain_q15)>>15;
+                if (s->performance_gain_q15!=32768)
+                    l=(l*s->performance_gain_q15)>>15;
+                l=(l*(int32_t)s->level)>>15;
+                out[2u*i]+=l;out[2u*i+1u]+=l;
+                continue;
             } else if (s->instrument == TK_INSTRUMENT_DRUM_KIT) {
                 tk_drum_wave(s, &l, &r);
             } else if (s->instrument == TK_INSTRUMENT_METAL) {
@@ -1511,6 +1650,17 @@ static void tk_render(int32_t *out, uint32_t frames, const tk_params_t *p)
             env = s->env >> 8;
             l = (l * env) >> 15;
             r = (r * env) >> 15;
+            if (s->instrument == TK_INSTRUMENT_DRUM_KIT) {
+                /* Boost each drum up to ~2x, saturating BEFORE its original
+                 * velocity gain so eight voices retain the proven mix bound. */
+                if (s->drum_gain_q15 != 32768) {
+                    l = (l * s->drum_gain_q15) >> 15; r = (r * s->drum_gain_q15) >> 15;
+                    if (l > 32760) l = 32760; else if (l < -32760) l = -32760;
+                    if (r > 32760) r = 32760; else if (r < -32760) r = -32760;
+                }
+                if (s->drum_pan < 64u) r = (r * (int32_t)s->drum_pan) >> 6;
+                else if (s->drum_pan > 64u) l = (l * ((int32_t)(127u - s->drum_pan) * 520)) >> 15;
+            }
             if (s->source == TK_SOURCE_ATMOS && s->ghost_gain_q15 < 32768) {
                 l = (l * s->ghost_gain_q15) >> 15;
                 r = (r * s->ghost_gain_q15) >> 15;

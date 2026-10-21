@@ -2,7 +2,7 @@
 /* TERKINSTEIN's original six-operator phase-modulation engine. This is not a
  * DX7 implementation. Operator 1 is op[0]; higher numbered operators feed
  * lower numbered ones. Eight bounded acyclic routings share the existing
- * six voice slots. All control, phase, envelope and sample arithmetic is
+ * shared voice pool. All control, phase, envelope and sample arithmetic is
  * integer; main only publishes guarded atomic-word patch mailboxes. */
 #ifndef TERKINSTEIN_FM_H
 #define TERKINSTEIN_FM_H
@@ -101,6 +101,12 @@ static void tk_fm_factory(tk_fm_patch_t *p, uint32_t index)
 }
 static uint32_t tk_fm_bank(uint32_t source)
 {
+    static const uint8_t track_bank[4] = {2u, 1u, 3u, 5u};
+    if (!source && tk_panel_patch_bank) return tk_panel_patch_bank;
+    if (source >= TK_SOURCE_FIRE0 && source < TK_SOURCE_FIRE0 + 4u)
+        return track_bank[tk_fire_track[source - TK_SOURCE_FIRE0]];
+    if (source >= TK_SOURCE_KEYBOARD0 && source < TK_SOURCE_KEYBOARD0 + 2u)
+        return track_bank[tk_keyboard_track[source - TK_SOURCE_KEYBOARD0]];
     if (source==TK_SOURCE_LIVE_DRUM) return TK_SOURCE_DRUM-32u;
     return source>=33u && source<=37u ? source-32u : 0u;
 }
@@ -270,17 +276,22 @@ static int32_t tk_fm_wave(tk_fm_voice_t *s)
         else for (i=0; i<6u; ++i) s->gain[i]+=s->delta[i];
         --s->remaining;
     }
-    for (i=6u; i-- >0u;) {
-        int32_t modulation=0;
-        uint32_t phase;
-        for (j=0; j<s->input_count[i]; ++j) modulation+=output[s->input[i][j]];
-        if (i==5u && s->patch.feedback)
-            modulation+=(s->feedback_sample*(int32_t)s->patch.feedback)>>7;
-        s->phase[i]+=s->increment[i];
-        /* Unsigned phase wrapping is intentional, including negative PM. */
-        phase=s->phase[i]+((uint32_t)modulation<<16);
-        output[i]=(tk_fm_sine(phase)*s->gain[i])>>15;
-    }
+    /* Constant operator indices avoid the small target's per-sample outer
+     * loop and feedback tests for operators that cannot own feedback.
+     * Preserve the exact descending evaluation and integer summation order. */
+#define TK_FM_SAMPLE(OP) do { \
+        int32_t modulation=0; uint32_t phase; \
+        for (j=0; j<s->input_count[OP]; ++j) modulation+=output[s->input[OP][j]]; \
+        if ((OP)==5u && s->patch.feedback) \
+            modulation+=(s->feedback_sample*(int32_t)s->patch.feedback)>>7; \
+        s->phase[OP]+=s->increment[OP]; \
+        phase=s->phase[OP]+((uint32_t)modulation<<16); \
+        output[OP]=(tk_fm_sine(phase)*s->gain[OP])>>15; \
+    } while (0)
+    TK_FM_SAMPLE(5u); TK_FM_SAMPLE(4u); TK_FM_SAMPLE(3u);
+    TK_FM_SAMPLE(2u); TK_FM_SAMPLE(1u); TK_FM_SAMPLE(0u);
+#undef TK_FM_SAMPLE
+    /* Unsigned phase wrapping above includes negative phase modulation. */
     s->feedback_sample=output[5];
     for (i=0; i<s->carrier_count; ++i) sum+=output[s->carrier[i]];
     return (sum*s->carrier_gain)>>15;

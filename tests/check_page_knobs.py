@@ -63,7 +63,6 @@ def main() -> None:
         ("envelope-pad", 0, 4, (22, 23, 11)),
         ("envelope-fm", 32, 4, (22, 23, 11)),
         ("envelope-metal", 11, 4, (22, 11, 10)),
-        ("envelope-kit", 30, 4, (10, 8, 9, 11)),
         ("lfo-pad", 0, 5, (17, 18, 19, 8)),
         ("lfo-metal", 11, 5, (17, 18, 19, 8)),
         ("lfo-fm", 32, 5, (17, 18, 19, 8)),
@@ -89,6 +88,20 @@ def main() -> None:
         preview(picture)
         reloaded = run(label + "-reload", ["100 btn 8", "1000 btn 9"], store=picture[2])
         check(reloaded[2] == picture[2], f"{label} failed fresh-process SAVE/reload")
+
+    # KIT ENV now edits the selected drum's persistent mix lane, rather than
+    # the old whole-kit BODY/WIRE/DECAY/BITE aliases. Query the real lane.
+    kit_setup = ["100 btn 8", sysex(150,0x16,1,(30,)), "200 btn 4"]
+    kit_setup += [sysex(250+field*50,0x31,30+field,(0,field,64)) for field in range(4)]
+    kit_setup += [sysex(800,0x30,3,(0,)), sysex(850,2,4)]
+    for knob in range(4):
+        result = run(f"envelope-kit-lane-k{knob+1}", kit_setup + [f"1000 enc {knob+2} 7",
+                     sysex(1300,0x30,5,(0,)), sysex(1400,2,6), "1600 btn 9"], fps=2)
+        replies = state(result)
+        expected = bytearray(replies[3]); expected[2+knob] = 71
+        check(replies[5] == expected, "KIT ENV missed the selected drum's level/decay/tune/pan field")
+        check(replies[4][10:30] == replies[6][10:30], "KIT ENV altered a hidden live macro or captured preset")
+        preview(result)
 
     # Unavailable controls explicitly consume turns; they do not fall through
     # to hidden sound macros. Read-only diagnostics do the same for all sounds.

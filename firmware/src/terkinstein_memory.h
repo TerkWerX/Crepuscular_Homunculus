@@ -15,6 +15,7 @@
  * Four six-byte cells plus a count use 28 bytes on the target.
  */
 #define TK_MEMORY_CELLS 4u
+#define TK_MEMORY_SOURCES 45u
 #define TK_MEMORY_MAX_Q8 (127 * 256)
 #define TK_MEMORY_ENV_FULL (1u << 23)
 
@@ -49,7 +50,7 @@ static void tk_memory_remember(tk_memory_state_t *state, uint32_t note,
                                int32_t fracture_q8)
 {
     uint32_t i, discard;
-    if (!state || note > 127u || source > 33u) return;
+    if (!state || note > 127u || source >= TK_MEMORY_SOURCES) return;
     discard = state->count;
     for (i = 0; i < state->count; ++i) {
         if (state->cell[i].note == note && state->cell[i].source == source) {
@@ -79,7 +80,7 @@ static int tk_memory_pick(const tk_memory_state_t *state, uint32_t note,
                           int32_t *fracture_q8)
 {
     uint32_t i, best = TK_MEMORY_CELLS, best_distance = 128u;
-    if (!state || !shade_q8 || !fracture_q8 || note > 127u || source > 33u)
+    if (!state || !shade_q8 || !fracture_q8 || note > 127u || source >= TK_MEMORY_SOURCES)
         return 0;
     for (i = 0; i < state->count; ++i) {
         uint32_t old_note = state->cell[i].note;
