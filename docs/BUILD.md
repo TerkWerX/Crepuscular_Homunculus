@@ -22,4 +22,13 @@ python3 -m pip install pillow
 python3 tools/preview.py --test
 ```
 
+The focused sixteen-group firmware suite is `python3 tools/check_host.py`.
+Use `--asan` with an AddressSanitizer-capable compiler (MSVC, clang or gcc).
+On Windows, run from the Visual Studio developer environment or pass `--cc`.
+The runner uses fake files only; it never opens MIDI or an audio device.
+
+Check authored assets with `python3 tools/generate_presets.py --check`,
+`python3 tools/make_homunculus.py --check` and
+`python3 tools/make_homunculus_gif.py --check`. Pillow is required for images.
+
 `tests/` contains host C checks and timed control scripts. A host preview proves code paths, not device timing or MIDI/USB behavior. The splash image and preset catalog are in `assets/`; generated C headers in `firmware/gen/` are tracked so the source is complete.

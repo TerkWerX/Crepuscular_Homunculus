@@ -14,8 +14,9 @@
 770 keys 0
 1000 btn 13
 1100 enc 0 1
-# The 36-slot bank wraps from KIT (30) to IRON PSALM (11) in 17 turns.
-1200 enc 6 17
+# Select the intended legacy METAL slot explicitly with the current 64-slot bank.
+# KIT (30) to IRON PSALM (11) is nineteen turns down, without wrapping.
+1200 enc 6 -19
 1300 btn 13
 1460 keys 0x80000
 1540 keys 0

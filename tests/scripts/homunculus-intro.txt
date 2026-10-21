@@ -1,0 +1,9 @@
+# Logo, looping bubbling intro, physical HOME dismissal, then reactive lightning.
+2200 btn 8
+2500 midi 0x90 48 105
+2500 midi 0x90 51 99
+2500 midi 0x90 55 113
+5000 midi 0x80 48 0
+5000 midi 0x80 51 0
+5000 midi 0x80 55 0
+9000 end

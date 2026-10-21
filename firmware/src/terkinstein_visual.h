@@ -15,7 +15,7 @@
 #define TK_VIS_BARRIER() ((void)0)
 #endif
 #define TK_VIS_SAMPLES 64u
-#define TK_VIS_VOICES 6u
+#define TK_VIS_VOICES 8u
 typedef struct {
     int16_t mono[TK_VIS_SAMPLES], side[TK_VIS_SAMPLES];
     /* pitch[7:0], envelope[15:8], source[23:16], sounding gate[24]. */

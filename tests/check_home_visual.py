@@ -94,8 +94,8 @@ def peak(prefix: Path, begin: int, end: int) -> int:
 
 def settings(path: Path) -> bytes:
     blob = path.read_bytes()
-    assert len(blob) == 3704 and struct.unpack_from("<II", blob) == (3700, 11), (
-        "HOME changed the current schema-11 settings layout")
+    assert len(blob) == 3704 and struct.unpack_from("<II", blob) == (3700, 12), (
+        "HOME changed the current schema-12 settings layout")
     return blob
 
 

@@ -22,6 +22,8 @@ enum { BTN_OCT_DOWN = 0, BTN_OCT_UP = 1, BTN_FX = 2, BTN_SEL = 3, BTN_ENV = 4, B
        BTN_GLO = 7, BTN_HOME = 8, BTN_SAVE = 9, BTN_ARP = 10, BTN_SEQ = 11, BTN_PLAY = 12, BTN_REC = 13 };
 enum { ENC_SELECT = 0, ENC_ALGORITHM = 1, ENC_KNOB1 = 2, ENC_KNOB2 = 3, ENC_KNOB3 = 4, ENC_KNOB4 = 5, ENC_PRESETS = 6 };
 #define KEY_LED(k) (14u + (k))
+#include <stdint.h>
+#include "terkinstein_store.h"
 
 #ifdef TERKINSTEIN_HOST
 #include "../../tests/host.c"                  /* on a computer: a fake FM-1 (tests/host.c) */
@@ -77,9 +79,10 @@ static inline void irq_restore(uint32_t flags);
 #include "midi_uart.c"
 #endif
 
-/* ---- flash: read anywhere; erase / program only the update's staging area and the settings sector */
+/* ---- flash: read anywhere; writes limited to staging, legacy settings and
+ * the bounded song journal inside the inherited DATA region. */
 #define SETTINGS_AT 0x000FC000u                 /* one 4 KiB sector of Felucca's globals area */
-#define FL_RANGE_OK(off, n) (FL_IN(off, n, FL_OTA_LO, FL_OTA_HI) || FL_IN(off, n, SETTINGS_AT, SETTINGS_AT + 0x1000u))
+#define FL_RANGE_OK(off, n) (FL_IN(off, n, FL_OTA_LO, FL_OTA_HI) || FL_IN(off, n, SETTINGS_AT, SETTINGS_AT + 0x1000u) || FL_IN(off, n, TK_STORE_BASE, TK_STORE_END))
 #include "fm1_flash.h"
 static uint8_t flash_ok;
 static int st_read(uint32_t off, void *dst, uint32_t n)
@@ -182,6 +185,29 @@ static int settings_save(const void *p, uint32_t n)   /* p in RAM, n <= 3840; un
     if ((rc = fl_write(SETTINGS_AT + sizeof h, p, n)) != 0)
         return rc;
     return fl_write(SETTINGS_AT, (const uint8_t *)h, sizeof h);   /* the header last: a cut save stays invalid */
+}
+static int tk_store_flash_read(uint32_t off, void *p, uint32_t n)
+{
+    if (!flash_ok || !FL_IN(off, n, TK_STORE_BASE, TK_STORE_END)) return -1;
+    return st_read(off, p, n);
+}
+static int tk_store_flash_write(uint32_t off, const uint8_t *p, uint32_t n)
+{
+    if (!flash_ok || !FL_IN(off, n, TK_STORE_BASE, TK_STORE_END)) return -1;
+    return fl_write(off, p, n);
+}
+static int tk_store_flash_erase(uint32_t off)
+{
+    uint32_t took;
+    if (!flash_ok || (off & 0xFFFu) || !FL_IN(off, 0x1000u, TK_STORE_BASE, TK_STORE_END)) return -1;
+    return fl_erase4k(off, &took);
+}
+static void tk_store_idle(void)
+{
+    /* Keep USB and the watchdog alive without entering a concurrent updater
+     * or processing note/control commands while the snapshot is committed. */
+    fm1_wdt_feed();
+    usb_retry(fm1_ms);
 }
 
 /* ---- MIDI input: USB cable 0 = port 0, rear TRS = port 1; fair when both have work */
@@ -315,11 +341,19 @@ void fm1_alnk0_irq(void)                       /* via isr_alnk0 (hal/fm1_isr.S) 
     in_audio = 0;
 }
 extern void isr_alnk0(void);
+static uint32_t master_activity_revision;
+static int platform_master_activity(void)
+{
+    static uint32_t seen;
+    int changed = seen != master_activity_revision; seen = master_activity_revision; return changed;
+}
 
 /* ---- the main loop's duties: watchdog, USB, the installer's update request, the MASTER knob */
 static void platform_poll(void)
 {
     static int32_t knob_avg = 512 * 16;
+    static uint32_t master_last;
+    static uint8_t master_seen;
     int32_t a;
     fm1_wdt_feed();
     usb_retry(fm1_ms);
@@ -344,6 +378,10 @@ static void platform_poll(void)
         uint32_t k10;
         knob_avg += (a * 16 - knob_avg) / 8;
         k10 = (uint32_t)(knob_avg / 16);
+        if (!master_seen) { master_last = k10; master_seen = 1u; }
+        else if ((k10 > master_last ? k10 - master_last : master_last - k10) >= 6u) {
+            master_last = k10; master_activity_revision++;
+        }
         master_q12 = (int32_t)((k10 * k10) >> 8);
     }
 }

@@ -94,7 +94,7 @@ def main():
             check(raised[2][offset] == 127, f"{instrument} FX knob did not reach its existing field's upper bound")
             check(lowered[2][offset] == 0, f"{instrument} FX knob did not reach its existing field's lower bound")
         for edited in (raised, lowered):
-            check(struct.unpack_from("<II", edited[2]) == (3700, 11), "FX changed the current save payload/schema")
+            check(struct.unpack_from("<II", edited[2]) == (3700, 12), "FX changed the current save payload/schema")
             check(edited[2][24:CAPTURED_END] == original[2][24:CAPTURED_END], "Live FX edit changed patterns or captured track patches")
             check(edited[2][TRACK_FM_AT:GRAFT_FM_AT] == original[2][TRACK_FM_AT:GRAFT_FM_AT], "Live FX edit changed captured FM")
             check(edited[2][14] == 1, "Edited corrosion/BITE failed to enable its existing bypass flag")

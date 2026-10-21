@@ -18,6 +18,23 @@
 #define TK_ARP_OUTSIDE_IN 3u
 #define TK_ARP_RANDOM 4u
 #define TK_ARP_LAST_MODE TK_ARP_RANDOM
+/* Musical durations on the fixed sixteenth-note grid. A dot means dotted;
+ * 255 is the existing exact four-whole-note/64-step sentinel. */
+static const uint8_t TK_NOTE_VALUES[] = {0,2,4,6,8,12,16,24,32,48,64,96,128,192,255};
+static const char *const TK_NOTE_VALUE_NAMES[] = {
+    "PULSE", "1/32", "1/16", "1/16.", "1/8", "1/8.", "1/4", "1/4.",
+    "1/2", "1/2.", "WHOLE", "WHOLE.", "2 WHOLE", "3 WHOLE", "4 WHOLE"
+};
+#define TK_NOTE_VALUE_COUNT (sizeof TK_NOTE_VALUES / sizeof TK_NOTE_VALUES[0])
+static uint32_t tk_note_value_index(uint32_t value)
+{
+    uint32_t i, pick = 0u, best = 256u;
+    for (i = 0; i < TK_NOTE_VALUE_COUNT; i++) {
+        uint32_t distance = value > TK_NOTE_VALUES[i] ? value - TK_NOTE_VALUES[i] : TK_NOTE_VALUES[i] - value;
+        if (distance < best) { best = distance; pick = i; }
+    }
+    return pick;
+}
 
 typedef struct {
     uint8_t pitch, velocity;

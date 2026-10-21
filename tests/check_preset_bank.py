@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import array
 import hashlib
-import json
 from pathlib import Path
 import subprocess
 import sys
@@ -29,11 +28,8 @@ import wave
 from PIL import Image
 from check_external_midi import Panel
 
-CATALOG = json.loads((Path(__file__).resolve().parents[1] /
-                      "assets/presets/terkinstein-presets.json").read_text(encoding="utf-8"))
-PRESET_NAMES = tuple(preset["name"] for preset in CATALOG["presets"])
-PRESET_INSTRUMENTS = tuple(preset["instrument"] for preset in CATALOG["presets"])
-KIT = 2
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+from preset_catalog import PRESET_NAMES, PRESET_INSTRUMENTS, KIT
 
 
 BANK_SIZE = 64
@@ -109,9 +105,9 @@ def check_program_changes(executable: Path, output_dir: Path) -> None:
         for slot in range(BANK_SIZE):
             expected = panel.run(f"encoder-{slot}",
                 f"10 btn 8\n30 enc 6 {slot}\n400 btn 9\n1000 end\n")[2]
-            assert expected is not None and struct.unpack_from("<II", expected) == (3700, 11)
+            assert expected is not None and struct.unpack_from("<II", expected) == (3700, 12)
             assert panel.run(f"reload-{slot}", "10 btn 8\n400 btn 9\n1000 end\n",
-                             store=expected)[2] == expected, (slot, "schema11 factory round trip")
+                             store=expected)[2] == expected, (slot, "schema12 factory round trip")
             for port in ("midi", "din"):
                 # Invalid values after the legal change cannot replace it.
                 events = "".join(f"{100 + invalid} {port} 0xC0 {invalid} 0\n"
@@ -134,7 +130,7 @@ def check_program_changes(executable: Path, output_dir: Path) -> None:
         assert panel.run("edited-fm-roundtrip", "10 btn 8\n400 btn 9\n1000 end\n",
                          store=bytes(edited))[2] == bytes(edited), "saved FM edits were replaced by factories"
     print("MIDI Program Change: USB/rear indices 0–63 match encoder factories; 64–127 ignored")
-    print("SAVE: all64 schema11 factory records and nonfactory six-bank FM fields round trip unchanged")
+    print("SAVE: all64 schema12 factory records and nonfactory six-bank FM fields round trip unchanged")
 
 
 def main() -> None:

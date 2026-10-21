@@ -8,7 +8,7 @@ Stop playback, release keys and pedals, press the FM-1's physical **SAVE**, and 
 
 ## Install TERKINSTEIN
 
-Download the `.fwsc` attached to the matching [GitHub Release](https://github.com/TerkWerX/FM1-TERKINSTEIN-Firmware/releases). On a computer, connect the FM-1 by a USB data cable, close other apps that have its MIDI ports open, then use the browser installer on [TERKINSTEIN.COM](https://terkinstein.com/) when that page is published. It requires a browser with Web MIDI and SysEx access, typically desktop Chrome or Edge, on HTTPS. The page checks the package and FM-1 identity before asking you to start.
+Download the `.fwsc` attached to the matching [GitHub Release](https://github.com/TerkWerX/Crepuscular_Homunculus/releases). On a computer, connect the FM-1 by a USB data cable, close other apps that have its MIDI ports open, then use the browser installer on [TERKINSTEIN.COM](https://terkinstein.com/) when that page is published. It requires a browser with Web MIDI and SysEx access, typically desktop Chrome or Edge, on HTTPS. The page checks the package and FM-1 identity before asking you to start.
 
 You can also use the included Python installer:
 

@@ -1,9 +1,18 @@
-# Audio performance review
+# Audio performance scope
 
-The current 0.22 build is deliberately conservative. It has six shared voices; up to four may be six-operator FM voices at once. FM routing is cached per voice when the algorithm changes, operator envelopes and other slow controls advance every 32 frames, and silent voices are skipped by the per-sample renderer. Screen drawing, USB commands and flash saves do not enter the synthesis callback.
+Crepuscular Homunculus0.26.10-dev uses eight shared voices, with at most four
+six-operator FM voices. Routing is cached; slower controls advance in bounded
+blocks and silent voices skip per-sample work. Display, USB and flash stay out
+of the synthesis callback.
 
-On one FM-1, the owner reported **MAX RENDER 3072 µs, LATE BLOCKS 0** while stress-testing CRUCIBLE (preset 34) with layered playback. The measured app interval is about 5805 µs. This establishes useful headroom for that session, not a worst-case benchmark of every preset and controller combination.
+The 256-frame interval at44.1kHz is about5805us. GLO times render, metronome and
+the optional visual tap. Later MASTER processing, USB ring copies/48kHz FIR,
+DAC work and nested interrupts are outside that timer. MAX/LATE accumulate
+since boot, so record workload and boot context. Idle results do not qualify
+loaded playback. Host tests do not measure JieLi cycles or stack high-water.
 
-GLO's timer begins just before `tk_render` and ends after click mixing and the optional sound-to-visual capture. The platform's later MASTER, USB-audio ring copy or 48 kHz FIR resampling, DAC output and nested USB/timer interrupts are outside that timed section. Thus a clean GLO result alone cannot rule out USB-audio underruns, host monitoring delay or an external audio-routing crackle. The Windows “Listen to this device” route has already produced audible latency independent of FM-1 synthesis.
-
-The remaining qualification run should record GLO values and USB audio stability at 44.1 and 48 kHz while four tracks, a full CRUCIBLE chord, metronome and HOME animation are active. A host build measures correctness and relative changes, not JieLi target cycles. Any DSP optimization should be compared against deterministic PCM hashes and then device timing and listening; there is no unverified audio rewrite in this release.
+Historical0.22 CRUCIBLE/layered playback showed MAX3072us/LATE0. It is not a
+measurement of this0.26.10-dev build. Repeat representative four-track/dense
+playing with metronome, HOME animation, normal mirroring and USB audio44.1/48kHz
+before a new release, recording clean sound, responsiveness and working margins.
+See TESTING.md. No demanding DSP was introduced by this source-only export.

@@ -18,7 +18,7 @@ static void block(int32_t *out)
     samples[0]=samples[513]=0x13579BDF;memset(samples+1,0,512u*sizeof(int32_t));
     tk_render(samples+1,256u,&LIVE);
     expect(samples[0]==0x13579BDF&&samples[513]==0x13579BDF,"track edits preserve render bounds");
-    for(i=1;i<513;i++)expect(samples[i]>=-24384&&samples[i]<=24384,"track edits preserve six-voice output headroom");
+    for(i=1;i<513;i++)expect(samples[i]>=-(int32_t)(TK_VOICES*TK_VOICE_PCM_BOUND)&&samples[i]<=(int32_t)(TK_VOICES*TK_VOICE_PCM_BOUND),"track edits preserve bounded eight-voice output headroom");
     if(out)memcpy(out,samples+1,512u*sizeof(int32_t));
 }
 static void setup(uint32_t instrument)

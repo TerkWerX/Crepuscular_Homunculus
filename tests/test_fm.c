@@ -19,7 +19,7 @@ static uint32_t render(uint32_t blocks,const tk_params_t *p)
         tk_render(pcm+1,256u,p);
         expect(pcm[0]==0x12345678 && pcm[513]==0x12345678,"FM respects render buffer bounds");
         for (i=1; i<513u; ++i) {
-            expect(pcm[i]>=-24384 && pcm[i]<=24384,"six FM voices retain original output ceiling");
+            expect(pcm[i]>=-(int32_t)(TK_VOICES*TK_VOICE_PCM_BOUND) && pcm[i]<=(int32_t)(TK_VOICES*TK_VOICE_PCM_BOUND),"FM mix stays within the eight-voice output ceiling");
             hash=(hash^(uint32_t)pcm[i])*16777619u;
         }
     }

@@ -27,7 +27,7 @@ static void render(uint32_t count)
     uint32_t i,j;
     for (i=0; i<count; ++i) {
         memset(pcm,0,sizeof pcm); tk_render(pcm,256u,&NORMAL);
-        for (j=0; j<512u; ++j) expect(pcm[j]>=-24384 && pcm[j]<=24384,"MONO retains six-voice output headroom");
+        for (j=0; j<512u; ++j) expect(pcm[j]>=-(int32_t)(TK_VOICES*TK_VOICE_PCM_BOUND) && pcm[j]<=(int32_t)(TK_VOICES*TK_VOICE_PCM_BOUND),"MONO retains bounded eight-voice output headroom");
     }
 }
 static void basic_priority(void)

@@ -87,8 +87,15 @@ static void page_sound_fields(void)
     static const uint8_t presets[4]={0,11,30,32};
     uint32_t i,k;
     for(k=0;k<4;k++) sound_field(0,TK_PAGE_MEMORY,k,memory[k]);
-    for(i=0;i<4;i++) for(k=0;k<(i==2?4u:3u);k++)
+    for(i=0;i<4;i++) if(i!=2) for(k=0;k<3u;k++)
         sound_field(presets[i],TK_PAGE_ENV,k,envelope[i==3?0:i][k]);
+    for(k=0;k<4;k++) {
+        reset_fixture(30); before=fixture; tk_drum_focus=2;
+        page_expect(turn(TK_PAGE_ENV,k,7)==7,"kit ENV edits its selected drum");
+        page_expect(((uint8_t *)&tk_drum_mix[2])[k]==71u,"selected drum control follows raw detents");
+        page_expect(!memcmp(&fixture,&before,sizeof fixture),"individual drum edit cannot alter whole-kit GRAFT or captured settings");
+        page_expect(((uint8_t *)&tk_drum_mix[0])[k]==64u,"editing snare leaves kick unchanged");
+    }
     for(i=0;i<4;i++) if(i!=2) {
         sound_field(presets[i],TK_PAGE_LFO,0,FIELD_RATE);
         sound_field(presets[i],TK_PAGE_LFO,1,FIELD_DEPTH);

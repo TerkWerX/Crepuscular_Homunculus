@@ -50,12 +50,12 @@ static void expect_activity(uint32_t buttons, uint32_t notes, uint32_t encoders,
     tk_panel_activity_t activity_before = tk_panel_activity;
     before = fixture; transport_before = transport;
     check(!command(TK_REMOTE_PANEL_ACTIVITY, 0, 0), "panel query reports no change or dirty flags");
-    check(reply_length == 12u && reply[0] == TK_REMOTE_OK && reply[1] == 2u,
-          "status plus exact eleven-byte version-two activity body");
+    check(reply_length == 13u && reply[0] == TK_REMOTE_OK && reply[1] == 3u,
+          "status plus exact twelve-byte version-three activity body");
     check(((uint32_t)reply[2] | (uint32_t)reply[3] << 7) == buttons, "fourteen physical button bits");
     for (i = 0; i < 4u; i++) decoded |= (uint32_t)reply[4u + i] << (7u * i);
     check(decoded == notes, "twenty-seven physical held key bits");
-    check(reply[8] == encoders && reply[9] == octave, "raw encoder pulses and biased panel octave");
+    check((reply[8] | (uint32_t)reply[12] << 7) == encoders && reply[9] == octave, "raw encoder/MASTER pulses and biased panel octave");
     check(((uint32_t)reply[10] | (uint32_t)reply[11] << 7) == activity_before.buttons,
           "exact held button mask excludes lingering press pulses");
     check(!(activity_before.buttons & ~buttons), "held buttons remain a subset of visible button activity");
@@ -193,9 +193,42 @@ static void pcm_checks(void)
     check(!memcmp(baseline, observed, sizeof baseline), "actual audio PCM is byte-identical with queries and capture");
 }
 
+static void steady_light_checks(void)
+{
+    uint8_t v4[]={4u},invalid[]={4u,0u}; uint32_t mask,bit;
+    tk_panel_activity_t saved_activity;
+    reset_fixture(); fixture.fx=1u; fixture.lfo_on=1u; fixture.octave=0;
+    transport.mode=TK_MODE_SEQ; transport.running=transport.recording=1u;
+    mask=(1u<<BTN_FX)|(1u<<BTN_LFO)|(1u<<BTN_HOME)|(1u<<BTN_SEQ)|(1u<<BTN_PLAY)|(1u<<BTN_REC);
+    check(tk_panel_button_lamps(&fixture,&transport,TK_PAGE_PAD,0u,0u,0u)==mask,
+          "HOME FX LFO SEQ and both red transport lights can remain on together");
+    tk_panel_activity.leds=(uint16_t)mask; fm1_ms=10000u; saved_activity=tk_panel_activity;
+    before=fixture; transport_before=transport;
+    check(!command(TK_REMOTE_PANEL_ACTIVITY,v4,1u) && reply_length==15u && reply[0]==0u && reply[1]==4u,
+          "explicit v4 query returns fourteen-byte body without change/dirty flags");
+    check((reply[13]|((uint32_t)reply[14]<<7))==mask && !reply[2] && !reply[3],
+          "steady LED mask remains after every press pulse has expired");
+    check(!memcmp(&fixture,&before,sizeof fixture) && !memcmp(&transport,&transport_before,sizeof transport) &&
+          !memcmp(&tk_panel_activity,&saved_activity,sizeof saved_activity),"LED query is entirely read-only");
+    command(TK_REMOTE_PANEL_ACTIVITY,0,0u);
+    check(reply_length==13u && reply[1]==3u,"empty query keeps legacy v3 wire format");
+    command(TK_REMOTE_PANEL_ACTIVITY,invalid,2u);
+    check(reply_length==1u && reply[0]==TK_REMOTE_BAD_ARGUMENT,"invalid LED query rejected");
+    for(bit=0;bit<TK_PANEL_BUTTONS;bit++) {
+        tk_panel_activity.leds=(uint16_t)(1u<<bit); command(TK_REMOTE_PANEL_ACTIVITY,v4,1u);
+        check((reply[13]|((uint32_t)reply[14]<<7))==(1u<<bit),"every real button has its own steady-light bit");
+    }
+    fixture.fx=fixture.lfo_on=0u; memset(&transport,0,sizeof transport); tk_arr.fill=tk_arr.auto_armed=0u;
+    check(tk_panel_button_lamps(&fixture,&transport,TK_PAGE_GLO,0u,0u,0u)==(1u<<BTN_GLO),"GLO light follows page with no held button");
+    check(tk_panel_button_lamps(&fixture,&transport,TK_PAGE_SOUND_EDIT,0u,0u,0u)==(1u<<BTN_EDIT),"EDIT light follows edit page");
+    check(tk_panel_button_lamps(&fixture,&transport,TK_PAGE_ENV,0u,0u,0u)==(1u<<BTN_ENV),"ENV light follows page");
+    check(tk_panel_button_lamps(&fixture,&transport,TK_PAGE_PAD,1u,0u,1u)==((1u<<BTN_HOME)|(1u<<BTN_ENV)|(1u<<BTN_SAVE)),"hold and pending SAVE have distinct lights");
+    fixture.octave=-1; check(tk_panel_button_lamps(&fixture,&transport,TK_PAGE_PAD,0u,0u,0u)&(1u<<BTN_OCT_DOWN),"physical negative octave remains lit");
+    fixture.octave=1; check(tk_panel_button_lamps(&fixture,&transport,TK_PAGE_PAD,0u,0u,0u)&(1u<<BTN_OCT_UP),"physical positive octave remains lit");
+}
 int main(void)
 {
-    pulse_checks(); edit_hold_checks(); pcm_checks();
+    pulse_checks(); edit_hold_checks(); pcm_checks(); steady_light_checks();
     printf("PASS panel activity app: %u checks\n", checks);
     return 0;
 }

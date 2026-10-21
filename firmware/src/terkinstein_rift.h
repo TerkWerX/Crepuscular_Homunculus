@@ -178,7 +178,7 @@ static void tk_rift_geometry(const tk_visual_snapshot_t *sound, uint32_t now, ui
     }
     /* Pitch positions each stitch; actual envelope, not a held-key bit,
      * determines its length and brilliance. A held one-shot therefore fades. */
-    for (v = 0; v < 6u; v++) {
+    for (v = 0; v < TK_VIS_VOICES; v++) {
         uint32_t voice = sound->voice[v], env = (voice >> 8) & 255u;
         uint32_t pitch = voice & 255u, source = (voice >> 16) & 255u;
         uint32_t k = 3u + (pitch % 36u) * 57u / 35u;
@@ -214,7 +214,7 @@ static void tk_rift_prepare(const tk_visual_snapshot_t *sound, uint32_t now, uin
     if (!sound || tk_rift_uploading) return;
     if (!tk_rift_phase) {
         uint32_t quiet = sound->peak == 0u;
-        for (i = 0; i < 6u; i++) if ((sound->voice[i] >> 8) & 255u) quiet = 0u;
+        for (i = 0; i < TK_VIS_VOICES; i++) if ((sound->voice[i] >> 8) & 255u) quiet = 0u;
         if (!tk_rift_force) {
             if (tk_rift_asleep && quiet && preset == tk_rift_preset) return;
             if (now - tk_rift_last_ms < (quiet ? 250u : 90u) && preset == tk_rift_preset) return;

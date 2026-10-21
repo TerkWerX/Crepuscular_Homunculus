@@ -202,7 +202,7 @@ def pedals_and_loss(panel: Panel) -> None:
 def bindings_and_settings(panel: Panel) -> None:
     _, _, initial, _ = panel.run("settings-factory", "10 btn 8\n100 btn 9\n400 end\n")
     assert initial is not None and len(initial) == 3704
-    assert struct.unpack_from("<II", initial) == (3700, 11)
+    assert struct.unpack_from("<II", initial) == (3700, 12)
     expected = b"".join(bytes((cc, 2, 16)) for cc in (20, 21, 22, 23, 24, 255, 255, 255))
     assert initial[BIND_AT:BIND_AT + 24] == expected and initial[BEND_AT] == 2
 

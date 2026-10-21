@@ -82,8 +82,8 @@ static void migration_checks(void)
         fixture.fm[track + 1u].feedback = (uint8_t)(71u + track);
     }
     check(settings_valid(&fixture), "dense migration fixture has valid FM, GRAFT and all four patterns");
-    check(sizeof fixture == 3700u && sizeof legacy == 3696u && TK_SCHEMA == 11u,
-          "schema 11 uses exactly 3700 bytes and retains schema-10's 3696-byte type");
+    check(sizeof fixture == 3700u && sizeof legacy == 3696u && TK_SCHEMA == 12u,
+          "schema 12 uses exactly 3700 bytes and retains schema-10's 3696-byte type");
     check(offsetof(tk_settings_t, metro_enabled) == offsetof(tk_settings_v10_t, mono) + 1u,
           "metronome follows the last real schema-10 field without moving any prior field");
     memcpy(&legacy, &fixture, sizeof legacy); legacy.schema = 10u;
@@ -92,7 +92,7 @@ static void migration_checks(void)
         ((uint8_t *)&legacy)[byte] = 0xDAu;
     check(settings_upgrade_v10(&migrated, &legacy) && settings_valid(&migrated),
           "valid schema-10 FM save migrates despite nonzero tail padding");
-    check(migrated.schema == 11u && !migrated.metro_enabled && migrated.metro_level == 32u &&
+    check(migrated.schema == 12u && !migrated.metro_enabled && migrated.metro_level == 32u &&
           migrated.metro_beats == 4u && migrated.metro_unit == 4u,
           "migration starts with silent metronome defaults rather than interpreting old padding");
     check(migrated.panel_response == TK_ENCODER_LINEAR,
@@ -116,12 +116,12 @@ static void migration_checks(void)
     corrupt = legacy; corrupt.midi_bind[6].cc = 64u;
     check(!settings_upgrade_v10(&migrated, &corrupt), "reserved old learned controller binding is rejected");
     check(settings_upgrade_v10(&migrated, &legacy), "valid old save still migrates after rejection checks");
-    before = migrated; migrated.metro_enabled = 2u; check(!settings_valid(&migrated), "schema-11 enable flag is bounded");
-    migrated = before; migrated.metro_level = 128u; check(!settings_valid(&migrated), "schema-11 click level is bounded");
-    migrated = before; migrated.metro_beats = 0u; check(!settings_valid(&migrated), "schema-11 meter needs at least one beat");
-    migrated = before; migrated.metro_beats = 13u; check(!settings_valid(&migrated), "schema-11 meter allows at most twelve beats");
-    migrated = before; migrated.metro_unit = 16u; check(!settings_valid(&migrated), "schema-11 unit accepts only quarter/eighth");
-    migrated = before; migrated.panel_response = 2u; check(!settings_valid(&migrated), "schema-11 panel response accepts only LINEAR/ACCEL");
+    before = migrated; migrated.metro_enabled = 2u; check(!settings_valid(&migrated), "schema-12 enable flag is bounded");
+    migrated = before; migrated.metro_level = 128u; check(!settings_valid(&migrated), "schema-12 click level is bounded");
+    migrated = before; migrated.metro_beats = 0u; check(!settings_valid(&migrated), "schema-12 meter needs at least one beat");
+    migrated = before; migrated.metro_beats = 13u; check(!settings_valid(&migrated), "schema-12 meter allows at most twelve beats");
+    migrated = before; migrated.metro_unit = 16u; check(!settings_valid(&migrated), "schema-12 unit accepts only quarter/eighth");
+    migrated = before; migrated.panel_response = 2u; check(!settings_valid(&migrated), "schema-12 panel response accepts only LINEAR/ACCEL");
 }
 
 static void remote_checks(void)

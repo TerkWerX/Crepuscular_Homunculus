@@ -72,7 +72,7 @@ static void sound_and_metadata_checks(void)
     uint32_t slot,other,peak,hash[64],new_fm=0u,new_kit=0u,new_pad=0u,new_metal=0u;
     tk_fm_patch_t patch,expected,prior;
     check(TK_PRESET_COUNT==64u,"exact 64-slot bank");
-    check(TK_VOICES==6u && TK_FM_VOICE_LIMIT==4u,"unchanged six total/four FM voice budget");
+    check(TK_VOICES==8u && TK_FM_VOICE_LIMIT==4u,"eight total/four FM voice budget");
     for(slot=0;slot<64u;++slot) {
         reset_fixture(); preset_apply(&fixture,slot);
         check(settings_valid(&fixture),"factory settings validate across mixed engines");
@@ -265,8 +265,8 @@ static void save_checks(void)
     }
     check(settings_valid(&fixture),"nonfactory six-bank FM fields validate");
     before=fixture;
-    check(sizeof fixture==3700u && TK_SCHEMA==11u && offsetof(tk_settings_t,fm)==3452u,
-        "schema11 size and saved FM offsets remain exact");
+    check(sizeof fixture==3700u && TK_SCHEMA==12u && offsetof(tk_settings_t,fm)==3452u,
+        "schema12 size and saved FM offsets remain exact");
     memcpy(&legacy,&fixture,sizeof legacy); legacy.schema=10u; legacy.midi_pad=0u;
     check(settings_upgrade_v10(&migrated,&legacy),"legacy edited FM record migrates");
     check(!memcmp(migrated.fm,before.fm,sizeof before.fm),"migration retains all six edited FM banks");

@@ -34,6 +34,9 @@ static volatile uint32_t fm1_ms;
 static struct { uint32_t notes, buttons; } fm1_in;
 static uint32_t host_edges, host_released;
 static int32_t host_enc[7];
+static int host_master_activity;
+static int platform_master_activity(void)
+{ int changed = host_master_activity; host_master_activity = 0; return changed; }
 static uint32_t fm1_input_edges(uint32_t *released)
 {
     uint32_t pressed = host_edges;
@@ -131,6 +134,52 @@ static int settings_save(const void *p, uint32_t n)
     printf("%6u ms  settings saved (%u B)\n", fm1_ms, n);
     return 0;
 }
+
+static uint8_t host_journal[TK_STORE_END - TK_STORE_BASE];
+static int host_journal_imported;
+static void host_journal_import(void)
+{
+    const char *path = getenv("TK_HOST_JOURNAL_PATH"); FILE *f;
+    if (host_journal_imported) return;
+    host_journal_imported = 1; memset(host_journal, 255, sizeof host_journal);
+    if (path && *path && (f = fopen(path, "rb"))) {
+        if (fread(host_journal, 1, sizeof host_journal, f) != sizeof host_journal || fgetc(f) != EOF)
+            memset(host_journal, 255, sizeof host_journal);
+        fclose(f);
+    }
+}
+static int host_journal_flush(void)
+{
+    const char *path = getenv("TK_HOST_JOURNAL_PATH"); FILE *f; int ok;
+    if (!path || !*path) return 0;
+    if (!(f = fopen(path, "wb"))) return -1;
+    ok = fwrite(host_journal, 1, sizeof host_journal, f) == sizeof host_journal;
+    if (fclose(f)) ok = 0;
+    return ok ? 0 : -1;
+}
+static int host_journal_range(uint32_t off, uint32_t n)
+{ return off >= TK_STORE_BASE && off <= TK_STORE_END && n <= TK_STORE_END - off; }
+static int tk_store_flash_read(uint32_t off, void *p, uint32_t n)
+{
+    host_journal_import();
+    if (!host_journal_range(off, n)) return -1;
+    memcpy(p, host_journal + off - TK_STORE_BASE, n); return 0;
+}
+static int tk_store_flash_write(uint32_t off, const uint8_t *p, uint32_t n)
+{
+    uint32_t i; host_journal_import();
+    if (!host_journal_range(off, n)) return -1;
+    for (i = 0; i < n; i++) if ((host_journal[off - TK_STORE_BASE + i] & p[i]) != p[i]) return -1;
+    for (i = 0; i < n; i++) host_journal[off - TK_STORE_BASE + i] &= p[i];
+    return host_journal_flush();
+}
+static int tk_store_flash_erase(uint32_t off)
+{
+    host_journal_import();
+    if ((off & 0xFFFu) || !host_journal_range(off, 0x1000u)) return -1;
+    memset(host_journal + off - TK_STORE_BASE, 255, 0x1000u); return host_journal_flush();
+}
+static void tk_store_idle(void) {}
 
 static uint8_t mq[64][4];
 static uint32_t mq_w, mq_r;

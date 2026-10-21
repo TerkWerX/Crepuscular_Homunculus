@@ -44,7 +44,7 @@ def main() -> None:
         result = panel.run(label, ordered(*[line + "\n" for line in lines], f"{end} end\n"),
                            store=store, fps=fps)
         check(result[2] is not None, f"{label}: silent physical SAVE did not finish")
-        check(struct.unpack_from("<II", result[2]) == (3700, 11),
+        check(struct.unpack_from("<II", result[2]) == (3700, 12),
               f"{label}: encoder response changed the sector size or schema")
         return result
 
@@ -75,7 +75,7 @@ def main() -> None:
     # Enter through the real GLO -> SEL menu; unrelated knobs and navigation
     # cannot edit sound while changing the saved hardware feel preference.
     feel = run("feel-menu", ["10 btn 8", "100 btn 7", "140 btn 3", "200 enc 2 1",
-               "220 enc 2 1", "240 enc 3 32767", "260 enc 4 -32767", "280 enc 5 32767",
+               "220 enc 2 1", "260 enc 4 -32767", "280 enc 5 32767",
                "300 enc 0 1", "320 enc 1 1", sysex(400, 0x0C, 1), "1800 btn 9"],
                store=linear, fps=2)
     wanted = bytearray(linear)
@@ -237,7 +237,7 @@ def main() -> None:
 
     report = {"checks": checks, "hardware_qualified": False,
               "preview": str(folder / "control-feel-preview.png"),
-              "save_size": 3700, "schema": 11,
+              "save_size": 3700, "schema": 12,
               "covered": ["real menu selection", "saved preference reload", "fine/fast response",
                           "reversal", "separate knobs", "page/preset reset", "endpoints/bounded extrema",
                           "discrete exclusions", "external MIDI/Fire neutrality", "schema10 migration"]}
