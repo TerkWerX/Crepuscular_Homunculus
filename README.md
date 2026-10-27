@@ -2,15 +2,15 @@
 
 **A dark, standalone synth and four-track groovebox for the M-VAVE FM-1.**
 
-Created by **TERKINSTEIN** Â· Free and open source
+Created by **TERKINSTEIN** · Free and open source
 
 Turn your FM-1 into an instrument for atmospheric pads, heavy bass, metallic
 textures, synthesized drums and six-operator FM. Play, build patterns and save
 complete songs on the FM-1 itself. No companion app or Fire controller is required.
 
 **[Download 0.26.19](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.19)**
-Â· **[Try the virtual FM-1](https://terkinstein.com/#play)**
-Â· **[Visit terkinstein.com](https://terkinstein.com/)**
+· **[Try the virtual FM-1](https://terkinstein.com/#play)**
+· **[Visit terkinstein.com](https://terkinstein.com/)**
 
 ![Crepuscular Homunculus HOME display](assets/hub/home-0.26.19.png)
 
@@ -18,7 +18,7 @@ complete songs on the FM-1 itself. No companion app or Fire controller is requir
 
 - **Explore 64 factory sounds**, then shape them with the FM-1's controls.
 - **Build a song on four tracks:** DRUM, MELODY, ATMOS and BASS, each with its own captured sound.
-- **Create variations** with four Aâ€“D banks per track and up to 64 steps per bank.
+- **Create variations** with four A–D banks per track and up to 64 steps per bank.
 - **Edit notes directly** with step entry, live recording and the native piano roll.
 - **Add swing**, use the arpeggiator, or play from a MIDI keyboard with pedal support.
 - **Choose your HOME display:** the reactive Homunculus or Thorn Rift, following the creator startup logo.
@@ -35,7 +35,7 @@ After installation, the instrument works without a computer.
 
 ## Find the right guide
 
-| I want toâ€¦ | Read this |
+| I want to… | Read this |
 | --- | --- |
 | Play a sound and make a pattern | [Quick start](docs/QUICK_START.md) |
 | Learn the buttons and knobs | [Panel controls](docs/PANEL_CONTROLS.md) |
