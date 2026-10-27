@@ -45,8 +45,8 @@ does not understand format 3 or the new IDs. Downgrading requires the verified
 older backup; automatic downgrade of revised songs is not supported.
 
 External song tools must negotiate the 66-definition catalog and explicit swing
-contract, refusing unsupported layouts before import. The firmware is fully
-usable standalone; no companion implementation is part of this source tree.
+contract, refusing unsupported layouts before import. All playing, editing and
+saving functions are available on the instrument itself.
 
 ## Verification
 

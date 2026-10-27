@@ -6,7 +6,7 @@ Created by **TERKINSTEIN** · Free and open source
 
 Turn your FM-1 into an instrument for atmospheric pads, heavy bass, metallic
 textures, synthesized drums and six-operator FM. Play, build patterns and save
-complete songs on the FM-1 itself. No companion app or Fire controller is required.
+complete songs on the FM-1 itself.
 
 **[Download 0.26.19](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.19)**
 · **[Try the virtual FM-1](https://terkinstein.com/#play)**
@@ -58,8 +58,7 @@ and [validation](docs/TESTING.md) for the details.
 ## Source and credits
 
 This repository contains only Crepuscular Homunculus firmware, artwork, platform
-and update code, build tools, tests and documentation. The companion application
-and the separate specialist firmwares are not included.
+and update code, build tools, tests and documentation for this instrument.
 
 Developers can start with the [build guide](docs/BUILD.md) and [architecture](docs/DESIGN.md).
 The complete source for this release is at tag **v0.26.19**.

@@ -8,7 +8,7 @@ uses the existing lossless raw/RLE/local-palette tiles at native detail, even
 on a negotiated compact subscription. The existing decoder accepts both types.
 Changing the context cancels an incomplete tile and refreshes coverage, avoiding
 stale coarse pixels. Menus, startup, actual LCD rendering and all audio remain
-unchanged. No new state, buffer, wire field or companion implementation is added.
+unchanged. No new state, buffer or wire field is added.
 Main retains the same slack guard and bounded USB admission. Measured device
 load with the higher-detail portrait is still an attended acceptance step.
 

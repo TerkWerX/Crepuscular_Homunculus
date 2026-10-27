@@ -18,7 +18,7 @@ groovebox, with 64 factory sounds spanning atmospheric pads, heavy bass, metalli
 textures, synthesized drums and six-operator FM. Build songs with four A–D banks
 per track, up to 64 steps, native piano-roll editing and saved swing, alongside
 reactive Homunculus and Thorn Rift displays. Play, edit and save on the FM-1
-itself; no companion application is required.
+itself.
 
 ## Picture and documentation
 

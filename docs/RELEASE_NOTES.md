@@ -1,9 +1,9 @@
 # Crepuscular Homunculus 0.26.19
 
 A free, standalone synth and four-track groovebox for the **M-VAVE FM-1**, by TERKINSTEIN.
-Play, edit, sequence and save on the instrument itself. The companion app is optional.
+Play, edit, sequence and save on the instrument itself.
 
-**[Try the virtual FM-1](https://terkinstein.com/#play)** · **[Quick start](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/v0.26.19/docs/QUICK_START.md)** · **[Full controls](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/v0.26.19/docs/PANEL_CONTROLS.md)**
+**[Try the virtual FM-1](https://terkinstein.com/#play)** · **[Quick start](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/main/docs/QUICK_START.md)** · **[Full controls](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/main/docs/PANEL_CONTROLS.md)**
 
 ## Download
 
@@ -11,7 +11,7 @@ Play, edit, sequence and save on the instrument itself. The companion app is opt
 - **Crepuscular-Homunculus-0.26.19-source.zip** — the complete matching source.
 - **SHA256SUMS.txt** — checksums for verifying the attached files.
 
-Licensing, credits and these release notes are also attached. No companion or specialist firmware is bundled.
+Licensing, credits and these release notes are also attached.
 
 ## What's new since 0.22
 
@@ -26,11 +26,11 @@ Licensing, credits and these release notes are also attached. No companion or sp
 ## Before installing
 
 Stop PLAY, release keys and pedals, let tails finish, press SAVE and wait for SAVED.
-Keep a separate song backup and your previous firmware. Follow the [installation guide](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/v0.26.19/docs/INSTALL.md).
+Keep a separate song backup and your previous firmware. Follow the [installation guide](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/main/docs/INSTALL.md).
 
 Supported older Homunculus songs migrate explicitly. Unrelated firmware's projects
 and samples do not. Returning to older firmware may require its own compatible
-backup; see [save compatibility](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/v0.26.19/docs/CATALOG_REVISION_2.md).
+backup; see [save compatibility](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/main/docs/CATALOG_REVISION_2.md).
 
 ## Validation and limits
 
@@ -41,7 +41,7 @@ piano-roll navigation and save checks, and exact audio/save comparisons with
 The retained 0.26.19-dev passed hardware identity, custom/official V15 switching
 and controlled transfer-recovery checks. Musical, USB audio and persistence results
 remain attributed to their tested builds. The suffix-free build was not flashed
-during release preparation. Read the [validation record](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/v0.26.19/docs/TESTING.md) for exact scope.
+during release preparation. Read the [validation record](https://github.com/TerkWerX/Crepuscular_Homunculus/blob/main/docs/TESTING.md) for exact scope.
 
 Eight voices are shared, with at most four FM voices. No extra voices or new effects
 are added. Device timing excludes full USB/DAC/ISR load; exhaustive stack and

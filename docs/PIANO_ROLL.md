@@ -1,6 +1,6 @@
 # Piano roll — Crepuscular Homunculus 0.26.19
 
-The piano roll edits notes directly on the FM-1, without a computer or companion.
+The piano roll edits notes directly on the FM-1.
 
 ## Open and leave the editor
 

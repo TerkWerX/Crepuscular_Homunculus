@@ -1,7 +1,7 @@
 # Standalone quick start
 
-Crepuscular Homunculus runs on the FM-1 by itself. The optional PC companion and
-Fire controllers are not required to play, edit, sequence or save on the instrument.
+Crepuscular Homunculus runs on the FM-1 by itself. Play, edit, sequence and save
+directly on the instrument.
 Use a comfortable listening level.
 
 ## Play a sound

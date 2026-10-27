@@ -1,9 +1,8 @@
 # Crepuscular Homunculus contributor notes
 
 This repository is exclusively the free Crepuscular Homunculus firmware and its
-corresponding source, artwork, tests, build tools and docs. Do not add the paid
-companion or the separate Lead, Bass, Rhythm and Drums product implementations.
-The free instrument retains four tracks.
+corresponding source, artwork, tests, build tools and docs. Keep public materials
+focused solely on this standalone instrument. The instrument retains four tracks.
 
 Read README.md, docs/DESIGN.md, docs/BUILD.md and docs/RULES.md before native
 changes. Preserve GPL notices, credits, creator splash, sound identifiers,

@@ -63,9 +63,8 @@ requires a valid explicit swing stage; missing/malformed fields cannot rescue
 a poisoned import. The catalog/namespaces/wire checksum remain unchanged.
 
 External tools must negotiate the current contract before importing and retain
-explicit swing. Missing swing in a supported legacy song becomes 0. The native
-firmware includes no companion implementation. Its host tests cover the full
-native command code, all 16 banks and complete captured/FM patches.
+explicit swing. Missing swing in a supported legacy song becomes 0. Host tests
+cover the full native command code, all 16 banks and complete captured/FM patches.
 
 Optimized/ASan checks cover zero-swing parity, bounds, grid/gates, REC, time wrap,
 tempo, Stop/Continue, native SAVE/reload and legacy migration. Owner listening,

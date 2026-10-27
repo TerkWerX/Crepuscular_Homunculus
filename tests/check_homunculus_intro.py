@@ -149,7 +149,7 @@ def main() -> None:
     check(title.getbbox() is not None, "Firmware title is missing beneath the character")
 
     # This is the actual capture hook, checked every host poll, plus actual
-    # emitted companion packets. The compact HOME codec must never be used
+    # emitted screen-mirror packets. The compact HOME codec must never be used
     # for either startup stage, including partially painted frame strips.
     streamed = run("startup-streamed", probes + [sysex(50, 0x0A, 70, (3, 1)),
                    sysex(2050, 0x0A, 71, (4, 1))], fps=FPS)

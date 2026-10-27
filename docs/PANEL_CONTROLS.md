@@ -39,8 +39,8 @@ uses exact native pixels/colours, including its animated skin and lightning;
 THORN RIFT retains its reduced-detail/four-colour interior stream. Switching
 restores all mirror tiles, with no manual PC setting. The FM-1 LCD is unchanged.
 Both reuse existing compression, dirty tiles, lease and USB admission budgets.
-There is no new screen command or saved field. An existing compact-capable
-companion accepts the lossless tiles on the same negotiated subscription.
+There is no new screen command or saved field. The existing compact-capable
+mirror protocol accepts lossless tiles on the same negotiated subscription.
 
 ## Homunculus HOME choice — 0.26.10-dev
 

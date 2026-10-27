@@ -3829,7 +3829,7 @@ static void app_main(void)
         if (tk_arr.dirty) { dirty = changed = 1; tk_arr.dirty = 0; }
         /* Dismiss only a previous result, not the SAVE press that creates it.
          * The gesture still performs its normal action; release edges and
-         * read-only companion polling cannot erase the confirmation. */
+         * read-only host polling cannot erase the confirmation. */
         if (tk_save_notice_finished(save_notice) &&
             (save_activity || (save_notice == TK_SAVE_NOTICE_SAVED && dirty)))
             save_notice = TK_SAVE_NOTICE_NONE;

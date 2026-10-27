@@ -2,7 +2,7 @@
 
 This guide is for the M-VAVE FM-1 running Crepuscular Homunculus. Use the matching
 0.26.19 package and release tag; see RELEASE_NOTES.md.
-No companion application is required for normal playing, sequencing or saving.
+Play, sequence and save directly on the FM-1.
 
 ## Preserve music before changing firmware
 

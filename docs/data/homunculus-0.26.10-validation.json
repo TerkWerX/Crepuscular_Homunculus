@@ -73,8 +73,6 @@
   },
   "artwork_generators": "checked",
   "isolated_free_source_scope": true,
-  "companion_included": false,
-  "specialist_products_included": false,
   "creator_splash_unchanged": true,
   "original_catalog_unchanged": true,
   "installed": false,
