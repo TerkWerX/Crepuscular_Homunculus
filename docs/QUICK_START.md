@@ -1,5 +1,7 @@
 # Standalone quick start
 
+Prefer pictures? The [illustrated tutorial](ILLUSTRATED_GUIDE.md) shows each action, button hold and resulting screen.
+
 Crepuscular Homunculus runs on the FM-1 by itself. Play, edit, sequence and save
 directly on the instrument.
 Use a comfortable listening level.

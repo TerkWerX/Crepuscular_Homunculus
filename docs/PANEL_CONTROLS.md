@@ -1,5 +1,7 @@
 # Crepuscular Homunculus 0.26.19 controls
 
+For a guided introduction with screen pictures, start with the [illustrated tutorial](ILLUSTRATED_GUIDE.md). This page is the detailed control reference.
+
 ## Candidate 0.26.17: confirmed HOME reset
 
 A physical HOME hold of 700ms opens RESET DEFAULTS? and leaves the song playing

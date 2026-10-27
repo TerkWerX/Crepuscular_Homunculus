@@ -12,6 +12,8 @@ complete songs on the FM-1 itself.
 · **[Try the virtual FM-1](https://terkinstein.com/#play)**
 · **[Visit terkinstein.com](https://terkinstein.com/)**
 
+**[Learn with the illustrated tutorial](docs/ILLUSTRATED_GUIDE.md)** — follow each button press, hold and resulting screen.
+
 ![Crepuscular Homunculus HOME display](assets/hub/home-0.26.19.png)
 
 ## What you can do
@@ -28,7 +30,7 @@ complete songs on the FM-1 itself.
 1. **Download** the `.fwsc` firmware from the [0.26.19 release](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.19).
 2. **Protect your music.** Stop playback, release keys and pedals, press SAVE and wait for SAVED. Keep a separate backup and your previous firmware.
 3. **Install from a computer** using the [installation guide](docs/INSTALL.md).
-4. **Start playing** with the [standalone quick start](docs/QUICK_START.md).
+4. **Start playing** with the [illustrated tutorial](docs/ILLUSTRATED_GUIDE.md), or use the shorter [quick start](docs/QUICK_START.md).
 
 The release also includes matching source code, checksums and licensing information.
 After installation, the instrument works without a computer.
@@ -37,6 +39,7 @@ After installation, the instrument works without a computer.
 
 | I want to… | Read this |
 | --- | --- |
+| Follow button presses and holds with screen pictures | [Illustrated tutorial](docs/ILLUSTRATED_GUIDE.md) |
 | Play a sound and make a pattern | [Quick start](docs/QUICK_START.md) |
 | Learn the buttons and knobs | [Panel controls](docs/PANEL_CONTROLS.md) |
 | Edit individual notes and chords | [Piano roll](docs/PIANO_ROLL.md) |

@@ -1,13 +1,13 @@
 # The 64-sound TERKINSTEIN bank
 
-Factory positions25/52 now select revised SULFUR TONGUE METAL and WICKED FELT FM. Original definitions remain in older captures as OLD. There are64 browser choices and66 stored definitions; see CATALOG_REVISION_2.md. The following catalog expansion history retains its original context.
+In 0.26.19, factory positions 25/52 select revised SULFUR TONGUE METAL and WICKED FELT FM. Original definitions remain in older captures as OLD. There are 64 browser choices (23 PAD, 22 METAL, 5 KIT and 14 FM) and 66 stored definitions; see [sound revisions](CATALOG_REVISION_2.md). The following catalog expansion history retains its original context.
 
 The local **0.20.0-dev** bank extends the existing machinery, ritual and decay vocabulary
 with parts that can form a complete four-track piece. The original 36 slots
 keep their order and factory settings. Slots 37–64 add six basses, six leads,
 six keys/plucks, four kit configurations and six atmospheres. Track roles
 below are suggestions: any track can capture any instrument.
-The complete bank contains 24 PAD, 22 METAL, 5 KIT and 13 FM sounds. The
+That original bank contained 24 PAD, 22 METAL, 5 KIT and 13 FM sounds. The
 source of their settings is the [curated catalog](../assets/presets/terkinstein-presets.json).
 
 ## What the existing bank already supplies
@@ -114,9 +114,9 @@ The mapping repeats in every octave:
 For rapid double-bass parts, start with the C kick in **RIVET WAKE** or
 **DUST CASKET**. Their factory DECAY settings (26 and 32) are shorter than
 the neutral kit's 64. Turn DECAY down further if repeated kicks blur together;
-use the longer C♯ sub boom for occasional low accents. All parts share six
-voices, so listen for missing hits when a dense melody and atmosphere are
-playing at the same time.
+use the longer C♯ sub boom for occasional low accents. All tracks, LIVE notes
+and release tails share eight voices, with at most four FM voices. Listen for
+missing hits when a dense melody and atmosphere are playing at the same time.
 
 Choose the desired kit before recording DRUM. DRUM REC keeps the live kit
 and its sculpted settings when a kit is already selected. The four sound

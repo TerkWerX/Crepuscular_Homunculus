@@ -2,6 +2,8 @@
 
 The piano roll edits notes directly on the FM-1.
 
+See [the illustrated route through ARRANGE and STEP EDIT](ILLUSTRATED_GUIDE.md#6-hold-sel-reach-the-piano-roll) for pictures of every screen on the way here.
+
 ## Open and leave the editor
 
 Open **SEQ** and choose the track with SELECT and its A–D bank with ALGORITHM.
