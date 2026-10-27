@@ -68,13 +68,13 @@ Each of the four tracks has a captured sound. The track names are **DRUM, MELODY
 1. On the SEQUENCER page, turn **SELECT** to highlight DRUM.
 2. Tap **HOME**. Check that the title says **TRACK SOUND** and the upper-right label says **DRUM**.
 3. Turn **PRESETS** to **SCRAP ALTAR**. Play a key to hear that captured kit.
-4. Tap **SEQ**, then **EDIT**. The step-entry header should say **EDIT: SCRAP ALTAR**.
+4. Tap **SEQ** to return to the sequencer overview. Choose an empty bank in the next lesson before entering notes.
 
-**Checkpoint:** the same kit should sound when you play the keys in TRACK SOUND and in sequencer step entry. A second HOME press from TRACK SOUND returns to LIVE. Always check the title before changing PRESETS: it tells you which sound you are editing.
+**Checkpoint:** TRACK SOUND / DRUM should now show SCRAP ALTAR. The next lesson's step-entry header will show **EDIT: SCRAP ALTAR**, using that same captured kit. A second HOME press from TRACK SOUND returns to LIVE. Always check the title before changing PRESETS: it tells you which sound you are editing.
 
 ## 4. Enter a drum pattern
 
-**Action: tap SEQ → SEQUENCER.** Choose DRUM with SELECT and an **empty A–D bank** with ALGORITHM. The screenshots use A as an example; use another empty bank if A contains work.
+**Start on the SEQUENCER overview.** If you followed lesson 3, you are already there; otherwise tap SEQ from HOME. Choose DRUM with SELECT and an **empty A–D bank** with ALGORITHM. The screenshots use A as an example; use another empty bank if A contains work.
 
 <a href="../assets/tutorial/sequencer.png"><img src="../assets/tutorial/sequencer.png" width="400" alt="SEQUENCER: four track rows, DRUM A selected, 16 steps, BPM 90 and SWING 50"></a>
 
