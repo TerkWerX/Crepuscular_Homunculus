@@ -2,7 +2,7 @@
   "version": 1,
   "legacy_count": 36,
   "default_drum_preset": 30,
-  "bank_version": "0.20.0-dev",
+  "bank_version": "0.26.18-dev",
   "authorship": "New slots 37\u00e2\u20ac\u201c64 independently authored for TERKINSTEIN from its own engine controls. No external patch data, sample files or bank dumps were imported.",
   "presets": [
     {
@@ -2319,6 +2319,183 @@
         "pitch_depth": 24,
         "pitch_time": 0
       }
+    },
+    {
+      "id": 64,
+      "name": "SULFUR TONGUE",
+      "instrument": 1,
+      "macros": [
+        12,
+        22,
+        127,
+        82
+      ],
+      "memory": 8,
+      "fx": 1,
+      "attack": 0,
+      "release": 12,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "Owner-approved metallic tongue revision; original stored ID retained for old songs.",
+      "fm_index": null,
+      "fm_patch": null
+    },
+    {
+      "id": 65,
+      "name": "WICKED FELT",
+      "instrument": 3,
+      "macros": [
+        30,
+        0,
+        0,
+        64
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Owner-approved dry FM v2 revision; original stored ID retained for old songs.",
+      "fm_index": 13,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            115,
+            0,
+            44,
+            24,
+            36
+          ],
+          [
+            3,
+            38,
+            0,
+            18,
+            0,
+            15
+          ],
+          [
+            2,
+            50,
+            1,
+            32,
+            8,
+            27
+          ],
+          [
+            1,
+            22,
+            0,
+            12,
+            0,
+            12
+          ],
+          [
+            3,
+            21,
+            0,
+            20,
+            0,
+            20
+          ],
+          [
+            7,
+            14,
+            0,
+            10,
+            0,
+            10
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      }
     }
-  ]
+  ],
+  "catalog_revision": 2,
+  "original_prefix_sha256": "d2b49ac961ff1b040579df95e75b3ab8063ff68515ec5e1534087ab7d060b8ef",
+  "factory_order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    64,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    65,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63
+  ],
+  "revision_sources": {
+    "64": 24,
+    "65": 51
+  }
 }

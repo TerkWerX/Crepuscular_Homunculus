@@ -4,6 +4,8 @@
 #ifndef TERKINSTEIN_REMOTE_H
 #define TERKINSTEIN_REMOTE_H
 #include "terkinstein_protocol.h"
+#include "terkinstein_panel_input.h"
+#include "terkinstein_midi_clock.h"
 #include "terkinstein_activity.h"
 #define TK_REMOTE_CHANGED 1u
 #define TK_REMOTE_DIRTY 2u
@@ -14,9 +16,32 @@ static uint8_t remote_cached_reply[TK_REMOTE_WIRE_MAX];
 static uint32_t remote_last_length, remote_reply_length, remote_generation;
 static uint32_t remote_cached_length;
 static uint8_t remote_last_valid, remote_reply_pending, remote_observed_valid;
-static uint8_t remote_ui_splash = 1u;
+static uint8_t remote_ui_splash = 1u, remote_swing_staged;
 static uint16_t remote_revision, remote_pattern_revision;
 static tk_settings_t remote_observed_settings;
+static int tk_remote_scene_parse(tk_scene_t *scene, const uint8_t *p)
+{
+    memset(scene, 0, sizeof *scene); memcpy(scene->bank, p + 1, TK_TRACKS);
+    scene->mute = p[5]; scene->tempo = (uint8_t)(p[6] | p[7] << 7);
+    scene->section_mutes = (uint16_t)(p[8] | p[9] << 7 | p[10] << 14);
+    scene->enabled = p[11]; return p[7] <= 1u && p[10] <= 3u && tk_scene_valid(scene);
+}
+static uint32_t tk_remote_scene_pack(uint32_t index, const tk_scene_t *scene, uint8_t *out)
+{
+    out[0] = TK_REMOTE_OK; out[1] = (uint8_t)index; memcpy(out + 2, scene->bank, TK_TRACKS);
+    out[6] = scene->mute; out[7] = scene->tempo & 127u; out[8] = scene->tempo >> 7;
+    out[9] = scene->section_mutes & 127u; out[10] = (scene->section_mutes >> 7) & 127u;
+    out[11] = scene->section_mutes >> 14; out[12] = scene->enabled; return 13u;
+}
+static uint32_t tk_remote_arr_state(uint8_t *out)
+{
+    uint32_t track;
+    out[0] = TK_REMOTE_OK; out[1] = 1u; out[2] = tk_arr.auto_armed; out[3] = !!tk_arr.fill;
+    out[4] = tk_arr.scene; out[5] = tk_arr.pending_scene;
+    out[6] = tk_arr.revision & 127u; out[7] = tk_arr.revision >> 7;
+    for (track = 0; track < TK_TRACKS; track++) out[8u + track] = tk_arr.cycle[track] & 127u;
+    return 12u;
+}
 
 static void tk_remote_observe(const tk_settings_t *s)
 {
@@ -82,7 +107,7 @@ static uint32_t tk_remote_banks(tk_settings_t *s, const tk_transport_t *t, uint8
 {
     uint32_t track, bank, step, revision;
     tk_banks_observe(s); tk_remote_observe(s);
-    memset(out, 0, 73u); out[0] = TK_REMOTE_OK; out[1] = 1; out[2] = tk_banks.importing;
+    memset(out, 0, 73u); out[0] = TK_REMOTE_OK; out[1] = 2; out[2] = tk_banks.importing;
     revision = (tk_banks.revision + remote_revision) & 16383u;
     out[3] = (uint8_t)(revision & 127u); out[4] = (uint8_t)(revision >> 7);
     for (track = 0; track < TK_TRACKS; track++) {
@@ -179,12 +204,27 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
         case TK_REMOTE_SET_TRACK_MACRO: case TK_REMOTE_SELECT_BANK: case TK_REMOTE_SET_BANK_STEP:
         case TK_REMOTE_SET_BANK_LENGTH: case TK_REMOTE_COPY_BANK: case TK_REMOTE_CLEAR_BANK:
         case TK_REMOTE_SONG_BEGIN:
-        case TK_REMOTE_SET_METRONOME:
+        case TK_REMOTE_SWING:
+        case TK_REMOTE_SET_METRONOME: case TK_REMOTE_SET_SECTION_MUTE: case TK_REMOTE_SET_DRUM_MIX:
+        case TK_REMOTE_SET_ARR_STEP: case TK_REMOTE_SET_SCENE: case TK_REMOTE_LAUNCH_SCENE:
+        case TK_REMOTE_FILL: case TK_REMOTE_AUTO_ARM:
             out[0] = TK_REMOTE_BUSY; return 0;
         default: break;
         }
     }
     switch (request->command) {
+    case TK_REMOTE_SWING:
+        if (n > 1u || (n && p[0] > 100u)) break;
+        if (n && t->recording) { out[0] = TK_REMOTE_BUSY; break; }
+        if (n && s->swing != p[0]) { s->swing = p[0]; flags = TK_REMOTE_CHANGED | TK_REMOTE_DIRTY; }
+        out[0] = TK_REMOTE_OK; out[1] = 1u; out[2] = (uint8_t)s->swing;
+        out[3] = 100u; out[4] = 16u; *out_n = 5u; break;
+    case TK_REMOTE_PANEL_INPUT:
+        /* Cancel is accepted during import; no new panel edits may enter it. */
+        if (tk_banks.importing && n && !(n == 5u && p[0] == 3u)) {
+            out[0] = TK_REMOTE_BUSY; break;
+        }
+        *out_n = tk_panel_input_command(p, n, out); break;
     case TK_REMOTE_HELLO:
         if (n) break;
         out[0] = TK_REMOTE_OK; out[1] = TK_REMOTE_VERSION;
@@ -197,6 +237,107 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
     case TK_REMOTE_STATE:
         if (!n) *out_n = tk_remote_state(s, t, page, dirty, out);
         break;
+    case TK_REMOTE_SYNC:
+        if (n > 1u || (n && p[0] > 1u)) break;
+        if (n) {
+            if (p[0]) {
+                if (tk_banks.importing || (!tk_midi_clock.enabled && (t->recording || t->running))) {
+                    out[0] = TK_REMOTE_BUSY; break;
+                }
+                tk_clock_arm(fm1_ms);
+            } else {
+                if (tk_midi_clock.enabled) { transport_stop(t); flags = TK_REMOTE_CHANGED; }
+                tk_clock_disable();
+            }
+        }
+        out[0] = TK_REMOTE_OK; out[1] = 1u; out[2] = tk_midi_clock.enabled;
+        out[3] = 24u; out[4] = tk_midi_clock.running; out[5] = tk_midi_clock.pulse;
+        out[6] = tk_midi_clock.fault; *out_n = 7u;
+        break;
+    case TK_REMOTE_ARR_STEP:
+    case TK_REMOTE_SET_ARR_STEP:
+    case TK_REMOTE_SONG_ARR_STEP:
+        if ((request->command == TK_REMOTE_ARR_STEP ? n != 3u : n != 9u)
+            || p[0] >= TK_TRACKS || p[1] >= TK_BANK_COUNT || p[2] >= TK_PATTERN_STEPS) break;
+        {
+            tk_arr_step_t *target = request->command == TK_REMOTE_SONG_ARR_STEP ?
+                &tk_bank_pool.stage.arrangement.step[p[0]][p[1]][p[2]] : &tk_arr_song.step[p[0]][p[1]][p[2]];
+            if (request->command != TK_REMOTE_ARR_STEP) {
+                tk_arr_step_t next; memcpy(&next, p + 3, sizeof next);
+                if (!tk_arr_step_valid(&next)) break;
+                if (request->command == TK_REMOTE_SONG_ARR_STEP) {
+                    if (!tk_banks.importing) { out[0] = TK_REMOTE_BUSY; break; }
+                    *target = next; out[0] = TK_REMOTE_OK; break;
+                }
+                if (memcmp(target, &next, sizeof next)) { *target = next; tk_arr_changed(); flags = TK_REMOTE_CHANGED | TK_REMOTE_DIRTY; }
+            }
+            out[0] = TK_REMOTE_OK; memcpy(out + 1, p, 3u); memcpy(out + 4, target, sizeof *target); *out_n = 10u;
+        }
+        break;
+    case TK_REMOTE_SCENE:
+    case TK_REMOTE_SET_SCENE:
+    case TK_REMOTE_SONG_SCENE:
+        if ((request->command == TK_REMOTE_SCENE ? n != 1u : n != 12u) || p[0] >= TK_SCENES) break;
+        {
+            tk_scene_t *target = request->command == TK_REMOTE_SONG_SCENE ?
+                &tk_bank_pool.stage.arrangement.scene[p[0]] : &tk_arr_song.scene[p[0]];
+            if (request->command != TK_REMOTE_SCENE) {
+                tk_scene_t next; if (!tk_remote_scene_parse(&next, p)) break;
+                if (request->command == TK_REMOTE_SONG_SCENE) {
+                    if (!tk_banks.importing) { out[0] = TK_REMOTE_BUSY; break; }
+                    *target = next; out[0] = TK_REMOTE_OK; break;
+                }
+                if (memcmp(target, &next, sizeof next)) { *target = next; tk_arr_changed(); flags = TK_REMOTE_CHANGED | TK_REMOTE_DIRTY; }
+            }
+            *out_n = tk_remote_scene_pack(p[0], target, out);
+        }
+        break;
+    case TK_REMOTE_LAUNCH_SCENE:
+        if (n != 1u || p[0] >= TK_SCENES || !tk_arr_song.scene[p[0]].enabled) break;
+        if (t->recording) { out[0] = TK_REMOTE_BUSY; break; }
+        tk_arr_scene_launch(s, t, p[0]); flags = TK_REMOTE_CHANGED;
+        *out_n = tk_remote_arr_state(out); break;
+    case TK_REMOTE_FILL:
+        if (n != 1u || p[0] > 1u) break;
+        tk_arr.fill = p[0] ? (uint8_t)(16u - (t->next_step % 16u)) : 0u;
+        flags = TK_REMOTE_CHANGED; *out_n = tk_remote_arr_state(out); break;
+    case TK_REMOTE_ARR_STATE:
+        if (!n) *out_n = tk_remote_arr_state(out); break;
+    case TK_REMOTE_AUTO_ARM:
+        if (n != 1u || p[0] >= 16u) break;
+        for (track = 0; track < TK_TRACKS; track++)
+            if (!(p[0] & (1u << track))) tk_arr.auto_touched[track] = 0u;
+        tk_arr.auto_armed = p[0]; flags = TK_REMOTE_CHANGED; *out_n = tk_remote_arr_state(out); break;
+    case TK_REMOTE_SONG_DRUM_MIX:
+        if (n != 5u || p[0] >= TK_DRUM_LANES) break;
+        if (!tk_banks.importing) { out[0] = TK_REMOTE_BUSY; break; }
+        memcpy(&tk_bank_pool.stage.drum_mix[p[0]], p + 1, 4u); out[0] = TK_REMOTE_OK; break;
+    case TK_REMOTE_DRUM_MIX:
+    case TK_REMOTE_SET_DRUM_MIX:
+        if (request->command == TK_REMOTE_DRUM_MIX ? (n != 1u || p[0] >= TK_DRUM_LANES) :
+            (n != 3u || p[0] >= TK_DRUM_LANES || p[1] >= 4u || p[2] > 127u)) break;
+        if (request->command == TK_REMOTE_SET_DRUM_MIX) {
+            uint8_t *field = (uint8_t *)&tk_drum_mix[p[0]] + p[1];
+            if (*field != p[2]) {
+                *field = p[2]; tk_set_drum_mix(p[0], &tk_drum_mix[p[0]]);
+                tk_arr_changed();
+                flags = TK_REMOTE_CHANGED | TK_REMOTE_DIRTY;
+            }
+        }
+        out[0] = TK_REMOTE_OK; out[1] = p[0];
+        memcpy(out + 2, &tk_drum_mix[p[0]], 4u); *out_n = 6u; break;
+    case TK_REMOTE_SECTION_MUTES:
+    case TK_REMOTE_SET_SECTION_MUTE:
+        if (request->command == TK_REMOTE_SECTION_MUTES ? n != 0u :
+            (n != 3u || p[0] >= TK_TRACKS || p[1] >= TK_SECTION_COUNT || p[2] > 1u)) break;
+        if (request->command == TK_REMOTE_SET_SECTION_MUTE &&
+            transport_section_mute_set(t, s, p[0], p[1], p[2]) == 1)
+            flags = TK_REMOTE_CHANGED | TK_REMOTE_DIRTY;
+        out[0] = TK_REMOTE_OK; out[1] = 1u;
+        for (track = 0; track < TK_TRACKS; track++)
+            out[2u + track] = tk_section_mutes_track(s->section_mutes, track);
+        *out_n = 6u;
+        break;
     case TK_REMOTE_UI_STATE:
         if (!n) {
             out[0] = TK_REMOTE_OK; out[1] = 1u;
@@ -207,6 +348,9 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
         if (!n) {
             out[0] = TK_REMOTE_OK;
             *out_n = 1u + tk_panel_activity_pack(&tk_panel_activity, s->octave, fm1_ms, out + 1u);
+        } else if (n == 1u && p[0] == 4u) {
+            out[0] = TK_REMOTE_OK;
+            *out_n = 1u + tk_panel_activity_pack_lights(&tk_panel_activity, s->octave, fm1_ms, out + 1u);
         }
         break;
     case TK_REMOTE_PAD_ROUTE:
@@ -223,6 +367,40 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
         out[2] = midi_live_drum_enabled; out[3] = 16u; out[4] = TK_TRACK_DRUM;
         *out_n = 5u;
         break;
+    case TK_REMOTE_KEYBOARD_ROUTE:
+        if (n && (n != 6u || p[0] != 1u || p[1] > 3u ||
+            p[2] < 1u || p[2] > 11u || p[4] < 1u || p[4] > 11u ||
+            p[3] >= TK_TRACKS || p[5] >= TK_TRACKS || (p[1] == 3u && p[2] == p[4]))) break;
+        if (n) {
+            uint32_t changed = midi_keyboard_mask != p[1];
+            for (track = 0; track < 2u; track++)
+                if (midi_keyboard_channel[track] + 1u != p[2u + track * 2u] ||
+                    tk_keyboard_track[track] != p[3u + track * 2u]) changed = 1u;
+            if (p[1] && changed && (t->recording || tk_banks.importing)) {
+                out[0] = TK_REMOTE_BUSY; break;
+            }
+            midi_keyboard_set(t,s,p[1],p+2);
+        }
+        out[0] = TK_REMOTE_OK; out[1] = 1u; out[2] = midi_keyboard_mask;
+        for (track = 0; track < 2u; track++) {
+            out[3u + track * 2u] = midi_keyboard_channel[track] + 1u;
+            out[4u + track * 2u] = (uint8_t)tk_keyboard_track[track];
+        }
+        *out_n = 7u; break;
+    case TK_REMOTE_FIRE_ROUTE:
+        if (n && (n != 6u || p[0] != 1u || p[1] > 15u ||
+            p[2] >= TK_TRACKS || p[3] >= TK_TRACKS || p[4] >= TK_TRACKS || p[5] >= TK_TRACKS)) break;
+        if (n) {
+            uint32_t changed = midi_fire_mask != p[1];
+            for (track = 0; track < 4u; track++) if (tk_fire_track[track] != p[2u+track]) changed = 1u;
+            if (p[1] && changed && (t->recording || tk_banks.importing)) {
+                out[0] = TK_REMOTE_BUSY; break;
+            }
+            midi_fire_set(t,s,p[1],p+2);
+        }
+        out[0] = TK_REMOTE_OK; out[1] = 1u; out[2] = midi_fire_mask; out[3] = 12u; out[4] = 4u;
+        for (track = 0; track < 4u; track++) out[5u+track] = (uint8_t)tk_fire_track[track];
+        *out_n = 9u; break;
     case TK_REMOTE_SOLO:
         if (n > 1u || (n && p[0] > TK_TRACKS)) break;
         if (n) {
@@ -405,7 +583,7 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
         break;
     case TK_REMOTE_LIVE_PRESET:
         if (n != 1u || p[0] >= TK_PRESET_COUNT) break;
-        preset_apply(s, p[0]); tk_forget_memory(); tk_lfo_init(lfo, fm1_ms); *live_shade = s->p.shade;
+        preset_apply(s, p[0]); tk_forget_live_memory(); tk_lfo_init(lfo, fm1_ms); *live_shade = s->p.shade;
         flags = TK_REMOTE_CHANGED | TK_REMOTE_DIRTY; out[0] = TK_REMOTE_OK;
         break;
     case TK_REMOTE_TRACK_PRESET:
@@ -438,6 +616,7 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
         if (macro_get(&s->track[track].p, p[1]) != p[2]) {
             const tk_track_patch_t *patch;
             macro_set(&s->track[track].p, p[1], p[2]);
+            tk_arr_record_knob(t, track, p[1], p[2]);
             /* The existing packed source mailbox feeds future and held voices.
              * Preserve gate/phase and the track LFO's clock; never select its
              * preset for live playing or release the generated part. */
@@ -446,7 +625,7 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
             patch = &s->track[track];
             track_shade[track] = tk_lfo_eval(&track_lfo[track], fm1_ms,
                 patch->lfo_rate, patch->lfo_on ? patch->lfo_depth : 0u,
-                patch->lfo_shape, patch->p.shade);
+                patch->lfo_shape, (tk_arr.lock_mask[track] & 1u) ? tk_arr.value[track][0] : patch->p.shade);
             tk_set_source_shade(TRACK_SOURCE[track], track_shade[track]);
             flags = TK_REMOTE_CHANGED | TK_REMOTE_DIRTY;
         }
@@ -466,9 +645,11 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
             t->selected = (uint8_t)track;
             transport_release_part(t, track); tk_all_sound_off(TRACK_SOURCE[track]);
             tk_pattern_clear(&s->pattern[track]);
+            /* Fire REC requests preservation with its third byte. Merely
+             * connecting a Fire must not change keyboard REC's live capture. */
             if ((n == 2u || !p[2]) && !(midi_live_drum_enabled && track == TK_TRACK_DRUM)) {
                 if (track == TK_TRACK_DRUM && PRESETS[s->preset].instrument != TK_INSTRUMENT_DRUM_KIT) {
-                    preset_apply(s, TK_KIT_PRESET_INDEX); tk_forget_memory(); tk_lfo_init(lfo, fm1_ms);
+                    preset_apply(s, TK_KIT_PRESET_INDEX); tk_forget_live_memory(); tk_lfo_init(lfo, fm1_ms);
                     *live_shade = s->p.shade;
                 }
                 track_capture_apply(s, track);
@@ -572,9 +753,15 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
             }
             if (n == 3u) {
                 *target = *tk_bank_pattern(s, track, p[1]);
+                memcpy(tk_arr_song.step[track][bank], tk_arr_song.step[track][p[1]], sizeof tk_arr_song.step[track][bank]);
                 tk_banks.length[track][bank] = tk_banks.length[track][p[1]];
                 if (bank == tk_banks.active[track]) s->length[track] = tk_banks.length[track][bank];
-            } else tk_pattern_clear(target);
+            } else {
+                uint32_t cell;
+                tk_pattern_clear(target); memset(tk_arr_song.step[track][bank], 0, sizeof tk_arr_song.step[track][bank]);
+                for (cell = 0; cell < TK_PATTERN_STEPS; cell++) tk_arr_song.step[track][bank][cell].probability = 100u;
+            }
+            tk_arr_changed();
             if (bank == tk_banks.active[track]) {
                 if (track == t->selected) t->edit_step %= s->length[track];
                 tk_banks_observe(s); flags = TK_REMOTE_CHANGED | TK_REMOTE_DIRTY;
@@ -583,11 +770,12 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
         out[0] = TK_REMOTE_OK;
         break;
     case TK_REMOTE_SONG_BEGIN:
-        if (n) break;
+        /* Swing-aware transaction1 is mandatory before any Stop/stage change. */
+        if (n != 1u || p[0] != 1u) { out[0] = TK_REMOTE_UNSUPPORTED; break; }
         if (t->recording) { out[0] = TK_REMOTE_BUSY; break; }
         transport_solo_set(t, s, TK_TRACKS, fm1_ms);
         tk_banks_cancel_pending(); transport_stop(t);
-        tk_song_clone(s, t); tk_banks.importing = 1; tk_banks.import_failed = 0;
+        tk_song_clone(s, t); tk_banks.importing = 1; tk_banks.import_failed = 0; remote_swing_staged = 0u;
         flags = TK_REMOTE_CHANGED; out[0] = TK_REMOTE_OK;
         break;
     case TK_REMOTE_SONG_PATCH:
@@ -601,10 +789,11 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
         out[0] = TK_REMOTE_OK;
         break;
     case TK_REMOTE_SONG_GLOBAL:
-        if ((n != 10u && n != 14u) || !tk_banks.importing || p[1] > 1u || p[2] >= 16u
+        if (n != 19u || p[18] > 100u || !tk_banks.importing || p[1] > 1u || p[2] >= 16u
             || p[3] >= TK_TRACKS || p[8] > 127u || p[9] > 1u) break;
-        if (n == 14u && (p[10] > 1u || p[11] > 127u || p[12] < 1u || p[12] > 12u
+        if (n >= 14u && (p[10] > 1u || p[11] > 127u || p[12] < 1u || p[12] > 12u
             || (p[13] != 4u && p[13] != 8u))) break;
+        if (n >= 18u && (p[14] > 15u || p[15] > 15u || p[16] > 15u || p[17] > 15u)) break;
         i = p[0] | p[1] << 7;
         if (i < 40u || i > 180u) break;
         for (track = 0; track < TK_TRACKS; track++) if (p[4u + track] >= TK_BANK_COUNT) {
@@ -614,13 +803,16 @@ static uint32_t tk_remote_command(const tk_remote_message_t *request,
         tk_bank_pool.stage.selected = p[3];
         for (track = 0; track < TK_TRACKS; track++) tk_bank_pool.stage.active[track] = p[4u + track];
         tk_bank_pool.stage.ghost_mask = p[8]; tk_bank_pool.stage.fx = p[9]; out[0] = TK_REMOTE_OK;
-        tk_bank_pool.stage.metro_enabled = n == 14u ? p[10] : 0u;
-        tk_bank_pool.stage.metro_level = n == 14u ? p[11] : 32u;
-        tk_bank_pool.stage.metro_beats = n == 14u ? p[12] : 4u;
-        tk_bank_pool.stage.metro_unit = n == 14u ? p[13] : 4u;
+        tk_bank_pool.stage.metro_enabled = n >= 14u ? p[10] : 0u;
+        tk_bank_pool.stage.metro_level = n >= 14u ? p[11] : 32u;
+        tk_bank_pool.stage.metro_beats = n >= 14u ? p[12] : 4u;
+        tk_bank_pool.stage.metro_unit = n >= 14u ? p[13] : 4u;
+        tk_bank_pool.stage.section_mutes = n >= 18u ? (uint16_t)(p[14] | p[15] << 4 |
+            p[16] << 8 | p[17] << 12) : 0u;
+        tk_bank_pool.stage.swing = p[18]; remote_swing_staged = 1u;
         break;
     case TK_REMOTE_SONG_COMMIT:
-        if (n || !tk_banks.importing || tk_banks.import_failed || !tk_song_valid(&tk_bank_pool.stage)) break;
+        if (n || !tk_banks.importing || tk_banks.import_failed || !remote_swing_staged || !tk_song_valid(&tk_bank_pool.stage)) break;
         tk_song_commit(s, t);
         for (track = 0; track < TK_TRACKS; track++) tk_remote_track_refresh(s, t, track, track_lfo, track_shade);
         flags = TK_REMOTE_CHANGED | TK_REMOTE_DIRTY; out[0] = TK_REMOTE_OK;
@@ -682,7 +874,10 @@ static uint32_t tk_remote_service(tk_settings_t *s, tk_transport_t *t,
     tk_remote_message_t message;
     int decoded;
     if (generation != remote_generation) {
+        tk_panel_input_cancel();
         midi_live_drum_set(t, s, 0u);
+        midi_fire_disable(t,s);
+        midi_keyboard_disable(t,s);
         if (transport_solo_set(t, s, TK_TRACKS, fm1_ms)) flags |= TK_REMOTE_CHANGED;
         tk_screen_reset(generation);
         tk_banks.importing = 0; /* an interrupted import never publishes its partial stage */

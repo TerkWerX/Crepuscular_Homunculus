@@ -1,0 +1,38 @@
+{
+  "version": "0.26.19",
+  "base_version": "0.26.19-dev",
+  "prepared_date": "2026-10-27",
+  "native_source_delta": {
+    "file": "firmware/src/terkinstein.c",
+    "change": "APP_VER string only"
+  },
+  "firmware_sha256": "985c1000dc58dd0afeafb18185a5de980795908166e9356d4c72fd07e656708f",
+  "base_firmware_sha256": "6d345d659275634492c7cb4ed65bfea4b492c83981abd1789d4518453ab9baa5",
+  "normal_and_asan_host_groups": 20,
+  "normal_and_asan_real_app_piano_checks": 14,
+  "piano_route": "SEQ -> hold SEL -> ARRANGEMENT -> tap SEL -> STEP EDIT -> hold SEL -> PIANO ROLL",
+  "silent_audio_and_saved_files_match_dev": true,
+  "matched_output_files": 10,
+  "former_macro_reproduces_sealed_dev_package": true,
+  "loader_unchanged": true,
+  "flash_ram_code_unchanged": true,
+  "target": {
+    "package_bytes": 610143,
+    "model_CRC_loader_verified": true,
+    "image": 220028,
+    "image_limit": 581564,
+    "static_RAM": 81904,
+    "static_RAM_limit": 98304,
+    "pool": 319876,
+    "pool_limit": 344064,
+    "ramtext": 2888
+  },
+  "image_delta_bytes": -4,
+  "static_ram_delta_bytes": 0,
+  "pool_delta_bytes": 0,
+  "home_glo_piano_pngs_inspected": true,
+  "final_build_installed": false,
+  "final_build_hardware_qualified": false,
+  "hardware_evidence": "Prior 0.26.19-dev identity/update and earlier 0.26.18 musical/persistence checks; see TESTING.md.",
+  "published": false
+}

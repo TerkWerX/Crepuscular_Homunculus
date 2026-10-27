@@ -99,8 +99,8 @@ static void protocol_and_lease(void)
     midi_live_drum_expire(&transport,&fixture,now+2999u); check(midi_live_drum_enabled,"lease arithmetic handles clock wrap");
     midi_live_drum_expire(&transport,&fixture,now+3000u); check(!midi_live_drum_enabled,"wrapped lease expires exactly at threshold");
     command(TK_REMOTE_SET_PAD_ROUTE,OFF,2u); check(reply[0]==TK_REMOTE_OK,"OFF cleanup is idempotent");
-    check(sizeof fixture==3700u && offsetof(tk_settings_t,fm)==3452u && TK_SOURCES==40u,
-        "unchanged flash record,FM offsets and per-source array count");
+    check(sizeof fixture==3700u && offsetof(tk_settings_t,fm)==3452u && TK_SOURCES==45u && TK_SOURCES<=64u,
+        "unchanged flash record and FM offsets; independent Fire/keyboard owners fit six-bit source IDs");
 }
 static void ownership_and_captured_sound(void)
 {
@@ -142,7 +142,7 @@ static void ownership_and_captured_sound(void)
     tk_note_on(60u,100u,1u);
     for(i=1;i<TK_VOICES;++i) tk_note_on(40u+i,100u,TK_SOURCE_DRUM);
     check(tk_note_on(36u,100u,TK_SOURCE_LIVE_DRUM) && held(60u,1u),"live pad can take generated capacity without evicting held keys");
-    check(TK_VOICES==6u && TK_FM_VOICE_LIMIT==4u,"routing does not increase DSP voices or FM cap");
+    check(TK_VOICES==8u && TK_FM_VOICE_LIMIT==4u,"routing retains eight total voices and the four-FM cap");
 }
 static void controller_and_reset_isolation(void)
 {
@@ -190,8 +190,175 @@ static void recording_sound(void)
     midi_live_drum_set(&transport,&fixture,0u); transport.selected=TK_TRACK_DRUM;
     check(midi_capture_allowed(&transport,0u) && midi_capture_allowed(&transport,1u),"OFF restores original any-live-input recording");
 }
+static void fire_track_routes(void)
+{
+    uint8_t route[]={1u,15u,0u,1u,2u,3u}, bad[]={1u,15u,0u,1u,2u,4u};
+    uint8_t record[]={1u,1u,1u}, stop[]={1u,0u};
+    uint32_t slot,flags; tk_voice_t *played;
+    reset_fixture(); before=fixture;
+    flags=command(TK_REMOTE_FIRE_ROUTE,0,0u);
+    check(!flags && reply_length==9u && !memcmp(reply,"\0\1\0\14\4\0\1\2\3",9u),"Fire query is read-only and initially off");
+    command(TK_REMOTE_FIRE_ROUTE,bad,6u);
+    check(reply[0]==TK_REMOTE_BAD_ARGUMENT && !midi_fire_mask,"invalid fourth track rejects all routes atomically");
+    command(TK_REMOTE_FIRE_ROUTE,route,5u);
+    check(reply[0]==TK_REMOTE_BAD_ARGUMENT && !midi_fire_mask,"truncated route cannot enable a subset");
+    transport.recording=1u; command(TK_REMOTE_FIRE_ROUTE,route,6u);
+    check(reply[0]==TK_REMOTE_BUSY && !midi_fire_mask,"initial routing waits for recording to finish");
+    transport.recording=0u; flags=command(TK_REMOTE_FIRE_ROUTE,route,6u);
+    check(!flags && reply[0]==TK_REMOTE_OK && midi_fire_mask==15u && !memcmp(&fixture,&before,sizeof fixture),"enable does not alter live patch, tracks, patterns or saved settings");
+    for(slot=0;slot<4u;slot++) {
+        check(midi_source(0u,11u+slot)==TK_SOURCE_FIRE0+slot && midi_source(1u,11u+slot)==28u+slot,"only the negotiated USB Fire channel is remapped");
+        check(tk_source_instrument_control[TK_SOURCE_FIRE0+slot]==fixture.track[slot].instrument &&
+            tk_source_patch_word[TK_SOURCE_FIRE0+slot]==tk_source_patch_word[TRACK_SOURCE[slot]],"each Fire gets its own complete captured patch");
+        check(tk_note_on(60u,90u,TK_SOURCE_FIRE0+slot),"four live Fire owners can hold the same pitch");
+    }
+    render(4u);
+    for(slot=0;slot<4u;slot++) {
+        played=voice(60u,TK_SOURCE_FIRE0+slot);
+        check(played && played->instrument==fixture.track[slot].instrument && played->frozen_patch,"audio latches the assigned captured instrument");
+    }
+    tk_note_off(60u,TK_SOURCE_FIRE0);
+    check(!held(60u,TK_SOURCE_FIRE0) && held(60u,TK_SOURCE_FIRE0+1u),"one Fire note-off cannot release another Fire");
+    transport_stop(&transport);
+    check(held(60u,TK_SOURCE_FIRE0+1u) && held(60u,TK_SOURCE_FIRE0+2u) && held(60u,TK_SOURCE_FIRE0+3u),"sequencer Stop retains every held Fire owner");
+    command(TK_REMOTE_RECORD,record,3u);
+    check(reply[0]==TK_REMOTE_OK && !memcmp(&fixture.track[1],&before.track[1],sizeof fixture.track[1]) && fixture.preset==before.preset,"explicit Fire REC preserves captured and live sounds");
+    check(midi_capture_allowed(&transport,TK_SOURCE_FIRE0+1u) && !midi_capture_allowed(&transport,TK_SOURCE_FIRE0),"recording accepts only the Fire assigned to the selected track");
+    command(TK_REMOTE_RECORD,stop,2u);
+    track_factory_apply(&fixture,1u,43u); publish_track(&fixture,1u); publish_fire_tracks();
+    tk_all_sound_off(TK_SOURCE_FIRE0+1u); render(60u);
+    tk_note_on(62u,100u,TK_SOURCE_FIRE0+1u); render(4u);played=voice(62u,TK_SOURCE_FIRE0+1u);
+    check(played && played->instrument==TK_INSTRUMENT_FM && played->fm.bank==1u &&
+        !memcmp(&played->fm.patch,&fixture.fm[2],sizeof fixture.fm[2]),"Fire FM uses the assigned captured FM bank, not the global live bank");
+    fm1_ms=100u;command(TK_REMOTE_FIRE_ROUTE,route,6u);transport.recording=1u;
+    fm1_ms=200u;command(TK_REMOTE_FIRE_ROUTE,route,6u);
+    check(reply[0]==TK_REMOTE_OK,"unchanged heartbeats are safe during recording");
+    midi_fire_expire(&transport,&fixture,3199u);check(midi_fire_mask==15u,"Fire lease remains until full 3000ms");
+    midi_fire_expire(&transport,&fixture,3200u);check(!midi_fire_mask && !held(62u,TK_SOURCE_FIRE0+1u),"expired routing releases only Fire owners");
+    transport.recording=0u;command(TK_REMOTE_FIRE_ROUTE,route,6u);
+    ++usb_remote_generation;tk_remote_service(&fixture,&transport,&live_shade,&live_lfo,track_lfo,track_shade,TK_PAGE_PAD,0u);
+    check(!midi_fire_mask && midi_source(0u,11u)==12u,"USB reset clears routes and restores ordinary MIDI meaning");
+    route[2]=2u;command(TK_REMOTE_FIRE_ROUTE,route,6u);
+    check(tk_fire_track[0]==2u && tk_fm_bank(TK_SOURCE_FIRE0)==3u,"one-to-three Fire layouts can route selected tracks with independent owners");
+    check(TK_VOICES==8u && TK_FM_VOICE_LIMIT==4u,"routing adds no synthesis voices");
+}
+static void keyboard_record_with_fires(void)
+{
+    uint8_t route[]={1u,15u,0u,1u,2u,3u},pads[]={1u,1u},record[]={1u,1u,0u};
+    uint32_t track,count; tk_track_patch_t expected; tk_fm_patch_t expected_fm;
+    for(track=1u;track<TK_TRACKS;track++) for(count=2u;count<=3u;count++) {
+        reset_fixture(); preset_apply(&fixture,32u);
+        fixture.p.shade=47u; fixture.memory=39u; fixture.fm[0].op[0].ratio=17u;
+        track_patch_capture(&expected,&fixture); expected_fm=fixture.fm[0]; before=fixture;
+        command(TK_REMOTE_FIRE_ROUTE,route,6u); command(TK_REMOTE_SET_PAD_ROUTE,pads,2u);
+        record[0]=(uint8_t)track; command(TK_REMOTE_RECORD,record,count);
+        check(reply[0]==TK_REMOTE_OK && !memcmp(&fixture.track[track],&expected,sizeof expected) &&
+            !memcmp(&fixture.fm[track+1u],&expected_fm,sizeof expected_fm),
+            "keyboard REC captures complete auditioned live patch with four Fires and split pads enabled");
+        before.track[track]=expected; before.fm[track+1u]=expected_fm;
+        check(!memcmp(fixture.track,before.track,sizeof fixture.track) && !memcmp(fixture.fm,before.fm,sizeof fixture.fm) &&
+            fixture.preset==before.preset && !memcmp(&fixture.p,&before.p,sizeof fixture.p),
+            "keyboard REC does not replace other Fire track sounds or global live patch");
+    }
+}
+static void keyboard_track_routes(void)
+{
+    static const uint8_t ON[] = {1u,3u,1u,1u,2u,2u};
+    static const uint8_t FIRE[] = {1u,15u,0u,1u,2u,3u};
+    static const uint8_t PADS[] = {1u,1u};
+    uint8_t invalid[6], shade; uint32_t i, bit, flags, buttons = 0u;
+    reset_fixture(); before = fixture;
+    check(!midi_keyboard_mask,"keyboard destinations default to the original live preset");
+    flags=command(TK_REMOTE_KEYBOARD_ROUTE,0,0u);
+    check(!flags && reply_length==7u && reply[0]==0u && reply[1]==1u && !reply[2],"keyboard probe is read-only and versioned");
+    check(!memcmp(&before,&fixture,sizeof fixture),"keyboard probe preserves saved sounds and patterns");
+    for(i=0;i<7u;i++) {
+        memcpy(invalid,ON,sizeof ON);
+        if(i==0u) invalid[0]=2u;
+        if(i==1u) invalid[1]=4u;
+        if(i==2u) invalid[2]=0u;
+        if(i==3u) invalid[4]=12u;
+        if(i==4u) invalid[3]=4u;
+        if(i==5u) invalid[5]=4u;
+        if(i==6u) invalid[4]=1u;
+        command(TK_REMOTE_KEYBOARD_ROUTE,invalid,6u);
+        check(reply[0]==TK_REMOTE_BAD_ARGUMENT && !midi_keyboard_mask,"invalid keyboard routes reject atomically");
+    }
+    fm1_ms=100u;command(TK_REMOTE_FIRE_ROUTE,FIRE,6u);command(TK_REMOTE_SET_PAD_ROUTE,PADS,2u);
+    command(TK_REMOTE_KEYBOARD_ROUTE,ON,6u);
+    check(reply_length==7u && reply[0]==0u && !memcmp(reply+1,ON,6u),"two keyboards confirm exact separate destinations");
+    check(midi_source(0u,0u)==TK_SOURCE_KEYBOARD0 && midi_source(0u,1u)==TK_SOURCE_KEYBOARD0+1u,"USB keyboard channels get independent captured owners");
+    check(midi_source(1u,0u)==17u && midi_source(0u,2u)==3u,"rear MIDI and unassigned USB channels keep original sound routing");
+    check(midi_source(0u,11u)==TK_SOURCE_FIRE0 && midi_source(0u,15u)==TK_SOURCE_LIVE_DRUM,"four Fires and split pads retain their routes");
+    check(tk_source_patch_word[TK_SOURCE_KEYBOARD0]==tk_source_patch_word[TK_SOURCE_SEQUENCE] &&
+          tk_source_patch_word[TK_SOURCE_KEYBOARD0+1u]==tk_source_patch_word[TK_SOURCE_ATMOS],"keyboards use the assigned captured patch mailboxes");
+    check(tk_fm_bank(TK_SOURCE_KEYBOARD0)==1u && tk_fm_bank(TK_SOURCE_KEYBOARD0+1u)==3u,"captured FM operators follow each keyboard's target");
+    for(i=0;i<2u;i++) check(tk_note_on(60u,100u,TK_SOURCE_KEYBOARD0+i),"both captured keyboards hold identical pitches independently");
+    check(tk_note_on(60u,80u,TK_SOURCE_FIRE0) && tk_note_on(60u,70u,17u),"Fire and rear notes coexist with both keyboards");
+    shade=fixture.p.shade;
+    flags=midi_control_cc(&fixture,&transport,0u,0xB0u,64u,127u,&shade,&buttons);
+    check(!flags && !buttons,"captured keyboard sustain does not edit global settings");
+    tk_note_off(60u,TK_SOURCE_KEYBOARD0);tk_note_off(60u,TK_SOURCE_KEYBOARD0+1u);
+    check(held(60u,TK_SOURCE_KEYBOARD0) && !held(60u,TK_SOURCE_KEYBOARD0+1u),"sustain belongs to its keyboard only");
+    midi_control_cc(&fixture,&transport,0u,0xB0u,64u,0u,&shade,&buttons);
+    check(!held(60u,TK_SOURCE_KEYBOARD0) && held(60u,TK_SOURCE_FIRE0) && held(60u,17u),"pedal release leaves Fire and rear owners intact");
+    before=fixture;
+    midi_control_cc(&fixture,&transport,0u,0xB0u,20u,0u,&shade,&buttons);
+    check(!memcmp(&before,&fixture,sizeof fixture),"captured keyboard CC mappings cannot overwrite live macros");
+    transport.selected=1u;
+    check(midi_capture_allowed(&transport,TK_SOURCE_KEYBOARD0) && !midi_capture_allowed(&transport,TK_SOURCE_KEYBOARD0+1u),"recording accepts only its assigned keyboard track");
+    transport.recording=1u;
+    command(TK_REMOTE_KEYBOARD_ROUTE,ON,6u);check(reply[0]==0u,"identical keyboard lease renews while recording");
+    memcpy(invalid,ON,6u);invalid[3]=3u;
+    command(TK_REMOTE_KEYBOARD_ROUTE,invalid,6u);
+    check(reply[0]==TK_REMOTE_BUSY && tk_keyboard_track[0]==1u,"keyboard reassignment cannot change a recording sound");
+    transport.recording=0u;
+    tk_note_on(62u,91u,TK_SOURCE_KEYBOARD0);fm1_ms=200u;
+    command(TK_REMOTE_KEYBOARD_ROUTE,ON,6u);
+    midi_keyboard_expire(&transport,&fixture,3199u);check(midi_keyboard_mask==3u,"keyboard lease lives through 2999ms");
+    midi_keyboard_expire(&transport,&fixture,3200u);
+    check(!midi_keyboard_mask && !held(62u,TK_SOURCE_KEYBOARD0) && held(60u,TK_SOURCE_FIRE0) && held(60u,17u),"expired keyboard lease clears only its own notes");
+    check(midi_source(0u,0u)==1u,"expired captured keyboard route restores ordinary live channel meaning");
+    for(bit=0;bit<2u;bit++) {
+        reset_fixture();fm1_ms=0xFFFFFF00u;command(TK_REMOTE_KEYBOARD_ROUTE,ON,6u);
+        tk_note_on(60u,100u,TK_SOURCE_KEYBOARD0+bit);
+        midi_keyboard_expire(&transport,&fixture,fm1_ms+3000u);
+        check(!midi_keyboard_mask && !held(60u,TK_SOURCE_KEYBOARD0+bit),"wrapped lease expires either keyboard cleanly");
+    }
+}
+static void captured_identity(void)
+{
+    const uint32_t presets[4]={9u,14u,30u,43u};
+    const uint8_t tracks[4]={0u,1u,2u,3u};
+    uint32_t i;
+    for(i=0;i<4u;i++) {
+        tk_voice_t *pad,*fire;
+        reset_fixture();track_factory_apply(&fixture,0u,presets[i]);publish_track(&fixture,0u);
+        midi_live_drum_set(&transport,&fixture,1u);midi_fire_set(&transport,&fixture,1u,tracks);
+        check(tk_source_instrument_control[TK_SOURCE_LIVE_DRUM]==tk_source_instrument_control[TK_SOURCE_FIRE0] &&
+            tk_source_instrument_control[TK_SOURCE_LIVE_DRUM]==fixture.track[0].instrument,"pads and Fire0 use captured DRUM engine");
+        check(tk_source_patch_word[TK_SOURCE_LIVE_DRUM]==tk_source_patch_word[TK_SOURCE_FIRE0] &&
+            tk_source_macro_control[TK_SOURCE_LIVE_DRUM]==tk_source_macro_control[TK_SOURCE_FIRE0] &&
+            tk_source_patch_timing[TK_SOURCE_LIVE_DRUM]==tk_source_patch_timing[TK_SOURCE_FIRE0] &&
+            tk_source_shade_control[TK_SOURCE_LIVE_DRUM]==tk_source_shade_control[TK_SOURCE_FIRE0] &&
+            tk_source_memory_control[TK_SOURCE_LIVE_DRUM]==tk_source_memory_control[TK_SOURCE_FIRE0],"both owners borrow identical captured controls");
+        check(tk_note_on(60u,100u,TK_SOURCE_LIVE_DRUM) && tk_note_on(60u,100u,TK_SOURCE_FIRE0),"both independent owners allocate");
+        render(4u);pad=voice(60u,TK_SOURCE_LIVE_DRUM);fire=voice(60u,TK_SOURCE_FIRE0);
+        check(pad && fire && pad->frozen_patch && fire->frozen_patch &&
+            pad->instrument==fixture.track[0].instrument && fire->instrument==pad->instrument,"sounding voices retain captured identity");
+        check(pad && fire && pad->patch_fracture==fire->patch_fracture && pad->patch_drift==fire->patch_drift &&
+            pad->patch_bloom==fire->patch_bloom && pad->patch_attack==fire->patch_attack &&
+            pad->patch_release==fire->patch_release && pad->level==fire->level,"sounding envelopes and macros agree");
+        if(fixture.track[0].instrument==TK_INSTRUMENT_FM)
+            check(pad && fire && pad->fm.bank==fire->fm.bank &&
+                !memcmp(&pad->fm.patch,&fire->fm.patch,sizeof pad->fm.patch),"both owners use captured DRUM FM bank");
+    }
+}
 int main(void)
 {
     protocol_and_lease(); ownership_and_captured_sound(); controller_and_reset_isolation(); recording_sound();
+    fire_track_routes(); keyboard_record_with_fires();
+    keyboard_track_routes();
+    captured_identity();
     printf("PASS: %u pad routing app checks (host only)\n",checks); return 0;
 }

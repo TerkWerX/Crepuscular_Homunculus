@@ -120,8 +120,8 @@ static void exact_live_patch(void)
     fx_expect(!memcmp(&fixture.graft_base, bytes, sizeof bytes)
         && !memcmp(&fixture.fm[5], &fixture.fm[0], sizeof fixture.fm[0]),
         "the next main pass retains edited live sound as its GRAFT base");
-    fx_expect(sizeof fixture == 3700u && fixture.schema == 11u && settings_valid(&fixture),
-        "FX controls retain the existing valid schema-eleven settings payload");
+    fx_expect(sizeof fixture == 3700u && fixture.schema == 12u && settings_valid(&fixture),
+        "FX controls retain the existing valid schema-twelve settings payload");
 }
 static void knob_mapping_and_bounds(void)
 {

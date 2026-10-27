@@ -22,6 +22,8 @@ enum { BTN_OCT_DOWN = 0, BTN_OCT_UP = 1, BTN_FX = 2, BTN_SEL = 3, BTN_ENV = 4, B
        BTN_GLO = 7, BTN_HOME = 8, BTN_SAVE = 9, BTN_ARP = 10, BTN_SEQ = 11, BTN_PLAY = 12, BTN_REC = 13 };
 enum { ENC_SELECT = 0, ENC_ALGORITHM = 1, ENC_KNOB1 = 2, ENC_KNOB2 = 3, ENC_KNOB3 = 4, ENC_KNOB4 = 5, ENC_PRESETS = 6 };
 #define KEY_LED(k) (14u + (k))
+#include <stdint.h>
+#include "terkinstein_store.h"
 
 #ifdef TERKINSTEIN_HOST
 #include "../../tests/host.c"                  /* on a computer: a fake FM-1 (tests/host.c) */
@@ -39,11 +41,9 @@ enum { ENC_SELECT = 0, ENC_ALGORITHM = 1, ENC_KNOB1 = 2, ENC_KNOB2 = 3, ENC_KNOB
 #include "bootguard.h"
 
 #ifndef APP_NAME
-#define APP_NAME "TERKINSTEIN"
+#define APP_NAME "Crepuscular Homunculus"
 #endif
-#ifndef FELUCCA_ID
-#define FELUCCA_ID "FM-1_960"                   /* provisional TERKINSTEIN identity; see README.md */
-#endif
+#include "terkinstein_identity.h"
 #ifndef APP_VER
 #define APP_VER "0.0"
 #endif
@@ -77,9 +77,10 @@ static inline void irq_restore(uint32_t flags);
 #include "midi_uart.c"
 #endif
 
-/* ---- flash: read anywhere; erase / program only the update's staging area and the settings sector */
+/* ---- flash: read anywhere; writes limited to staging, legacy settings and
+ * the bounded song journal inside the inherited DATA region. */
 #define SETTINGS_AT 0x000FC000u                 /* one 4 KiB sector of Felucca's globals area */
-#define FL_RANGE_OK(off, n) (FL_IN(off, n, FL_OTA_LO, FL_OTA_HI) || FL_IN(off, n, SETTINGS_AT, SETTINGS_AT + 0x1000u))
+#define FL_RANGE_OK(off, n) (FL_IN(off, n, FL_OTA_LO, FL_OTA_HI) || FL_IN(off, n, SETTINGS_AT, SETTINGS_AT + 0x1000u) || FL_IN(off, n, TK_STORE_BASE, TK_STORE_END))
 #include "fm1_flash.h"
 static uint8_t flash_ok;
 static int st_read(uint32_t off, void *dst, uint32_t n)
@@ -127,6 +128,7 @@ static void ota_show(uint32_t step, int32_t code)
 {
     static const char *const STEP[] = {"", "PACKAGE", "CHECK HEAD", "LOADER", "CONFIRM", "RESTART"};
     if (recovery_active) return;
+    lcd_cooperative_immediate();
     lcd_fill(0, 0, 240, 240, C_BLACK);
     draw_text_box(0, 92, 240, &FONT_S, "UPDATE", C_WHITE, 1);
     if (step < 9u)
@@ -141,6 +143,7 @@ static void ota_commit(const uint8_t *parm)
     fm1_delay_ms(30);
     fm1_enter_update(parm);
 }
+#include "terkinstein_product_label.h"
 #include "recovery.c"
 
 /* ---- settings: [magic][length][crc32] then the bytes; settings_save erases the sector (~50 ms with
@@ -182,6 +185,29 @@ static int settings_save(const void *p, uint32_t n)   /* p in RAM, n <= 3840; un
     if ((rc = fl_write(SETTINGS_AT + sizeof h, p, n)) != 0)
         return rc;
     return fl_write(SETTINGS_AT, (const uint8_t *)h, sizeof h);   /* the header last: a cut save stays invalid */
+}
+static int tk_store_flash_read(uint32_t off, void *p, uint32_t n)
+{
+    if (!flash_ok || !FL_IN(off, n, TK_STORE_BASE, TK_STORE_END)) return -1;
+    return st_read(off, p, n);
+}
+static int tk_store_flash_write(uint32_t off, const uint8_t *p, uint32_t n)
+{
+    if (!flash_ok || !FL_IN(off, n, TK_STORE_BASE, TK_STORE_END)) return -1;
+    return fl_write(off, p, n);
+}
+static int tk_store_flash_erase(uint32_t off)
+{
+    uint32_t took;
+    if (!flash_ok || (off & 0xFFFu) || !FL_IN(off, 0x1000u, TK_STORE_BASE, TK_STORE_END)) return -1;
+    return fl_erase4k(off, &took);
+}
+static void tk_store_idle(void)
+{
+    /* Keep USB and the watchdog alive without entering a concurrent updater
+     * or processing note/control commands while the snapshot is committed. */
+    fm1_wdt_feed();
+    usb_retry(fm1_ms);
 }
 
 /* ---- MIDI input: USB cable 0 = port 0, rear TRS = port 1; fair when both have work */
@@ -315,11 +341,19 @@ void fm1_alnk0_irq(void)                       /* via isr_alnk0 (hal/fm1_isr.S) 
     in_audio = 0;
 }
 extern void isr_alnk0(void);
+static uint32_t master_activity_revision;
+static int platform_master_activity(void)
+{
+    static uint32_t seen;
+    int changed = seen != master_activity_revision; seen = master_activity_revision; return changed;
+}
 
 /* ---- the main loop's duties: watchdog, USB, the installer's update request, the MASTER knob */
 static void platform_poll(void)
 {
     static int32_t knob_avg = 512 * 16;
+    static uint32_t master_last;
+    static uint8_t master_seen;
     int32_t a;
     fm1_wdt_feed();
     usb_retry(fm1_ms);
@@ -331,6 +365,7 @@ static void platform_poll(void)
     }
     if (usb.uboot_req) {
         fm1_audio_stop();
+        lcd_cooperative_immediate();
         lcd_fill(0, 0, 240, 240, C_BLACK);
         draw_text_box(0, 110, 240, &FONT_S, "UBOOT (USB)", C_WHITE, 1);
         usb_detach();
@@ -344,23 +379,20 @@ static void platform_poll(void)
         uint32_t k10;
         knob_avg += (a * 16 - knob_avg) / 8;
         k10 = (uint32_t)(knob_avg / 16);
+        if (!master_seen) { master_last = k10; master_seen = 1u; }
+        else if ((k10 > master_last ? k10 - master_last : master_last - k10) >= 6u) {
+            master_last = k10; master_activity_revision++;
+        }
         master_q12 = (int32_t)((k10 * k10) >> 8);
     }
 }
 
 static void fm1_fault(const fm1_crash_t *c)
 {
-    char b[12];
-    uint32_t i, t0, v[3] = {c->vec, c->pc, c->rets};
+    uint32_t t0;
     fm1_audio_stop();
-    lcd_fill(0, 0, 240, 240, RGB(160, 0, 0));
-    draw_text_box(0, 20, 240, &FONT_S, APP_NAME " CRASH", C_WHITE, 1);
-    for (i = 0; i < 3u; i++) {
-        uint32_t k;
-        for (k = 0; k < 8u; k++) b[k] = "0123456789ABCDEF"[(v[i] >> (28u - 4u * k)) & 15u];
-        b[8] = 0;
-        draw_text_box(10, 60 + i * 20, 220, &FONT_S, b, C_WHITE, 0);
-    }
+    lcd_cooperative_immediate();
+    tk_product_fault_screen(c->vec, c->pc, c->rets);
     t0 = fm1_ticks();
     while ((uint32_t)(fm1_ticks() - t0) < 8000u * 1000u * FM1_TICKS_PER_US)
         fm1_wdt_feed();

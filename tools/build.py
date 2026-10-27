@@ -47,7 +47,16 @@ SDK_SHA256 = {
     "cfg/eq_cfg_hw.bin": "41167491bffed4651750719c973d2758adeb9021a5670d02d6a53c85ed80ea7d",
 }
 
-PRODUCT = "FM-1_960"                # Provisional; absent from hub snapshot 2026-10-12, not reserved
+def source_product():
+    """Keep package, standalone app and loader defaults on one identity."""
+    source = (FW / "src" / "terkinstein_identity.h").read_text()
+    match = re.search(r'^#define TK_FIRMWARE_ID "(FM-1_9\d{2})"$', source, re.M)
+    if not match:
+        raise SystemExit("build: terkinstein_identity.h must define an FM-1_9NN identity")
+    return match.group(1)
+
+
+PRODUCT = source_product()
 
 
 def source_version():
@@ -134,7 +143,7 @@ def ldr_wrap(image):
 def build_loader():
     LDR.mkdir(parents=True, exist_ok=True)
     src = FW / "loader"
-    flags = [*CFLAGS, "-Ifirmware/hal", "-Ifirmware/src"]
+    flags = [*CFLAGS, "-Ifirmware/hal", "-Ifirmware/src", f'-DFELUCCA_ID="ota-{PRODUCT}"']
     tc_all(("cc", "-c", src / "crt0_ldr.S", "-o", LDR / "crt0_ldr.o"),
            ("cc", *flags, "-c", src / "loader.c", "-o", LDR / "loader.o"))
     elf = LDR / "loader.elf"

@@ -26,8 +26,9 @@ static void render(uint32_t count, const tk_params_t *p)
         expect(pcm[0] == 0x12345678 && pcm[FRAMES * 2u + 1u] == 0x12345678,
                "controller render respects buffer guards");
         for (i = 1u; i <= FRAMES * 2u; ++i)
-            expect(pcm[i] >= -24384 && pcm[i] <= 24384,
-                   "expressive six-voice PCM retains headroom");
+            expect(pcm[i] >= -(int32_t)(TK_VOICES * TK_VOICE_PCM_BOUND) &&
+                   pcm[i] <= (int32_t)(TK_VOICES * TK_VOICE_PCM_BOUND),
+                   "expressive shared-voice PCM stays inside its proven bound");
     }
 }
 static tk_voice_t *voice(uint32_t note, uint32_t source)
@@ -48,7 +49,8 @@ static void defaults_and_sources(void)
                "bounded revision packing and wrap ignore every payload bit");
     }
     tk_init();
-    expect(TK_SOURCES == 40u && TK_SOURCE_SEQUENCE == 33u && TK_SOURCE_BASS == 37u,
+    expect(TK_SOURCES == 45u && TK_SOURCE_SEQUENCE == 33u && TK_SOURCE_BASS == 37u &&
+           TK_SOURCE_LIVE_DRUM == 38u && TK_SOURCE_FIRE0 == 39u && TK_SOURCE_KEYBOARD0 == 43u,
            "both 16-channel MIDI ports precede protected generated sources");
     for (i = 0; i < TK_SOURCES; ++i) {
         expect(tk_source_performance[i] == TK_PERFORMANCE_DEFAULT &&
@@ -61,14 +63,14 @@ static void defaults_and_sources(void)
         expect(!tk_note_is_held(60u, i), "matching source note-off releases before render");
     }
     tk_init();
-    for (i = 17u; i < 23u; ++i) tk_note_on(60u + i, 100u, i);
+    for (i = 17u; i < 17u + TK_VOICES; ++i) tk_note_on(60u + i, 100u, i);
     expect(tk_live_voice_count() == TK_VOICES, "TRS port notes count as protected live voices");
-    expect(!tk_note_on(40u, 100u, TK_SOURCE_SEQUENCE), "sequence cannot steal six held TRS notes");
+    expect(!tk_note_on(40u, 100u, TK_SOURCE_SEQUENCE), "sequence cannot steal eight held TRS notes");
     tk_note_off(77u, 1u);
     expect(tk_note_is_held(77u, 17u), "USB channel1 cannot release TRS channel1");
     tk_note_off(77u, 17u);
     expect(tk_note_on(40u, 100u, TK_SOURCE_SEQUENCE), "sequence can borrow a released TRS slot");
-    expect(tk_live_voice_count() == 5u, "generated slot remains separate from live count");
+    expect(tk_live_voice_count() == TK_VOICES - 1u, "generated slot remains separate from live count");
 }
 static void bend_ranges(void)
 {

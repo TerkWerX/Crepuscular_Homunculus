@@ -151,18 +151,23 @@ def main():
     folder = Path(sys.argv[2]).resolve()
     folder.mkdir(parents=True, exist_ok=True)
     os.environ["TK_SCREEN_VALIDATE"] = "1"
-    # The startup image itself comes from real lcd_blit strips and includes
-    # dense binary colors. A complete wire reconstruction must match its PPM.
+    # Let both startup phases run, then dismiss with ENV and select a stationary
+    # page so a complete asynchronous
+    # wire refresh has an exact, stable LCD reference. The intro-specific
+    # harness checks its strip capture, artwork and startup-only encoding.
+    static_page = ["2200 btn 4"]
     heartbeat = [sysex(t, 0x0A, i + 1, (1,)) for i, t in enumerate(range(50, 9000, 2000))]
-    quiet, _, _ = run(exe, folder, "mirror-splash-off", [], 8500)
-    streamed, log, _ = run(exe, folder, "mirror-splash-on", heartbeat, 8500)
+    quiet, _, _ = run(exe, folder, "mirror-static-off", static_page, 8500)
+    streamed, log, _ = run(exe, folder, "mirror-static-on",
+        sorted(static_page + heartbeat, key=lambda line: int(line.split()[0])), 8500)
     frame, complete = pixels_from_log(log)
     assert len(complete) == 225, "Initial stream failed to refresh every tile"
-    assert rgb_bytes(frame) == Path(f"{streamed}-8200.ppm").read_bytes().split(b"\n", 1)[1], "Wire image differs from real LCD splash"
+    assert rgb_bytes(frame) == Path(f"{streamed}-8200.ppm").read_bytes().split(b"\n", 1)[1], "Wire image differs from real static LCD page"
     assert quiet.with_suffix(".wav").read_bytes() == streamed.with_suffix(".wav").read_bytes()
     advanced_heartbeat = [sysex(t, 0x0A, i + 1, (3 if i == 0 else 4,))
                           for i, t in enumerate(range(50, 9000, 2000))]
-    advanced, advanced_log, _ = run(exe, folder, "mirror-splash-advanced", advanced_heartbeat, 8500)
+    advanced, advanced_log, _ = run(exe, folder, "mirror-static-advanced",
+        sorted(static_page + advanced_heartbeat, key=lambda line: int(line.split()[0])), 8500)
     advanced_frame, complete = pixels_from_log(advanced_log)
     assert len(complete) == 225
     assert rgb_bytes(advanced_frame) == Path(f"{advanced}-8200.ppm").read_bytes().split(b"\n", 1)[1]

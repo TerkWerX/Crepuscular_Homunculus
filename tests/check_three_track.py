@@ -52,7 +52,7 @@ LCD = re.compile(r"^\s*(\d+) ms  LCD pixels (\d+)$", re.MULTILINE)
 NOTE_ON = {"drum": 0x99, "melody": 0x91, "atmos": 0x92, "bass": 0x93}
 NOTE_OFF = {"drum": 0x89, "melody": 0x81, "atmos": 0x82, "bass": 0x83}
 PITCHES = {"drum": {48, 50}, "melody": {60, 64}, "atmos": {60, 64}, "bass": set()}
-SCHEMA = 11
+SCHEMA = 12
 SCHEMA4_SIZE = 496
 SCHEMA5_SIZE = 688
 CURRENT_SIZE = 3700
@@ -442,8 +442,8 @@ def check_dense_allocation(executable: Path, prefix: Path, saved: Path,
     assert len(live) == 3, f"the held live triad was not played: {live}"
     generated = [(status, pitch) for ms, status, pitch, velocity in events
                  if ms == 100 and status in NOTE_ON.values() and velocity]
-    assert sorted(generated) == sorted(((0x99, 48), (0x91, 60), (0x92, 72))), (
-        f"dense step did not share three available voices across tracks: {generated}")
+    assert sorted(generated) == sorted(((0x99, 48), (0x91, 60), (0x92, 72), (0x99, 50), (0x91, 62))), (
+        f"dense step did not share five available voices across tracks: {generated}")
     assert 10 < active_peak(dense, 100, 300) < 32767, (
         "dense three-track step was silent or clipped")
     check_note_pairs(events)
@@ -485,9 +485,9 @@ def check_sustained_layering(executable: Path, prefix: Path, saved: Path,
         f"ATMOS did not sustain across later drum/melody steps: {atmosphere}")
     dense = [(status, pitch) for ms, status, pitch, velocity in events
              if 264 <= ms <= 268 and status in NOTE_ON.values() and velocity]
-    assert sorted(dense) == sorted(((NOTE_ON["drum"], 48),
-                                    (NOTE_ON["melody"], 60))), (
-        f"dense step did not split its two free voices across DRUM/MELODY: {dense}")
+    assert sorted(dense) == sorted(((NOTE_ON["drum"], 48), (NOTE_ON["melody"], 60),
+                                    (NOTE_ON["drum"], 50), (NOTE_ON["melody"], 62))), (
+        f"dense step did not split its four free voices across DRUM/MELODY: {dense}")
     later = [(status, pitch) for ms, status, pitch, velocity in events
              if 596 <= ms <= 600 and status in NOTE_ON.values() and velocity]
     assert sorted(later) == sorted(((NOTE_ON["drum"], 50),
@@ -546,13 +546,13 @@ def check_generated_preemption(executable: Path, prefix: Path, saved: Path,
                 ms == 1300 for ms, _ in live_offs
             ), f"{label}: a held live key was displaced: {live_ons}, {live_offs}"
 
-    one_run("generated-preempt", (60, 62, 64, 67), (72, 74),
+    one_run("generated-preempt", (60, 62, 64, 67), (72, 74, 76, 79),
             GENERATED_PREEMPT,
             {(NOTE_ON["melody"], pitch) for pitch in (60, 62, 64, 67)} |
-            {(NOTE_ON["atmos"], pitch) for pitch in (72, 74)}, False)
-    one_run("live-preempt", (60, 62), (72,), LIVE_PREEMPT,
-            {(NOTE_ON["melody"], pitch) for pitch in (60, 62)} |
-            {(NOTE_ON["atmos"], 72)}, True)
+            {(NOTE_ON["atmos"], pitch) for pitch in (72, 74, 76, 79)}, False)
+    one_run("live-preempt", (60, 62, 64), (72, 74), LIVE_PREEMPT,
+            {(NOTE_ON["melody"], pitch) for pitch in (60, 62, 64)} |
+            {(NOTE_ON["atmos"], pitch) for pitch in (72, 74)}, True)
 
     # In a sorted step, note[0] may retrigger an already held pitch. That
     # retrigger must not consume the one preemption allowance for the track:
@@ -561,7 +561,7 @@ def check_generated_preemption(executable: Path, prefix: Path, saved: Path,
     blob[pattern_at:pattern_at + pattern_bytes] = bytes(pattern_bytes)
     for track, step_number, pitches in (
         (1, 0, (60, 62, 64, 67)),
-        (2, 0, (72, 74)),
+        (2, 0, (72, 74, 76, 79)),
         (1, 1, (60, 65)),
     ):
         at = pattern_at + (track * STEPS + step_number) * STEP_BYTES
@@ -585,7 +585,7 @@ def check_generated_preemption(executable: Path, prefix: Path, saved: Path,
     victims = [(status, pitch) for status, pitch, _ in at_step
                if status in NOTE_OFF.values() and pitch != 60]
     initial = ({(NOTE_ON["melody"], pitch) for pitch in (60, 62, 64, 67)} |
-               {(NOTE_ON["atmos"], pitch) for pitch in (72, 74)})
+               {(NOTE_ON["atmos"], pitch) for pitch in (72, 74, 76, 79)})
     assert len(victims) == 1 and (victims[0][0] | 0x10, victims[0][1]) in initial, (
         f"new pitch lacked a matching generated victim note-off: {at_step}")
 
@@ -702,10 +702,10 @@ def main() -> None:
         path.unlink()
     print("Three-track recording: distinct drum/melody/atmosphere MIDI channels and notes passed")
     print("SEQ panel: SELECT chooses tracks; SEL mute hides only the drum loop")
-    print("Save/reload: schema-11 record and all three loops survive a fresh host process")
+    print("Save/reload: schema-12 record and all three loops survive a fresh host process")
     print("Schema-5 held loops migrate with Ghost Mask OFF; SEQ Knob 4 depth survives SAVE/reload")
-    print("Dense step: three held live notes leave one generated voice for each loop track")
-    print("Layering: held ATMOS spans later steps while DRUM and MELODY split two free voices")
+    print("Dense step: three held live notes leave five generated voices shared across three loop tracks")
+    print("Layering: held ATMOS spans later steps while DRUM and MELODY split four free voices")
     print("Saturation: later drum and duplicate-then-new note preempt generated holds, preserving live keys")
     print("SEQ BPM: pending step and held gate rescale when tempo changes mid-note")
     print("REC BPM: held-note length integrates both tempos and survives save/reload")

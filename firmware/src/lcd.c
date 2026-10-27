@@ -77,6 +77,9 @@ static void lcd_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c)
 #ifdef TERKINSTEIN_SCREEN_MIRROR
     tk_screen_capture_fill(x, y, w, h, c);
 #endif
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    if (tk_lcd_queue.active) return;
+#endif
     lcd_sync();
     k = 240u / w * w;                       /* whole rows per transfer (narrow fills: one DMA) */
     for (i = 0; i < k; i++)
@@ -96,8 +99,55 @@ static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint1
 #ifdef TERKINSTEIN_SCREEN_MIRROR
     tk_screen_capture_blit(x, y, w, h, px);
 #endif
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    if (tk_lcd_queue.active) return;
+#endif
     lcd_window(x, y, x + w - 1u, y + h - 1u);
     lcd_data(px, w * h * 2u);
+}
+
+/* Ordinary app painting only updates the existing exact RGB565 framebuffer.
+ * Return to input/clock/transport between <=512-pixel physical batches. Never
+ * call this from audio. No UI drawing or mirror capture recurses from upload. */
+static void lcd_cooperative_begin(void)
+{
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    if (tk_lcd_queue.active) return;
+    lcd_sync();
+    tk_lcd_queue.active = 1u;
+#endif
+}
+static void lcd_cooperative_immediate(void)
+{
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    uint32_t tile;
+    lcd_sync();
+    /* A full immediate override can equal a queued desired color while the
+     * physical/mirrored old color differs. Preserve publication of those tiles
+     * when canceling; otherwise an emergency clear could leave a stale mirror. */
+    for (tile = 0; tile < TK_SCREEN_TILES; ++tile)
+        if (tk_lcd_queue.dirty[tile]) tk_screen.dirty[tile] = 1u;
+    tk_lcd_queue_reset(); /* recovery/updater/fault must not wait for app_main */
+#endif
+}
+static uint32_t lcd_cooperative_upload(void)
+{
+    uint32_t count = 0u;
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    for (; count < TK_LCD_BATCH_TILES; ++count) {
+        uint32_t tile, x, y;
+        lcd_sync();
+        tile = tk_lcd_queue_take(tk_screen_pool.pixels);
+        if (tile == TK_SCREEN_TILES) break;
+        x = tile % TK_SCREEN_COLUMNS * TK_SCREEN_TILE;
+        y = tile / TK_SCREEN_COLUMNS * TK_SCREEN_TILE;
+        lcd_window(x, y, x + TK_SCREEN_TILE - 1u, y + TK_SCREEN_TILE - 1u);
+        lcd_data(tk_lcd_queue.pixels, TK_SCREEN_TILE_BYTES);
+        lcd_sync(); /* release mirror eligibility only after physical completion */
+        tk_screen.dirty[tile] = 1u;
+    }
+#endif
+    return count;
 }
 
 /* ST7789V init: reset, then 16-bit colour, scan direction and IPS inversion;
@@ -117,6 +167,9 @@ static const uint8_t LCD_SEQ[] = {
 static void lcd_init(void)
 {
     uint32_t r, x;
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    tk_lcd_queue_reset();
+#endif
     fm1_lcd_hw_init();
     lcd_spin(2000000u);
     for (r = 0; r < sizeof LCD_SEQ; r += 2u + LCD_SEQ[r + 1u]) {

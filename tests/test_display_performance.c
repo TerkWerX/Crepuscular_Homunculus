@@ -64,7 +64,9 @@ int main(void)
     tk_banks.active[3] = 1; tk_banks.pending[3] = TK_BANK_NONE;
     expect(seq_paint() == 7200u, "active bank redraws only its lane");
     clock_state.editing = 1;
-    expect(seq_paint() < 15000u, "entry mode repaints status/help and focused lane only");
+    /* Existing 0.22 and current layouts: one 7,200-pixel lane plus three
+     * 224x16 status/help boxes. Same-state pixel parity remains exact. */
+    expect(seq_paint() == 17952u, "entry mode repaints status/help and focused lane only");
     clock_state.edit_step = 7;
     expect(seq_paint() == 7200u, "edit cursor redraws its lane");
     tk_pattern_record(&fixture.pattern[1], 7, 60, 100);
@@ -84,7 +86,9 @@ int main(void)
     seq_paint(); clock_state.shown_step = 15; seq_paint();
     previous = clock_state.shown_step; clock_state.shown_step = 16;
     host_lcd_pixels = 0; draw_seq_playhead(&fixture, &clock_state, previous, 16);
-    expect(host_lcd_pixels < 10000u, "sixteen-step group transition stays partial");
+    /* Four rows each repaint a 224x2 head strip, sixteen 11x8 cells,
+     * one scar pixel, a 40x16 page label and the next 11x2 playhead. */
+    expect(host_lcd_pixels == 10076u, "sixteen-step group transition stays partial");
     expect(!seq_paint(), "group transition retains complete screen parity");
     clock_state.running = 0;
     expect(seq_paint() > 30000u, "stopping removes old playheads");

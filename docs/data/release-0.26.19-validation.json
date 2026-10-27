@@ -1,0 +1,73 @@
+{
+  "version": "0.26.19-dev",
+  "firmware_sha256": "6d345d659275634492c7cb4ed65bfea4b492c83981abd1789d4518453ab9baa5",
+  "availability": {
+    "checked_utc": "2026-10-27T00:01:24.190112+00:00",
+    "catalog_url": "https://thefirmwarehub.com/catalog.json",
+    "catalog_sha256": "8c0e9fbfdfb63402c5d9fb9d3129592ac70ed8646ac9b52a148f8b2246a9bc76",
+    "entries": 105,
+    "new_identity": "FM-1_986",
+    "loader_identity": "ota-FM-1_986",
+    "fields": [
+      "product",
+      "ident"
+    ],
+    "match_policy": "prefix including possible version extensions",
+    "matches": [],
+    "reserved": false
+  },
+  "target": {
+    "sha256": "6d345d659275634492c7cb4ed65bfea4b492c83981abd1789d4518453ab9baa5",
+    "package_bytes": 610143,
+    "model_CRC_loader_verified": true,
+    "image": 220032,
+    "image_limit": 581564,
+    "static_RAM": 81904,
+    "static_RAM_limit": 98304,
+    "pool": 319876,
+    "pool_limit": 344064,
+    "ramtext": 2888,
+    "installed": false,
+    "hardware_qualified": false
+  },
+  "host": {
+    "optimized": {
+      "suite": "Passed 20 host groups. No hardware qualification.",
+      "identity-app": [
+        "FM-1_986",
+        "FM-1_000",
+        "FM-1_986"
+      ],
+      "usb-app": "PASS exact UTF-16LE product name, descriptor length/type, EP0 bound and revision",
+      "identity-loader": [
+        "ota-FM-1_986"
+      ],
+      "usb-loader": "PASS exact UTF-16LE product name, descriptor length/type, EP0 bound and revision"
+    },
+    "asan": {
+      "suite": "Passed 20 host groups with ASan. No hardware qualification.",
+      "identity-app": [
+        "FM-1_986",
+        "FM-1_000",
+        "FM-1_986"
+      ],
+      "usb-app": "PASS exact UTF-16LE product name, descriptor length/type, EP0 bound and revision",
+      "identity-loader": [
+        "ota-FM-1_986"
+      ],
+      "usb-loader": "PASS exact UTF-16LE product name, descriptor length/type, EP0 bound and revision"
+    },
+    "target_parity": {
+      "app_exact_except_identity_version": true,
+      "loader_exact_except_identity": true
+    },
+    "silent_parity": "three scripts; WAV and every produced settings/journal file equal to18 and across optimized/ASan"
+  },
+  "test_fixture_correction": "HOME choice fixture updated from pre-swing schema12 expectations to current schema13 plus explicit legacy migration. Production save code unchanged.",
+  "visual_review": "Two native240x240 HOME PNGs inspected; version19 fits; inherited character/footer unchanged.",
+  "hardware_tested": false,
+  "published": false,
+  "prior_hardware_evidence": "release-0.26.18-validation.json",
+  "record_scope": "Historical offline build record, before installation. Current hardware results in release-0.26.19-hardware.json.",
+  "current_hardware_evidence": "release-0.26.19-hardware.json"
+}

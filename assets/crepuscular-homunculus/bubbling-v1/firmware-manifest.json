@@ -1,0 +1,165 @@
+{
+  "format": "FM-1 shared-palette 4-bit RGB565 animation v1",
+  "generator": "tools/make_homunculus.py",
+  "canvas": {
+    "width": 240,
+    "height": 240,
+    "background": "black"
+  },
+  "crop": {
+    "x": 62,
+    "y": 9,
+    "width": 114,
+    "height": 175
+  },
+  "palette_method": "deterministic weighted median-cut, 15 visible colors plus black; no dithering",
+  "palette_rgb565": [
+    "0000",
+    "1022",
+    "2085",
+    "28c6",
+    "3108",
+    "41a8",
+    "4189",
+    "520a",
+    "6309",
+    "73ca",
+    "846b",
+    "94ac",
+    "a56e",
+    "be10",
+    "c672",
+    "df15"
+  ],
+  "palette_rgb888_preview": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      16,
+      4,
+      16
+    ],
+    [
+      33,
+      16,
+      41
+    ],
+    [
+      41,
+      24,
+      49
+    ],
+    [
+      49,
+      32,
+      66
+    ],
+    [
+      66,
+      52,
+      66
+    ],
+    [
+      66,
+      48,
+      74
+    ],
+    [
+      82,
+      65,
+      82
+    ],
+    [
+      99,
+      97,
+      74
+    ],
+    [
+      115,
+      121,
+      82
+    ],
+    [
+      132,
+      142,
+      90
+    ],
+    [
+      148,
+      150,
+      99
+    ],
+    [
+      165,
+      174,
+      115
+    ],
+    [
+      189,
+      195,
+      132
+    ],
+    [
+      198,
+      207,
+      148
+    ],
+    [
+      222,
+      227,
+      173
+    ]
+  ],
+  "packing": "row-major, high nibble first, black index 0, RGB565 unswapped",
+  "row_bytes": 57,
+  "frame_bytes": 9975,
+  "frame_count": 3,
+  "pixel_bytes": 29925,
+  "palette_bytes": 32,
+  "total_asset_bytes": 29957,
+  "playback": {
+    "frames": [
+      0,
+      1,
+      2,
+      1
+    ],
+    "frame_duration_ms": 200
+  },
+  "sources": [
+    {
+      "file": "homunculus_A.png",
+      "sha256": "ced94fbfe854a00a835f9dd258572d845148bc3a910e0b4ca0acddd0409af8fe"
+    },
+    {
+      "file": "homunculus_B.png",
+      "sha256": "ef2c53c3e5651541c4cbc71189f7f092017bd22c36f196ca14ca889561a9498b"
+    },
+    {
+      "file": "homunculus_C.png",
+      "sha256": "50badfb221fe66eb1494709cd9cc6f40e21d89badbb80be06c4dca38bd5e4c54"
+    }
+  ],
+  "previews": [
+    {
+      "file": "homunculus_A_firmware.png",
+      "decoded_rgb_sha256": "e82d5e63763f0c84038a2b8c04f351c4c0ab1f7f7d12f036758a7b3787808b6c",
+      "packed_sha256": "65057ad9031607ee3ac4e8102f5382b309ece758b5d779b93a3b7cb71d076e6d"
+    },
+    {
+      "file": "homunculus_B_firmware.png",
+      "decoded_rgb_sha256": "69f1d2e37f89e747caf58d82a9f3aeff613898422a1afe3d06e4f55fd5414f09",
+      "packed_sha256": "a23d683bb48dd6e3def93976ef77d1a3336404d9f2f100ae5adb613dd58470cd"
+    },
+    {
+      "file": "homunculus_C_firmware.png",
+      "decoded_rgb_sha256": "f952ceb63d3506ac5a7889f302ea8392efd98714aa804c06cf4fab62b5ccfffe",
+      "packed_sha256": "9cae6c5852e38b0ff8beaebaa317415dccd57d03cb2ecbe8492ed2da050bbebc"
+    }
+  ],
+  "header_sha256": "32a38363820af137e0a6e8eb4841c4b6ee9bf664be24792d92d16ea95eb0b1f2",
+  "note": "Only offline color conversion and common cropping; source artwork and layout are unchanged. Previews show exact decoded RGB565 palette colors on black. No hardware qualification."
+}

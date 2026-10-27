@@ -1,9 +1,65 @@
-# Page controls — TERKINSTEIN 0.22.0-dev
+# Crepuscular Homunculus 0.26.19 controls
+
+## Candidate 0.26.17: confirmed HOME reset
+
+A physical HOME hold of 700ms opens RESET DEFAULTS? and leaves the song playing
+or stopped as it was. Release every button, then press physical SEL alone to
+confirm. HOME cancels. The prompt times out after10seconds; other panel actions
+cancel it and retain their normal function. Encoders cancel before editing.
+Remote/virtual HOME or SEL cannot confirm reset. The first HOME press retains
+its normal captured-track/LIVE navigation. Reset itself retains the previous
+RAM-default semantics and never implicitly presses SAVE. See HOME_RESET_GUARD.md.
+
+## Candidate0.26.15: song-wide swing
+
+On SEQ overview, Knob3 now edits saved swing0–100. In SEQ EDIT it still selects
+steps. Zero is straight;100 approaches75:25 pairs. Edits latch at the next
+even global step; REC/import lock this knob. SAVE follows complete-silence
+guards. All other encoders retain their roles. See [song swing](SONG_SWING.md).
+
+## Selected-track step-entry sound — 0.26.14-dev candidate
+
+In SEQ, select DRUM/MELODY/ATMOS/BASS, press HOME and choose its captured
+sound. Returning to SEQ and pressing EDIT now auditions that same capture.
+SELECT during step entry follows the newly selected track; PRESETS edits only
+that track's capture. The SEQ status shows `EDIT: <preset>` and the header
+shows the current track. Existing held notes/HOLD finish on their original
+sound; release them and play a new gesture to audition a newly selected track.
+
+Leaving step entry restores independent LIVE. The non-editing SEQ overview
+keeps its previous LIVE/PRESETS/REC behavior. Ordinary unrouted external MIDI
+continues to use LIVE; explicitly routed keyboards/Fire retain their own track.
+Navigation never recaptures a patch or starts playback. No saved/wire format,
+catalog, DSP or voice changes. The track sound fix has attended acceptance in the retained lineage; see TESTING.md for exact-build scope.
+
+## HOME mirror detail — 0.26.11-dev candidate
+
+The same GLO → SEL / Knob2 choice also selects the PC mirror codec. HOMUNCULUS
+uses exact native pixels/colours, including its animated skin and lightning;
+THORN RIFT retains its reduced-detail/four-colour interior stream. Switching
+restores all mirror tiles, with no manual PC setting. The FM-1 LCD is unchanged.
+Both reuse existing compression, dirty tiles, lease and USB admission budgets.
+There is no new screen command or saved field. An existing compact-capable
+companion accepts the lossless tiles on the same negotiated subscription.
+
+## Homunculus HOME choice — 0.26.10-dev
+
+GLO → SEL opens CONTROL FEEL. Knob 1 keeps LINEAR/ACCEL; Knob 2 selects
+HOMUNCULUS (left/default) or THORN RIFT (right). HOME returns; SAVE remembers
+after complete silence. The creator splash is unchanged.
+
+In SEQ, select one of the four tracks and press HOME to edit its captured
+sound independently; HOME again returns to LIVE. To open the piano roll:
+**SEQ → hold SEL (700 ms) for ARRANGEMENT → tap SEL for STEP EDIT →
+hold SEL (700 ms) for PIANO ROLL**. Release SEL between gestures.
+STEP EDIT is the arrangement note editor; it is different from the SEQ EDIT
+step-entry mode opened with the EDIT button. EDIT or held SEL returns from
+the piano roll to STEP EDIT. See [piano-roll controls](PIANO_ROLL.md).
 
 The FM-1's detented Knobs 1–4 have distinct jobs on each parameter page.
 SELECT chooses the sequencer track, ALGORITHM chooses its A–D bank, and
-PRESETS chooses the live sound. Captured track patches stay independent of
-live sound edits. Selectable acceleration is available on eligible continuous
+PRESETS chooses LIVE outside captured sound editing and SEQ step entry.
+Captured track patches stay independent of LIVE edits. Selectable acceleration is available on eligible continuous
 parameters. See [testing](TESTING.md) for the current validation scope.
 
 | Page / instrument | Knob 1 | Knob 2 | Knob 3 | Knob 4 |
@@ -16,9 +72,9 @@ parameters. See [testing](TESTING.md) for the current validation scope.
 | ENV, kit | Decay | Body | Wire | Bite |
 | LFO, pitched | Rate | Depth | Shape | Base filter |
 | ARP | BPM | Note order | Rate | Gate |
-| SEQ | BPM, including EDIT | Length: 16 / 32 / 64 | Step cursor in EDIT only | Ghost Mask |
+| SEQ | BPM, including EDIT | Length: 16 / 32 / 64 | SWING on overview; step cursor in EDIT | Ghost Mask |
 | METRONOME | BPM | Click level | Beats per measure: 1–12 | Beat unit: 4 or 8 |
-| CONTROL FEEL | LINEAR / ACCEL | Inactive | Inactive | Inactive |
+| CONTROL FEEL | LINEAR / ACCEL | HOMUNCULUS / THORN RIFT | Inactive | Inactive |
 | MIDI CONTROL | Target | CC number; bend range on bend target | Input port | MIDI channel |
 | OP1–OP6, FM | Ratio | Level | Attack | Decay |
 | PIT | FM pitch depth | FM pitch time | Bend range | Panel octave |
@@ -91,8 +147,8 @@ not alter incoming MIDI controller values.
 
 On SEQ, **SELECT chooses the track**, **ALGORITHM chooses its A–D bank**,
 **Knob 1 always sets BPM**, **Knob 2 sets length**, **Knob 3 moves the cursor
-after EDIT enters step entry**, and **Knob 4 sets Ghost Mask**. Knob 3 is
-explicitly inactive outside step entry. Track navigation does not start playback
+after EDIT enters step entry**, and **Knob 4 sets Ghost Mask**. Knob 3 sets
+SWING on the overview. Track navigation does not start playback
 or silently select a live bass preset. Choose the desired live sound before
 legacy REC captures it; navigation retains each track's captured sound.
 Track, bank, length and cursor changes are locked during recording; BPM and
@@ -112,7 +168,7 @@ quarter/eighth-note beat unit. SEL enables/bypasses the click; HOME returns.
 The default is **OFF, level 32, 4/4**. It follows sequencer PLAY/REC and accents
 the first beat. Changing its meter changes click grouping, not pattern lengths
 or the sequencer's sixteenth-note step timing. The click uses its own bounded
-sound generator rather than another one of the six instrument voices.
+sound generator rather than another one of the eight shared instrument voices.
 
 The new parameter mappings stop at numeric limits without baking GRAFT or creating a
 save change. Shape, ARP choices, track and cursor navigation wrap in either
@@ -127,8 +183,9 @@ The control remap adds no instrument voices or captured-patch fields. The
 metronome adds a small click generator included in GLO's render timing and four
 saved fields in **schema 11, 3,700 bytes**. Existing schema-10 settings migrate
 with the click off at level 32 and 4/4. After a 0.19 SAVE, downgrading to 0.18
-or earlier starts with factory settings. Physical SAVE retains four active
-patterns. Save separate copies of important patterns before changing firmware.
+or earlier starts with factory settings. Current physical SAVE retains all sixteen pattern banks, captures and settings.
+See [save compatibility](CATALOG_REVISION_2.md) for the current journal and migration.
+Save separate copies of important patterns before changing firmware.
 CONTROL FEEL reuses a previously reserved byte without changing schema 11's
 size or song protocol. Host tests and previews do not qualify physical encoder/hold response, device
 audio timing or USB latency. See [testing](TESTING.md).

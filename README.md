@@ -1,43 +1,71 @@
-# TERKINSTEIN for the M-VAVE FM-1
+# Crepuscular Homunculus
 
-**A dark performance synth and four-track groovebox for the FM-1.** TERKINSTEIN gives the small instrument 64 curated sounds, six-operator FM, metallic distortion, synthesized drum kits, sustained pads, a reactive purple-and-green display, and four 64-step tracks with four pattern banks each.
+**A dark, standalone synth and four-track groovebox for the M-VAVE FM-1.**
 
-![TERKINSTEIN startup artwork](assets/splash/terkinstein-splash-master.png)
+Created by **TERKINSTEIN** Â· Free and open source
 
-`0.22.0-dev` is a development preview. It has been built and installed on one FM-1; broader hardware qualification is still in progress. See [testing](docs/TESTING.md) for the exact scope.
+Turn your FM-1 into an instrument for atmospheric pads, heavy bass, metallic
+textures, synthesized drums and six-operator FM. Play, build patterns and save
+complete songs on the FM-1 itself. No companion app or Fire controller is required.
+
+**[Download 0.26.19](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.19)**
+Â· **[Try the virtual FM-1](https://terkinstein.com/#play)**
+Â· **[Visit terkinstein.com](https://terkinstein.com/)**
+
+![Crepuscular Homunculus HOME display](assets/hub/home-0.26.19.png)
+
+## What you can do
+
+- **Explore 64 factory sounds**, then shape them with the FM-1's controls.
+- **Build a song on four tracks:** DRUM, MELODY, ATMOS and BASS, each with its own captured sound.
+- **Create variations** with four Aâ€“D banks per track and up to 64 steps per bank.
+- **Edit notes directly** with step entry, live recording and the native piano roll.
+- **Add swing**, use the arpeggiator, or play from a MIDI keyboard with pedal support.
+- **Choose your HOME display:** the reactive Homunculus or Thorn Rift, following the creator startup logo.
 
 ## Get started
 
-1. [Back up your songs and settings](docs/INSTALL.md#before-you-change-firmware). Keep the previous `.fwsc` file if you may want to return to it. The FM-1's USB updater cannot read the currently installed firmware image back to your computer.
-2. Download the matching `.fwsc` from this repository's [Releases](https://github.com/TerkWerX/FM1-TERKINSTEIN-Firmware/releases). Use a USB data cable and install with the [FM-1 installer](docs/INSTALL.md).
-3. After restart, press a key or button to dismiss the splash. HOME or GLO shows the version. Open [controls](docs/PANEL_CONTROLS.md) and [preset guide](docs/PRESET_GUIDE.md) to explore.
+1. **Download** the `.fwsc` firmware from the [0.26.19 release](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.19).
+2. **Protect your music.** Stop playback, release keys and pedals, press SAVE and wait for SAVED. Keep a separate backup and your previous firmware.
+3. **Install from a computer** using the [installation guide](docs/INSTALL.md).
+4. **Start playing** with the [standalone quick start](docs/QUICK_START.md).
 
-There is an **OCT− at power-on** USB rescue mode for interrupted updates. The [recovery instructions](docs/INSTALL.md#returning-or-recovering) cover it and the official M-VAVE firmware.
+The release also includes matching source code, checksums and licensing information.
+After installation, the instrument works without a computer.
 
-## On the instrument
+## Find the right guide
 
-| Sound | Sequencing | Performance |
-| --- | --- | --- |
-| Pads, basses, leads, metallic timbres, synthesized drums, 6-op FM | DRUM, MELODY, ATMOS and BASS; 64 steps per track; A–D banks | Live recording, held notes, arpeggiator, onboard metronome, MIDI notes/wheels/pedals |
+| I want toâ€¦ | Read this |
+| --- | --- |
+| Play a sound and make a pattern | [Quick start](docs/QUICK_START.md) |
+| Learn the buttons and knobs | [Panel controls](docs/PANEL_CONTROLS.md) |
+| Edit individual notes and chords | [Piano roll](docs/PIANO_ROLL.md) |
+| Explore the sound collection | [Sound guide](docs/PRESET_GUIDE.md) |
+| Install, switch back or recover | [Installation and recovery](docs/INSTALL.md) |
+| Understand older-song compatibility | [Saved songs and sound revisions](docs/CATALOG_REVISION_2.md) |
+| See what changed in this release | [Release notes](docs/RELEASE_NOTES.md) |
 
-The HOME screen animates **Thorn Rift** in response to what you play. Long-press FX, ENV or LFO for deeper edits. SEQ navigation does not start playback; PLAY/STOP does. See the [complete control map](docs/PANEL_CONTROLS.md).
+## A few useful limits
 
-![TERKINSTEIN HOME host preview](assets/hub/home.png)
-![TERKINSTEIN sequencer host preview](assets/hub/sequencer.png)
+Eight voices are shared across the four tracks, LIVE playing and release tails;
+at most four voices can use FM. Large chords and overlapping tails share that
+budget. The FX button bypasses corrosion/BITE rather than every sound control.
 
-These screens are host-rendered previews of the firmware UI. The connected FM-1 is the source of truth for sound and timing.
+Supported older Homunculus songs migrate explicitly. Projects, sounds and samples
+from unrelated firmware are not imported automatically. See [performance limits](docs/PERFORMANCE.md)
+and [validation](docs/TESTING.md) for the details.
 
-## Build and source
+## Source and credits
 
-The complete firmware source, linker scripts, HAL, update loader, generators, license and build tools are in this repository. [Build instructions](docs/BUILD.md) cover the JieLi toolchain and SDK. [Preset provenance](docs/PRESET_PROVENANCE.md) describes the new sound authorship and comparison method.
+This repository contains only Crepuscular Homunculus firmware, artwork, platform
+and update code, build tools, tests and documentation. The companion application
+and the separate specialist firmwares are not included.
 
-TERKINSTEIN is **GPL-3.0-only**, derived from Dinghy with Felucca/SLOOP platform work. See [LICENSING.md](LICENSING.md) for credits and third-party terms. M-VAVE and FM-1 are trademarks of their owners; this is an independent project.
+Developers can start with the [build guide](docs/BUILD.md) and [architecture](docs/DESIGN.md).
+The complete source for this release is at tag **v0.26.19**.
 
-Visit [TERKINSTEIN.COM](https://terkinstein.com/) for demonstrations and the broader performance setup.
+Licensed under **GPL-3.0-only**. Derived from Dinghy, with Felucca/SLOOP platform
+work; see [licensing and credits](LICENSING.md). M-VAVE and FM-1 are trademarks of
+their owners. This is an independent project.
 
-<details>
-<summary>Developer notes</summary>
-
-The app is fixed-point C on JieLi pi32v2. DSP stays in the audio callback; display and flash stay outside it. The custom package identity is provisionally `FM-1_960`. Builds verify size and flash-layout guards. Host tests and a target compile do not replace device measurements; a busy 0.22 session reported 3072 µs maximum app render with zero late blocks. [Performance notes](docs/PERFORMANCE.md) explain what that timer excludes.
-
-</details>
+*The HOME picture is a native host render, not a hardware photograph.*

@@ -32,9 +32,9 @@ def validate(data: dict) -> list[dict]:
     require(data.get('version') == 1, 'unsupported catalog schema')
     require(data.get('legacy_count') == 36, 'legacy bank must keep its 36 slots')
     require(data.get('default_drum_preset') == 30, 'original drum default must remain slot 31')
-    require(data.get('bank_version') == '0.20.0-dev', 'unexpected bank version')
+    require(data.get('bank_version') == '0.26.18-dev', 'unexpected bank version')
     rows = data['presets']
-    require(len(rows) == 64, 'curated bank must have 64 presets')
+    require(len(rows) == 66, '64 factory choices plus two retained legacy definitions required')
     names: set[str] = set()
     settings: set[str] = set()
     fm_id = 0
@@ -45,7 +45,7 @@ def validate(data: dict) -> list[dict]:
         require(isinstance(name, str) and 1 <= len(name) <= 14
                 and all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789' for c in name),
                 f'slot {i+1}: invalid display name')
-        require(name not in names, f'duplicate name: {name}')
+        require(name not in names or (i in (64,65) and name == rows[(24,51)[i-64]]['name']), f'duplicate name: {name}')
         names.add(name)
         integer(row['instrument'], 3, f'{name} engine')
         require(len(row['macros']) == 4, f'{name}: four macros required')
@@ -77,7 +77,11 @@ def validate(data: dict) -> list[dict]:
         settings.add(signature)
     legacy = json.dumps([{k: row[k] for k in FIELDS} for row in rows[:36]], sort_keys=True, separators=(',', ':')).encode()
     require(hashlib.sha256(legacy).hexdigest() == LEGACY_HASH, 'legacy names, indices or sound settings changed')
-    require(fm_id == 13, 'expected four original and nine new FM patches')
+    require(fm_id == 14, 'expected unchanged thirteen FM patches plus approved WICKED v2')
+    prefix = json.dumps(rows[:64], sort_keys=True, separators=(',', ':')).encode()
+    require(hashlib.sha256(prefix).hexdigest() == 'd2b49ac961ff1b040579df95e75b3ab8063ff68515ec5e1534087ab7d060b8ef', 'original64 definitions must remain byte-equivalent')
+    require(data.get('catalog_revision') == 2, 'catalog revision required')
+    require(data.get('factory_order') == [64 if i == 24 else 65 if i == 51 else i for i in range(64)], 'explicit stable factory selection map required')
     return rows
 
 
@@ -95,9 +99,9 @@ def c_output(rows: list[dict], digest: str) -> str:
         macros = ', '.join(map(str, r['macros']))
         lines.append(f'    {{"{r["name"]}", {{{macros}}}, {fields}, {on}, {shapes[shape]}, {rate}, {depth}, {engines[r["instrument"]]}}},')
     lines += ['};', '/* 255 denotes a non-FM instrument; IDs 0..3 retain tk_fm_factory. */',
-              'static const uint8_t TK_PRESET_FM_PATCH[64] = {',
+              'static const uint8_t TK_PRESET_FM_PATCH[66] = {',
               '    ' + ', '.join(str(r['fm_index'] if r['fm_index'] is not None else 255) for r in rows),
-              '};', '/* New independently authored patches, IDs 4..12. */',
+              '};', '/* Independently authored patches, IDs 4..13. */',
               'static const tk_fm_patch_t TK_NEW_FM_FACTORY[] = {']
     for r in rows:
         if r['fm_index'] is None or r['fm_index'] < 4:
@@ -106,7 +110,10 @@ def c_output(rows: list[dict], digest: str) -> str:
         operators = ', '.join('{' + ', '.join(map(str, op)) + '}' for op in p['operators'])
         controls = ', '.join(str(p[k]) for k in ('algorithm', 'feedback', 'pitch_depth', 'pitch_time'))
         lines += [f'    /* {r["name"]} */', '    {{' + operators + '}, ' + controls + '},']
-    lines += ['};', '#endif', '']
+    lines += ['};', '#define TK_FACTORY_COUNT 64u', '#define TK_CATALOG_REVISION 2u',
+              'static const uint8_t TK_FACTORY_SOUND[64] = {',
+              '    ' + ', '.join(str(64 if i == 24 else 65 if i == 51 else i) for i in range(64)),
+              '};', '#endif', '']
     return '\n'.join(lines)
 
 
@@ -130,8 +137,8 @@ def main() -> int:
     if stale:
         parser.exit(1, 'Stale generated preset files: ' + ', '.join(stale) + '\nRun tools/generate_presets.py.\n')
     counts = [sum(r['instrument'] == e for r in rows) for e in range(4)]
-    print(f'Curated 64-preset bank {"verified" if args.check else "generated"}: '
-          f'{counts[0]} PAD / {counts[1]} METAL / {counts[2]} KIT / {counts[3]} FM; original 36 locked.')
+    print(f'Curated 64-choice / 66-definition bank {"verified" if args.check else "generated"}: '
+          f'{counts[0]} PAD / {counts[1]} METAL / {counts[2]} KIT / {counts[3]} FM; original 64 locked; only two approved revisions selectable in their factory positions.')
     return 0
 
 

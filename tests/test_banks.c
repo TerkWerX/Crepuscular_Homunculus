@@ -56,7 +56,7 @@ static void content_and_lengths(void)
     uint8_t p[3];
     reset_fixture();
     check(sizeof(tk_pattern_t)==832&&sizeof(tk_pattern_step_t)==13,"dense pattern wire-independent storage remains832bytes");
-    check(sizeof(tk_settings_t)==3700 && TK_SCHEMA==11,"bank feature preserves the current saved flash schema11 exactly");
+    check(sizeof(tk_settings_t)==3700 && TK_SCHEMA==12,"bank feature preserves the saved 3700-byte layout in schema12");
     for (track=0;track<4;track++) for(bank=0;bank<4;bank++) {
         set_note(track,bank,63,48+track*4+bank,255);
         p[0]=(uint8_t)track;p[1]=(uint8_t)bank;p[2]=(uint8_t)((track+bank)%3);

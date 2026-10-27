@@ -69,11 +69,11 @@ static uint32_t pcm_hash(uint32_t slot,uint32_t *peak_out)
 }
 static void sound_and_metadata_checks(void)
 {
-    uint32_t slot,other,peak,hash[64],new_fm=0u,new_kit=0u,new_pad=0u,new_metal=0u;
+    uint32_t slot,other,peak,hash[66],new_fm=0u,new_kit=0u,new_pad=0u,new_metal=0u;
     tk_fm_patch_t patch,expected,prior;
-    check(TK_PRESET_COUNT==64u,"exact 64-slot bank");
-    check(TK_VOICES==6u && TK_FM_VOICE_LIMIT==4u,"unchanged six total/four FM voice budget");
-    for(slot=0;slot<64u;++slot) {
+    check(TK_PRESET_COUNT==66u,"exact66 stable sound IDs /64 factory choices");
+    check(TK_VOICES==8u && TK_FM_VOICE_LIMIT==4u,"eight total/four FM voice budget");
+    for(slot=0;slot<66u;++slot) {
         reset_fixture(); preset_apply(&fixture,slot);
         check(settings_valid(&fixture),"factory settings validate across mixed engines");
         check(fixture.preset==slot,"factory selection retains requested index");
@@ -112,7 +112,7 @@ static void sound_and_metadata_checks(void)
             PRESETS[slot].instrument,peak,hash[slot]);
     }
     check(new_fm && new_kit && new_pad && new_metal,"expansion includes all four established engines");
-    fm_for_preset(&patch,64u); tk_fm_defaults(&expected);
+    fm_for_preset(&patch,66u); tk_fm_defaults(&expected);
     check(!memcmp(&patch,&expected,sizeof patch),"out-of-range FM request yields safe neutral metadata");
     fm_for_preset(0,0u);
 }
@@ -123,14 +123,14 @@ static void selection_and_graft_checks(void)
     tk_track_patch_t target;
     tk_fm_patch_t fm;
     reset_fixture(); command(TK_REMOTE_HELLO,0,0u);
-    check(reply[0]==TK_REMOTE_OK && reply[8]==64u,"HELLO reports MIDI-safe64 count");
-    for(slot=0;slot<64u;++slot) {
+    check(reply[0]==TK_REMOTE_OK && reply[8]==66u,"HELLO reports MIDI-safe66 count");
+    for(slot=0;slot<66u;++slot) {
         payload[0]=(uint8_t)slot; command(TK_REMOTE_LIVE_PRESET,payload,1u);
         check(reply[0]==TK_REMOTE_OK && fixture.preset==slot,"remote live preset selects every factory slot");
-        before=fixture; preset_apply(&fixture,64u);
+        before=fixture; preset_apply(&fixture,66u);
         check(!memcmp(&fixture,&before,sizeof fixture),"invalid factory selection is an exact no-op");
         check(fixture.graft_base.instrument==PRESETS[slot].instrument,"GRAFT base retains selected engine");
-        for(i=0;i<64u;++i) {
+        for(i=0;i<66u;++i) {
             fixture.graft_target=graft_next_target(&fixture,1);
             check(PRESETS[fixture.graft_target].instrument==PRESETS[slot].instrument,"GRAFT never crosses engine boundaries");
         }
@@ -152,7 +152,7 @@ static void selection_and_graft_checks(void)
             check(reply[0]==TK_REMOTE_OK && fixture.track[track].preset==slot,"remote track selection reaches all64 factories");
         }
     }
-    for(slot=64u;slot<128u;++slot) {
+    for(slot=66u;slot<128u;++slot) {
         before=fixture; payload[0]=(uint8_t)slot;
         command(TK_REMOTE_LIVE_PRESET,payload,1u);
         check(reply[0]==TK_REMOTE_BAD_ARGUMENT && !memcmp(&fixture,&before,sizeof fixture),"MIDI-safe invalid remote index rejected atomically");
@@ -167,7 +167,7 @@ static void kit_checks(void)
     uint32_t seen[64][12];
     int32_t pcm[512];
     seen_count=0u;
-    for(slot=0;slot<64u;++slot) if(PRESETS[slot].instrument==TK_INSTRUMENT_DRUM_KIT) {
+    for(slot=0;slot<66u;++slot) if(PRESETS[slot].instrument==TK_INSTRUMENT_DRUM_KIT) {
         for(key=0;key<12u;++key) {
             reset_fixture(); preset_apply(&fixture,slot); publish_params(&fixture,fixture.p.shade);
             tk_note_on(36u+key,110u,1u); peak=0u; hash=2166136261u;
@@ -192,7 +192,7 @@ static void layered_checks(void)
 {
     uint32_t slot,block,i,peak;
     int32_t pcm[512];
-    for(slot=0;slot<64u;++slot) if(PRESETS[slot].instrument==TK_INSTRUMENT_DRUM_KIT) {
+    for(slot=0;slot<66u;++slot) if(PRESETS[slot].instrument==TK_INSTRUMENT_DRUM_KIT) {
         reset_fixture(); preset_apply(&fixture,slot); publish_params(&fixture,fixture.p.shade);
         /* Use the selected kit on its generated source, as captured playback does. */
         track_factory_apply(&fixture,TK_TRACK_DRUM,slot); publish_track(&fixture,TK_TRACK_DRUM);
@@ -216,7 +216,7 @@ static void drum_velocity_checks(void)
     uint64_t energy,previous_energy;
     uint8_t payload[7];
     int32_t pcm[512];
-    for(slot=0;slot<64u;++slot) if(PRESETS[slot].instrument==TK_INSTRUMENT_DRUM_KIT) {
+    for(slot=0;slot<66u;++slot) if(PRESETS[slot].instrument==TK_INSTRUMENT_DRUM_KIT) {
         previous_peak=0u; previous_energy=0u;
         for(level=0;level<sizeof VELOCITY;++level) {
             reset_fixture();
@@ -265,8 +265,8 @@ static void save_checks(void)
     }
     check(settings_valid(&fixture),"nonfactory six-bank FM fields validate");
     before=fixture;
-    check(sizeof fixture==3700u && TK_SCHEMA==11u && offsetof(tk_settings_t,fm)==3452u,
-        "schema11 size and saved FM offsets remain exact");
+    check(sizeof fixture==3704u && TK_SCHEMA==13u && offsetof(tk_settings_t,fm)==3452u,
+        "schema13 swing append and saved FM offsets remain exact");
     memcpy(&legacy,&fixture,sizeof legacy); legacy.schema=10u; legacy.midi_pad=0u;
     check(settings_upgrade_v10(&migrated,&legacy),"legacy edited FM record migrates");
     check(!memcmp(migrated.fm,before.fm,sizeof before.fm),"migration retains all six edited FM banks");
@@ -274,7 +274,7 @@ static void save_checks(void)
     check(settings_valid(&fixture),"new lastslot captured settings fit unchanged schema");
     before=fixture;
     check(settings_valid(&fixture) && !memcmp(&fixture,&before,sizeof fixture),"validation never replaces saved FM with factory data");
-    fixture.preset=64u; check(!settings_valid(&fixture),"future factory index is rejected on save load");
+    fixture.preset=66u; check(!settings_valid(&fixture),"future factory index is rejected on save load");
 }
 int main(void)
 {

@@ -1,5 +1,7 @@
 # Preset authorship and review
 
+This document records the earlier36-to64 expansion. Current0.26.18 adds two separately approved revisions at stable factory positions25/52; original definitions are immutable. The factory now includes14 FM choices. Historical catalog hashes/counts below refer to the earlier bank; see CATALOG_REVISION_2.md and TESTING.md.
+
 The 28 sounds added to expand TERKINSTEIN from 36 to 64 presets are authored
 for its own PAD, METAL, KIT and six-operator FM engines. Their settings are
 chosen to complement the existing bank. No stock FM-1 voice, DX7 cartridge,

@@ -1,0 +1,31 @@
+{
+  "version": "0.26.19-dev",
+  "tested_package_sha256": "6d345d659275634492c7cb4ed65bfea4b492c83981abd1789d4518453ab9baa5",
+  "completed_local_date": "2026-10-26",
+  "identity": "FM-1_986",
+  "loader_identity": "ota-FM-1_986",
+  "custom_entry": [
+    "0.26.18-dev",
+    "Sloop2.8.1"
+  ],
+  "official_V15_entry": true,
+  "outgoing_to_official_V15": true,
+  "complete_song_and_queryable_LIVE_preserved": true,
+  "SAVE_dirty_clear": true,
+  "interrupted_transfer": {
+    "cut_logical_address": "0x5400",
+    "confirmed_sector_chunks": 8,
+    "physical_power_and_USB_kept_connected": true,
+    "loader_reidentified_after_seconds": 20.34399999998277,
+    "ordinary_same_package_completion": true,
+    "read_queries": 7137,
+    "read_errors": 0
+  },
+  "limits": [
+    "Host stopped between sector requests; not a power-cut or mid-program test.",
+    "First-sector processing inferred from verified loader request order, not raw-flash readback.",
+    "Queryable LIVE equality and native SAVE verified; protocol omits some local fields.",
+    "This additional owner-requested test is not an explicit hub checklist requirement."
+  ],
+  "personal_backups_included": false
+}

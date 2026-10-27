@@ -1,29 +1,52 @@
 # Install, return and recover
 
-TERKINSTEIN runs on the **M-VAVE FM-1**. The release `.fwsc` is the firmware package. This guide is for the hardware firmware only.
+This guide is for the M-VAVE FM-1 running Crepuscular Homunculus. Use the matching
+0.26.19 package and release tag; see RELEASE_NOTES.md.
+No companion application is required for normal playing, sequencing or saving.
 
-## Before you change firmware
+## Preserve music before changing firmware
 
-Stop playback, release keys and pedals, press the FM-1's physical **SAVE**, and wait for any unsaved indicator to clear. A physical SAVE stores on-device settings and active patterns. Save important songs and presets separately with a compatible backup tool; other firmware may not understand TERKINSTEIN's saved-data format. Keep a copy of the `.fwsc` for the firmware you currently use if you may return to it. **The normal USB-MIDI updater cannot extract the installed firmware image**, so a firmware package must be obtained from its author or an existing download.
+Stop PLAY, release keys and pedals and let the tails finish. Press physical SAVE
+and wait for SAVED/the unsaved indicator to clear. SAVE stores all sixteen banks,
+captured sounds and local settings. Pressing SAVE alone does not prove completion
+while notes, holds or tails remain active. Use a compatible backup tool for a
+separate complete song copy when the music matters. Keep the previous firmware's
+.fwsc too: the normal USB-MIDI updater cannot extract the installed image.
 
-## Install TERKINSTEIN
+Different firmware may overwrite or be unable to read saved projects. This release
+migrates supported earlier Homunculus saves, not arbitrary third-party projects or
+stock samples. Revised captures use stored IDs 64/65 and journal format 3. An older
+firmware needs its own compatible backup; no automatic downgrade is promised.
 
-Download the `.fwsc` attached to the matching [GitHub Release](https://github.com/TerkWerX/FM1-TERKINSTEIN-Firmware/releases). On a computer, connect the FM-1 by a USB data cable, close other apps that have its MIDI ports open, then use the browser installer on [TERKINSTEIN.COM](https://terkinstein.com/) when that page is published. It requires a browser with Web MIDI and SysEx access, typically desktop Chrome or Edge, on HTTPS. The page checks the package and FM-1 identity before asking you to start.
+## Install an approved package
 
-You can also use the included Python installer:
+Use the .fwsc from the matching release, and verify its SHA-256 against SHA256SUMS.txt.
+Connect a reliable USB data cable and close apps using the FM-1's MIDI ports.
+Use the project or hub installer only after the intended release is published.
+For the included Python installer, extract the source and install its dependencies:
 
-```powershell
-py -m pip install mido python-rtmidi
-py tools/fm1_install.py --info
-py tools/fm1_install.py .\TERKINSTEIN-0.22.0-dev.fwsc
+```sh
+python -m pip install mido python-rtmidi
+python tools/fm1_install.py --info
+python tools/fm1_install.py path/to/Crepuscular-Homunculus-0.26.19.fwsc
 ```
 
-The installer asks before writing. Do not unplug the FM-1 during an update. After restart, dismiss the startup splash with a key or button; HOME or GLO displays the running version.
+Replace path/to with the file's actual location. The first command installs Python
+dependencies, the second only reads identity, and the third asks before writing.
+Never use --force or an unknown package to work around an identity/recovery error.
+Do not interrupt power or USB during writing. After normal boot, GLO shows the version.
 
-## Returning or recovering
+## Return or recover
 
-To return to **M-VAVE's official firmware**, download the current FM-1 package from [M-VAVE's download center](https://www.m-vave.com/download) under **PC Firmware → FM-1**, then follow its installer instructions. TERKINSTEIN.COM's browser tool accepts the verified official V15 `FM-1.fwsc` file when available. Do not use an unverified file renamed to look official.
+To return to another firmware, use that project's verified package and instructions.
+The [hub's official-firmware section](https://thefirmwarehub.com/) and
+[M-VAVE download center](https://www.m-vave.com/download) provide stock recovery routes.
+Do not assume returning firmware restores overwritten songs automatically.
 
-To return to another custom firmware, obtain that project's `.fwsc` and follow its own update instructions. The TERKINSTEIN browser tool can attempt a validated FM-1 package, but a different update loader may require its project's installer. Saved songs and sounds may be incompatible after switching.
-
-If an update is interrupted while TERKINSTEIN's loader is still present, reconnect USB and retry the **same package**. If the running app cannot start, hold **OCT−** while powering on the FM-1 to enter its USB rescue screen, then reinstall a compatible package. If the device cannot enumerate over USB, follow hardware recovery guidance from the relevant firmware project.
+If a transfer stops while its loader is present, keep power and USB connected,
+close the failed updater session and retry the same verified package. The19
+loader recovered this way in the controlled transfer test; do not confuse this
+with power-loss or mid-program qualification. If the app will not start, hold OCT- while powering on to enter USB
+rescue, then use a compatible verified installer/package. If USB rescue cannot
+enumerate, follow the [hub recovery guide](https://thefirmwarehub.com/kb/#rescue).
+Inherited loader, boot and flash guards remain in this source and package.

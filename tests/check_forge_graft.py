@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 import array
 import hashlib
-import json
 import os
 from pathlib import Path
 import re
@@ -25,9 +24,9 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = json.loads((ROOT / "assets/presets/terkinstein-presets.json").read_text(encoding="utf-8"))
-PRESET_INSTRUMENTS = tuple(preset["instrument"] for preset in CATALOG["presets"])
-SCHEMA = 11
+sys.path.insert(0, str(ROOT / "tools"))
+from preset_catalog import PRESET_INSTRUMENTS
+SCHEMA = 12
 SIZE = 3700
 LEGACY_SIZE = 3412
 PATCH_AT = 3352                         # host file includes the 4-byte length
@@ -258,7 +257,9 @@ def forge_and_recording(panel: Panel, factories: dict[int, bytes]) -> None:
         "1300 btn 13\n3000 btn 9\n13000 end\n", morphed)
     assert song[PATCH_AT + 14:PATCH_AT + 28] == patch(morphed), (
         "REC captured the unmorphed source instead of the effective patch")
-    play = "100 btn 11\n100 btn 12\n150 btn 8\n200 btn 6\n3000 btn 12\n7000 end\n"
+    # HOME from SEQ now inspects the captured track; HOME again explicitly
+    # returns to the independent live patch before testing live-only GRAFT.
+    play = "100 btn 11\n100 btn 12\n150 btn 8\n180 btn 8\n200 btn 6\n3000 btn 12\n7000 end\n"
     _, plain, plain_midi = panel.run("frozen-plain", play, song, saved=False)
     changed = play.replace("3000 btn", "600 enc 0 63\n1600 enc 0 -127\n3000 btn")
     _, moved, moved_midi = panel.run("frozen-morphed", changed, song, saved=False)

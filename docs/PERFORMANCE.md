@@ -1,9 +1,30 @@
-# Audio performance review
+# Performance and allocation limits
 
-The current 0.22 build is deliberately conservative. It has six shared voices; up to four may be six-operator FM voices at once. FM routing is cached per voice when the algorithm changes, operator envelopes and other slow controls advance every 32 frames, and silent voices are skipped by the per-sample renderer. Screen drawing, USB commands and flash saves do not enter the synthesis callback.
+Crepuscular Homunculus has eight shared synthesis voices, with at most four FM
+voices. Captured tracks, live notes, pedal-held notes and release tails share them.
+The number of stored sounds or tracks does not increase simultaneous voice capacity.
+Display, USB and flash stay outside the synthesis callback; main services LCD work
+in bounded batches and flash SAVE waits for complete silence.
 
-On one FM-1, the owner reported **MAX RENDER 3072 µs, LATE BLOCKS 0** while stress-testing CRUCIBLE (preset 34) with layered playback. The measured app interval is about 5805 µs. This establishes useful headroom for that session, not a worst-case benchmark of every preset and controller combination.
+## Exact0.26.18 and0.26.19 target allocation (unchanged)
 
-GLO's timer begins just before `tk_render` and ends after click mixing and the optional sound-to-visual capture. The platform's later MASTER, USB-audio ring copy or 48 kHz FIR resampling, DAC output and nested USB/timer interrupts are outside that timed section. Thus a clean GLO result alone cannot rule out USB-audio underruns, host monitoring delay or an external audio-routing crackle. The Windows “Listen to this device” route has already produced audible latency independent of FM-1 synthesis.
+| Allocation | Used | Limit |
+| --- | ---: | ---: |
+| Application image | 220,032 bytes | 581,564 bytes |
+| Static RAM | 81,904 bytes | 98,304 bytes |
+| Pool | 319,876 bytes | 344,064 bytes |
+| RAM flash code | 2,888 bytes | 24,576 bytes |
 
-The remaining qualification run should record GLO values and USB audio stability at 44.1 and 48 kHz while four tracks, a full CRUCIBLE chord, metronome and HOME animation are active. A host build measures correctness and relative changes, not JieLi target cycles. Any DSP optimization should be compared against deterministic PCM hashes and then device timing and listening; there is no unverified audio rewrite in this release.
+These are separate allocations. Their remainders and reserved stack sizes are not
+measured free working memory or spare stack for additional DSP.
+
+The nominal256-frame44.1kHz block budget is5,804us. Exact18's attended mixed run
+reported MAX4,677us, no late blocks, clean audio and responsive HOME. That leaves
+1,127us within this timer only; it is not a complete-device safety margin. GLO's
+MAX/LATE accumulate since boot. The later48kHz musical recording remained clean
+with the same reportedMAX and0late.
+
+USB audio, DAC processing, nested interrupts and other main-loop work are outside
+the timed application interval. Stack high-water and exhaustive worst-case load
+remain unmeasured. Host tests and compilation do not measure device cycles.
+See [validation and scope](TESTING.md). No new DSP was added during packaging.

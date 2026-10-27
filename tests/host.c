@@ -34,6 +34,9 @@ static volatile uint32_t fm1_ms;
 static struct { uint32_t notes, buttons; } fm1_in;
 static uint32_t host_edges, host_released;
 static int32_t host_enc[7];
+static int host_master_activity;
+static int platform_master_activity(void)
+{ int changed = host_master_activity; host_master_activity = 0; return changed; }
 static uint32_t fm1_input_edges(uint32_t *released)
 {
     uint32_t pressed = host_edges;
@@ -57,31 +60,84 @@ static void fm1_led_key(uint32_t id, int on) { (void)id; (void)on; }
 #endif
 static uint16_t fb[240 * 240];
 static uint32_t host_lcd_pixels;
+#ifdef TK_TEST_LCD_HOOK
+static void (*host_lcd_transfer_hook)(uint32_t);
+#endif
 static void lcd_sync(void) {}
 static void lcd_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c)
 {
     uint32_t i, j;
-    host_lcd_pixels += w * h;
 #ifdef TERKINSTEIN_SCREEN_MIRROR
     tk_screen_capture_fill(x, y, w, h, c);
 #endif
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    if (tk_lcd_queue.active) return;
+#endif
+    host_lcd_pixels += w * h;
     for (j = y; j < y + h && j < 240u; j++)
         for (i = x; i < x + w && i < 240u; i++)
             fb[j * 240u + i] = c;
+#ifdef TK_TEST_LCD_HOOK
+    if (host_lcd_transfer_hook) host_lcd_transfer_hook(w * h);
+#endif
 }
 static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint16_t *px)
 {
     uint32_t i, j;
-    host_lcd_pixels += w * h;
 #ifdef TERKINSTEIN_SCREEN_MIRROR
     tk_screen_capture_blit(x, y, w, h, px);
 #endif
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    if (tk_lcd_queue.active) return;
+#endif
+    host_lcd_pixels += w * h;
     for (j = 0; j < h; j++)
         for (i = 0; i < w; i++)
             if (x + i < 240u && y + j < 240u) {
                 uint16_t c = px[j * w + i];
                 fb[(y + j) * 240u + x + i] = (uint16_t)(c >> 8 | c << 8);
             }
+#ifdef TK_TEST_LCD_HOOK
+    if (host_lcd_transfer_hook) host_lcd_transfer_hook(w * h);
+#endif
+}
+static void lcd_cooperative_begin(void)
+{
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    tk_lcd_queue.active = 1u;
+#endif
+}
+static void lcd_cooperative_immediate(void)
+{
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    uint32_t tile;
+    for (tile = 0; tile < TK_SCREEN_TILES; ++tile)
+        if (tk_lcd_queue.dirty[tile]) tk_screen.dirty[tile] = 1u;
+    tk_lcd_queue_reset();
+#endif
+}
+static uint32_t lcd_cooperative_upload(void)
+{
+    uint32_t count = 0u;
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    for (; count < TK_LCD_BATCH_TILES; ++count) {
+        uint32_t tile = tk_lcd_queue_take(tk_screen_pool.pixels), row, col, x, y;
+        if (tile == TK_SCREEN_TILES) break;
+        x = tile % TK_SCREEN_COLUMNS * TK_SCREEN_TILE;
+        y = tile / TK_SCREEN_COLUMNS * TK_SCREEN_TILE;
+        for (row = 0; row < TK_SCREEN_TILE; ++row)
+            for (col = 0; col < TK_SCREEN_TILE; ++col) {
+                uint16_t c = tk_lcd_queue.pixels[row * TK_SCREEN_TILE + col];
+                fb[(y + row) * TK_SCREEN_WIDTH + x + col] = (uint16_t)(c >> 8 | c << 8);
+            }
+        host_lcd_pixels += TK_SCREEN_TILE * TK_SCREEN_TILE;
+#ifdef TK_TEST_LCD_HOOK
+        if (host_lcd_transfer_hook) host_lcd_transfer_hook(TK_SCREEN_TILE * TK_SCREEN_TILE);
+#endif
+        tk_screen.dirty[tile] = 1u;
+    }
+#endif
+    return count;
 }
 #define CV_MAX (240u * 64u)
 #include "gfx.c"
@@ -131,6 +187,52 @@ static int settings_save(const void *p, uint32_t n)
     printf("%6u ms  settings saved (%u B)\n", fm1_ms, n);
     return 0;
 }
+
+static uint8_t host_journal[TK_STORE_END - TK_STORE_BASE];
+static int host_journal_imported;
+static void host_journal_import(void)
+{
+    const char *path = getenv("TK_HOST_JOURNAL_PATH"); FILE *f;
+    if (host_journal_imported) return;
+    host_journal_imported = 1; memset(host_journal, 255, sizeof host_journal);
+    if (path && *path && (f = fopen(path, "rb"))) {
+        if (fread(host_journal, 1, sizeof host_journal, f) != sizeof host_journal || fgetc(f) != EOF)
+            memset(host_journal, 255, sizeof host_journal);
+        fclose(f);
+    }
+}
+static int host_journal_flush(void)
+{
+    const char *path = getenv("TK_HOST_JOURNAL_PATH"); FILE *f; int ok;
+    if (!path || !*path) return 0;
+    if (!(f = fopen(path, "wb"))) return -1;
+    ok = fwrite(host_journal, 1, sizeof host_journal, f) == sizeof host_journal;
+    if (fclose(f)) ok = 0;
+    return ok ? 0 : -1;
+}
+static int host_journal_range(uint32_t off, uint32_t n)
+{ return off >= TK_STORE_BASE && off <= TK_STORE_END && n <= TK_STORE_END - off; }
+static int tk_store_flash_read(uint32_t off, void *p, uint32_t n)
+{
+    host_journal_import();
+    if (!host_journal_range(off, n)) return -1;
+    memcpy(p, host_journal + off - TK_STORE_BASE, n); return 0;
+}
+static int tk_store_flash_write(uint32_t off, const uint8_t *p, uint32_t n)
+{
+    uint32_t i; host_journal_import();
+    if (!host_journal_range(off, n)) return -1;
+    for (i = 0; i < n; i++) if ((host_journal[off - TK_STORE_BASE + i] & p[i]) != p[i]) return -1;
+    for (i = 0; i < n; i++) host_journal[off - TK_STORE_BASE + i] &= p[i];
+    return host_journal_flush();
+}
+static int tk_store_flash_erase(uint32_t off)
+{
+    host_journal_import();
+    if ((off & 0xFFFu) || !host_journal_range(off, 0x1000u)) return -1;
+    memset(host_journal + off - TK_STORE_BASE, 255, 0x1000u); return host_journal_flush();
+}
+static void tk_store_idle(void) {}
 
 static uint8_t mq[64][4];
 static uint32_t mq_w, mq_r;
@@ -369,9 +471,17 @@ static void platform_poll(void)                 /* one call = one millisecond */
     static int32_t blk[2u * HALF_FRAMES];
     fm1_ms++;
 #ifdef TERKINSTEIN_SCREEN_MIRROR
-    if (getenv("TK_SCREEN_VALIDATE") && memcmp(fb, tk_screen_pool.pixels, sizeof fb)) {
+    if (getenv("TK_SCREEN_VALIDATE")) {
+        uint32_t at;
+        for (at = 0; at < 240u * 240u; ++at) {
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+            if (tk_lcd_queue.active && tk_lcd_queue.dirty[(at / 240u / 16u) * 15u + at % 240u / 16u]) continue;
+#endif
+            if (fb[at] != tk_screen_pool.pixels[at]) {
         fprintf(stderr, "LCD capture differs from actual host framebuffer at %u ms\n", fm1_ms);
         exit(1);
+            }
+        }
     }
 #endif
     if (fm1_ms % 1000u == 0u && getenv("TK_TRACE_LCD")) {

@@ -26,7 +26,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="tk-panel-") as temp:
         panel=Panel(args.executable.resolve(),prefix,Path(temp))
         factory=panel.run("fm-factory","10 btn 8\n30 enc 6 32\n400 btn 9\n1000 end\n")[2]
-        assert factory is not None and struct.unpack_from("<II",factory)==(3700,11)
+        assert factory is not None and struct.unpack_from("<II",factory)==(3700,12)
         for index,key in enumerate(LABELS):
             audio,midi,saved,out=panel.run(f"label-{index}",
                 "10 btn 8\n30 enc 6 32\n"+chord(key)+"700 btn 9\n1000 end\n",fps=2)

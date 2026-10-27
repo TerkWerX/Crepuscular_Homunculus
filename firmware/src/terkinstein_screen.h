@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* Main-owned capture of the actual 240 x 240 LCD writes. No ISR, DSP, flash,
- * allocation or computer-side reconstruction of page drawing is involved. */
+/* Main-owned exact 240 x 240 paint capture. In cooperative LCD mode, the mirror
+ * snapshots a tile only after its physical upload completes. No ISR, DSP,
+ * flash, allocation or computer-side page reconstruction is involved. */
 #ifndef TERKINSTEIN_SCREEN_H
 #define TERKINSTEIN_SCREEN_H
 #include <stdint.h>
@@ -16,6 +17,10 @@
 #define TK_SCREEN_LEASE_MS 5000u
 #define TK_SCREEN_COMPACT_BYTES 17u
 
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+#include "terkinstein_lcd_queue.h"
+#endif
+
 typedef struct {
     uint16_t pixels[TK_SCREEN_WIDTH * TK_SCREEN_WIDTH];
     uint8_t raw[TK_SCREEN_TILE_BYTES], rle[TK_SCREEN_TILE_BYTES];
@@ -28,6 +33,14 @@ static struct {
     uint8_t enabled, transmitting, encoding, sent, advanced, burst_count, compact, home;
 } tk_screen;
 
+static void tk_screen_pixel_changed(uint32_t tile)
+{
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+    if (tk_lcd_queue.active) { tk_lcd_queue.dirty[tile] = 1u; return; }
+#endif
+    tk_screen.dirty[tile] = 1u;
+}
+
 static void tk_screen_capture_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t color)
 {
     uint32_t row, col;
@@ -38,7 +51,7 @@ static void tk_screen_capture_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t 
         uint16_t *pixel = &tk_screen_pool.pixels[row * TK_SCREEN_WIDTH + col];
         if (*pixel != color) {
             *pixel = color;
-            tk_screen.dirty[(row / TK_SCREEN_TILE) * TK_SCREEN_COLUMNS + col / TK_SCREEN_TILE] = 1;
+            tk_screen_pixel_changed((row / TK_SCREEN_TILE) * TK_SCREEN_COLUMNS + col / TK_SCREEN_TILE);
         }
     }
 }
@@ -56,7 +69,7 @@ static void tk_screen_capture_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t 
         uint16_t *pixel = &tk_screen_pool.pixels[(y + row) * TK_SCREEN_WIDTH + x + col];
         if (*pixel != color) {
             *pixel = color;
-            tk_screen.dirty[((y + row) / TK_SCREEN_TILE) * TK_SCREEN_COLUMNS + (x + col) / TK_SCREEN_TILE] = 1;
+            tk_screen_pixel_changed(((y + row) / TK_SCREEN_TILE) * TK_SCREEN_COLUMNS + (x + col) / TK_SCREEN_TILE);
         }
     }
 }
@@ -67,7 +80,9 @@ static void tk_screen_reset(uint32_t generation)
     tk_screen.compact = 0;
     tk_screen.offset = 0;
 }
-/* Only the PC stream uses this display context; the captured LCD remains exact.
+/* Only the PC stream uses this compact-eligible HOME context; the captured LCD
+ * remains exact. The free app selects it only for Thorn Rift. Homunculus
+ * and other pages use the existing native-pixel lossless encodings.
  * Restore all tiles when entering/leaving HOME so stale coarse samples cannot
  * remain in a later full-resolution page. Serial and burst budgets survive. */
 static void tk_screen_set_home(uint32_t home)
@@ -245,7 +260,11 @@ static int tk_screen_pump(uint32_t now, uint32_t generation, int allowed,
     if (!tk_screen.transmitting) {
         for (i = 0; i < TK_SCREEN_TILES; i++) {
             uint32_t tile = (tk_screen.cursor + i) % TK_SCREEN_TILES;
-            if (tk_screen.dirty[tile]) { tk_screen_prepare(tile); break; }
+            if (tk_screen.dirty[tile]
+#ifdef TERKINSTEIN_LCD_COOPERATIVE
+                && (!tk_lcd_queue.active || !tk_lcd_queue.dirty[tile])
+#endif
+            ) { tk_screen_prepare(tile); break; }
         }
         if (!tk_screen.transmitting) return 0;
     }

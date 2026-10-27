@@ -3,21 +3,34 @@
  * Platform derived from Dinghy by
  * zvenson, on Felucca (Leo Kuroshita / Hugelton Instruments) and SLOOP (isod89).
  * The compact chord-afterimage experiment is described in docs/DESIGN.md. */
-#define APP_NAME "TERKINSTEIN"
+#define APP_NAME "Crepuscular Homunculus"
 #ifndef APP_VER
-#define APP_VER "0.22.0-dev"
+#define APP_VER "0.26.19"
 #endif
 #define SETTINGS_MAGIC 0x4E494B54u /* TKIN: never interpret another app's settings */
 #define TERKINSTEIN_SCREEN_MIRROR 1
+#define TERKINSTEIN_LCD_COOPERATIVE 1
+#include <stddef.h>
 #include "platform.c"
+#include "terkinstein_product_label.h"
 #include "terkinstein_engine.h"
 #include "terkinstein_transport.h"
+#include "terkinstein_midi_clock.h"
+#include "terkinstein_section_mutes.h"
 #include "terkinstein_lfo.h"
 #include "terkinstein_splash.h"
+#include "terkinstein_intro.h"
 #include "terkinstein_visual.h"
 #include "terkinstein_metronome.h"
 #include "terkinstein_encoder.h"
-#include "terkinstein_rift.h"
+#include "terkinstein_home_visual.h"
+static tk_drum_mix_t tk_drum_mix[TK_DRUM_LANES];
+static uint8_t tk_drum_focus;
+static void publish_drum_mix(void)
+{
+    uint32_t lane;
+    for (lane = 0; lane < TK_DRUM_LANES; lane++) tk_set_drum_mix(lane, &tk_drum_mix[lane]);
+}
 typedef char tk_visual_voice_budget[(TK_VIS_VOICES == TK_VOICES) ? 1 : -1];
 
 /* Main owns a single packed parameter word; audio reads an atomic snapshot.
@@ -102,9 +115,12 @@ typedef struct {
 } tk_settings_v3_t;
 /* Schema 3 was shipped in 0.3; read it without altering its exact layout. */
 typedef char tk_settings_schema3_size[(sizeof(tk_settings_v3_t) == 164u) ? 1 : -1];
-#define TK_SCHEMA 11u
+#define TK_SCHEMA 13u
+#define TK_SETTINGS_V12_BYTES 3700u
 #define TK_LEGACY_TRACKS 3u
 #define TK_TRACKS 4u
+#define TK_BANK_COUNT 4u
+#include "terkinstein_arrangement_data.h"
 enum { TK_TRACK_DRUM, TK_TRACK_MELODY, TK_TRACK_ATMOS, TK_TRACK_BASS };
 static const uint8_t TRACK_SOURCE[TK_TRACKS + 1u] = {
     TK_SOURCE_DRUM, TK_SOURCE_SEQUENCE, TK_SOURCE_ATMOS, TK_SOURCE_BASS, TK_SOURCE_ARP
@@ -234,9 +250,34 @@ typedef struct {
     tk_fm_patch_t fm[6]; /* live, DRUM/MELODY/ATMOS/BASS, GRAFT base */
     uint8_t mono;
     uint8_t metro_enabled, metro_level, metro_beats, metro_unit;
+} tk_settings_v11_t;
+typedef char tk_settings_schema11_size[(sizeof(tk_settings_v11_t) == 3700u) ? 1 : -1];
+
+typedef struct {
+    uint32_t schema;
+    tk_params_t p;
+    int8_t octave;
+    uint8_t preset, fx, memory;
+    uint8_t tempo, lfo_rate, lfo_depth, lfo_shape, lfo_on, arp_mode;
+    uint8_t attack, release;
+    tk_pattern_t pattern[TK_TRACKS];
+    tk_track_patch_t track[TK_TRACKS];
+    uint8_t track_mute, ghost_mask, length[TK_TRACKS];
+    tk_track_patch_t graft_base;
+    uint8_t graft_target, graft_amount;
+    tk_midi_binding_t midi_bind[TK_MIDI_BINDINGS];
+    uint8_t midi_bend_range, panel_response;
+    tk_fm_patch_t fm[6];
+    uint8_t mono;
+    uint8_t metro_enabled, metro_level, metro_beats, metro_unit;
+    uint8_t home_visual; /* tagged cosmetic choice; former byte 3697 padding */
+    uint16_t section_mutes; /* track n uses bits n*4..n*4+3; old tail padding */
+    uint32_t swing; /* schema13: 0..100; zero is the exact old straight clock */
 } tk_settings_t;
 /* Four 64-step patterns stay inside the guarded 4 KiB settings sector. */
-typedef char tk_settings_schema11_size[(sizeof(tk_settings_t) == 3700u) ? 1 : -1];
+typedef char tk_settings_schema13_size[(sizeof(tk_settings_t) == 3704u) ? 1 : -1];
+typedef char tk_settings_v12_prefix[(offsetof(tk_settings_t, swing) == TK_SETTINGS_V12_BYTES) ? 1 : -1];
+typedef char tk_settings_home_visual_offset[(offsetof(tk_settings_t, home_visual) == 3697u) ? 1 : -1];
 typedef char tk_settings_fits_flash[(sizeof(tk_settings_t) <= 3840u) ? 1 : -1];
 #define KEY0 53u
 #define C_ACC RGB(178, 76, 244)
@@ -244,7 +285,15 @@ typedef char tk_settings_fits_flash[(sizeof(tk_settings_t) <= 3840u) ? 1 : -1];
 #define C_BAR RGB(36, 21, 49)
 #define TK_GREEN RGB(135, 255, 101)
 enum { TK_PAGE_PAD, TK_PAGE_MEMORY, TK_PAGE_GLO, TK_PAGE_ENV, TK_PAGE_LFO, TK_PAGE_ARP, TK_PAGE_SEQ, TK_PAGE_SOUND_EDIT, TK_PAGE_MIDI,
-       TK_PAGE_OPERATOR, TK_PAGE_PITCH, TK_PAGE_GLOBAL, TK_PAGE_VOICE, TK_PAGE_FX, TK_PAGE_METRONOME, TK_PAGE_CONTROLS };
+       TK_PAGE_OPERATOR, TK_PAGE_PITCH, TK_PAGE_GLOBAL, TK_PAGE_VOICE, TK_PAGE_FX, TK_PAGE_METRONOME, TK_PAGE_CONTROLS,
+       TK_PAGE_ARRANGE, TK_PAGE_STEP_EDIT, TK_PAGE_SCENES, TK_PAGE_PIANO };
+static uint8_t tk_arr_lock_edit, tk_scene_focus;
+/* HOME from SEQ enters an explicit captured-track workbench. The live patch
+ * stays in settings outside bounded panel/drawing scopes, including queries,
+ * incoming MIDI and SAVE. HOME again returns to the independent live preset. */
+static uint8_t tk_panel_edit_track = TK_TRACKS;
+static uint8_t tk_panel_audition_track = TK_TRACKS;
+static const char *const TK_SOUND_CONTEXT[] = {"DRUM", "MELODY", "ATMOS", "BASS", "LIVE"};
 enum { TK_MODE_OFF, TK_MODE_ARP, TK_MODE_SEQ };
 typedef struct { uint32_t pressed_ms; uint8_t pending, long_press; } tk_fx_button_t;
 /* Short physical presses toggle on release. A held/released 700-ms press
@@ -267,6 +316,47 @@ static uint32_t tk_fx_button_event(tk_fx_button_t *state, uint32_t pressed,
     }
     return action;
 }
+enum { TK_RESET_OPEN = 1u, TK_RESET_READY = 2u, TK_RESET_CANCEL = 4u, TK_RESET_CONFIRM = 8u };
+typedef struct {
+    uint32_t pressed_ms, opened_ms;
+    uint8_t tracking, prompt, ready;
+} tk_home_reset_t;
+static void tk_home_reset_cancel(tk_home_reset_t *r)
+{ r->tracking = r->prompt = r->ready = 0u; }
+/* Main-only, physical two-gesture confirmation. A raw held bit without a fresh
+ * HOME edge cannot arm it. Navigation taps and virtual HOME/SEL never reset.
+ * The prompt must observe every physical button released before a fresh,
+ * physical SEL-only press can confirm. Other controls cancel it. */
+static uint32_t tk_home_reset_event(tk_home_reset_t *r, uint32_t pressed,
+                                  uint32_t held, uint32_t any_pressed,
+                                  uint32_t cancel, uint32_t now)
+{
+    const uint32_t home = 1u << BTN_HOME, sel = 1u << BTN_SEL;
+    if (cancel || (any_pressed & ~(home | sel))) {
+        uint32_t action = r->prompt ? TK_RESET_CANCEL : 0u;
+        tk_home_reset_cancel(r); return action;
+    }
+    if (r->prompt) {
+        if (now - r->opened_ms >= 10000u || (any_pressed & home) ||
+            ((any_pressed & sel) && !(pressed & sel))) {
+            tk_home_reset_cancel(r); return TK_RESET_CANCEL;
+        }
+        if (!held && !r->ready) { r->ready = 1u; return TK_RESET_READY; }
+        if (r->ready && (pressed & sel) && held == sel) {
+            tk_home_reset_cancel(r); return TK_RESET_CONFIRM;
+        }
+        return 0u;
+    }
+    if ((pressed & home) && held == home) {
+        r->pressed_ms = now; r->tracking = 1u;
+    }
+    if (held != home) r->tracking = 0u;
+    if (r->tracking && now - r->pressed_ms >= 700u) {
+        r->tracking = 0u; r->prompt = 1u; r->ready = 0u; r->opened_ms = now;
+        return TK_RESET_OPEN;
+    }
+    return 0u;
+}
 typedef struct {
     const char *name;
     tk_params_t p;
@@ -286,6 +376,17 @@ typedef struct {
 typedef char tk_presets_fit_index[(TK_PRESET_COUNT <= 127u) ? 1 : -1];
 typedef char tk_fm_map_matches_bank[(sizeof TK_PRESET_FM_PATCH == TK_PRESET_COUNT) ? 1 : -1];
 typedef char tk_kit_preset_exists[(TK_KIT_PRESET_INDEX < TK_PRESET_COUNT) ? 1 : -1];
+/* Storage/Program Change IDs never move. PRESETS browsing presents the
+ * 64 current choices; IDs24/51 remain readable old-song definitions. */
+static uint32_t factory_position(uint32_t sound)
+{
+    return sound == 64u ? 24u : sound == 65u ? 51u : sound;
+}
+static uint32_t factory_next(uint32_t sound, int32_t delta)
+{
+    int32_t at=(int32_t)factory_position(sound), count=(int32_t)TK_FACTORY_COUNT;
+    return TK_FACTORY_SOUND[(at+delta%count+count)%count];
+}
 static const char *const MACRO_NAME[] = {"SHADE", "FRACTURE", "DRIFT", "BLOOM"};
 static const char *const FORGE_NAME[] = {"BODY", "WIRE", "DECAY", "BITE"};
 static const char *const ARP_NAME[] = {"UP", "DOWN", "PING PONG", "OUTSIDE IN", "RANDOM"};
@@ -301,9 +402,19 @@ static uint8_t midi_rpn_msb[TK_SOURCES], midi_rpn_lsb[TK_SOURCES];
  * channel 16 keeps its ordinary live meaning unless explicitly negotiated. */
 static uint8_t midi_live_drum_enabled;
 static uint32_t midi_live_drum_lease_ms;
+static uint8_t midi_fire_mask;
+static uint32_t midi_fire_lease_ms;
+static uint8_t midi_keyboard_mask, midi_keyboard_channel[2] = {0u, 1u};
+static uint32_t midi_keyboard_lease_ms;
 #define TK_PAD_ROUTE_LEASE_MS 3000u
 static uint32_t midi_source(uint32_t port, uint32_t channel)
 {
+    uint32_t slot;
+    if (!port) for (slot = 0; slot < 2u; slot++)
+        if ((midi_keyboard_mask & (1u << slot)) && channel == midi_keyboard_channel[slot])
+            return TK_SOURCE_KEYBOARD0 + slot;
+    if (!port && channel >= 11u && channel <= 14u && (midi_fire_mask & (1u << (channel - 11u))))
+        return TK_SOURCE_FIRE0 + channel - 11u;
     return midi_live_drum_enabled && !port && channel == 15u ?
         TK_SOURCE_LIVE_DRUM : 1u + port * 16u + channel;
 }
@@ -324,6 +435,11 @@ static void midi_performance_init(const tk_settings_t *s)
         tk_set_bend_range(source, s->midi_bend_range);
     }
     midi_live_drum_enabled = 0u;
+    midi_fire_mask = 0u;
+    midi_keyboard_mask = 0u;
+    midi_keyboard_channel[0] = 0u; midi_keyboard_channel[1] = 1u;
+    tk_keyboard_track[0] = 1u; tk_keyboard_track[1] = 2u;
+    for (source = 0; source < 4u; source++) tk_fire_track[source] = source;
     midi_rpn_msb[TK_SOURCE_LIVE_DRUM] = midi_rpn_lsb[TK_SOURCE_LIVE_DRUM] = 127u;
     tk_set_bend_range(TK_SOURCE_LIVE_DRUM, s->midi_bend_range);
     midi_latch = 0;
@@ -478,14 +594,14 @@ static uint8_t graft_next_target(const tk_settings_t *s, int32_t delta)
 }
 static void graft_reset(tk_settings_t *s)
 {
-    uint32_t i;
+    uint32_t i, count = s->preset < 64u ? 64u : TK_PRESET_COUNT;
     s->graft_amount = 0;
     track_patch_capture(&s->graft_base, s);
     s->fm[5] = s->fm[0];
     s->graft_target = s->preset;
     if (PRESETS[s->preset].instrument != TK_INSTRUMENT_DRUM_KIT)
-        for (i = 1; i < TK_PRESET_COUNT; i++) {
-            uint32_t candidate = (s->preset + i) % TK_PRESET_COUNT;
+        for (i = 1; i < count; i++) {
+            uint32_t candidate = (s->preset + i) % count;
             if (PRESETS[candidate].instrument == PRESETS[s->preset].instrument) {
                 s->graft_target = (uint8_t)candidate;
                 break;
@@ -643,7 +759,7 @@ static int track_patch_valid(const tk_track_patch_t *p)
 static int settings_valid(const tk_settings_t *s)
 {
     uint32_t track;
-    if (s->schema != TK_SCHEMA || s->octave < -2 || s->octave > 2 || s->preset >= TK_PRESET_COUNT || s->fx > 1u
+    if (s->swing > 100u || s->schema != TK_SCHEMA || s->octave < -2 || s->octave > 2 || s->preset >= TK_PRESET_COUNT || s->fx > 1u
         || s->p.shade > 127u || s->p.fracture > 127u || s->p.drift > 127u || s->p.bloom > 127u
         || s->memory > 127u || s->tempo < 40u || s->tempo > 180u || s->lfo_rate > 127u
         || s->lfo_depth > 127u || s->lfo_shape > TK_LFO_RAMP || s->lfo_on > 1u
@@ -733,6 +849,23 @@ static int settings_upgrade_v10(tk_settings_t *s, const tk_settings_v10_t *old)
     s->panel_response = TK_ENCODER_LINEAR;
     return settings_valid(s);
 }
+static int settings_upgrade_v12(tk_settings_t *s, const void *old)
+{
+    uint32_t schema; memcpy(&schema, old, sizeof schema);
+    if (schema != 12u) return 0;
+    memset(s, 0, sizeof *s); memcpy(s, old, TK_SETTINGS_V12_BYTES);
+    s->schema = TK_SCHEMA; return settings_valid(s);
+}
+static int settings_upgrade_v11(tk_settings_t *s, const tk_settings_v11_t *old)
+{
+    if (old->schema != 11u) return 0;
+    memset(s, 0, sizeof *s); memcpy(s, old, sizeof *old);
+    s->schema = TK_SCHEMA;
+    /* Schema 11's tail padding is not a stored cosmetic choice or mute mask. */
+    s->home_visual = 0;
+    s->section_mutes = 0;
+    return settings_valid(s);
+}
 static int settings_upgrade_v4(tk_settings_t *s, const tk_settings_v4_t *old)
 {
     uint32_t track;
@@ -810,6 +943,7 @@ static void publish_params(const tk_settings_t *s, uint8_t live_shade)
 static void publish_track(const tk_settings_t *s, uint32_t track)
 {
     tk_params_t p = s->track[track].p;
+    tk_arr_apply_params(track, &p);
     if (!s->track[track].fx) {
         if (s->track[track].instrument == TK_INSTRUMENT_DRUM_KIT) p.bloom = 64u;
         else p.fracture = 0;
@@ -817,6 +951,7 @@ static void publish_track(const tk_settings_t *s, uint32_t track)
     tk_set_source_instrument(TRACK_SOURCE[track], s->track[track].instrument);
     tk_set_source_patch(TRACK_SOURCE[track], &p,
         s->track[track].attack, s->track[track].release);
+    tk_set_source_memory(TRACK_SOURCE[track], s->track[track].memory);
     tk_set_source_fm_patch(TRACK_SOURCE[track], &s->fm[track + 1u]);
 }
 /* Reuse the existing source mailboxes and FM bank. Main mirrors complete
@@ -830,7 +965,30 @@ static void publish_live_drum(void)
     tk_source_patch_word[TK_SOURCE_LIVE_DRUM] = tk_source_patch_word[TK_SOURCE_DRUM];
     tk_source_macro_control[TK_SOURCE_LIVE_DRUM] = tk_source_macro_control[TK_SOURCE_DRUM];
     tk_source_shade_control[TK_SOURCE_LIVE_DRUM] = tk_source_shade_control[TK_SOURCE_DRUM];
+    tk_source_memory_control[TK_SOURCE_LIVE_DRUM] = tk_source_memory_control[TK_SOURCE_DRUM];
     tk_source_patch_timing[TK_SOURCE_LIVE_DRUM] = tk_source_patch_timing[TK_SOURCE_DRUM];
+}
+static void publish_fire_tracks(void)
+{
+    uint32_t slot;
+    for (slot = 0; slot < 4u; slot++) if (midi_fire_mask & (1u << slot)) {
+        uint32_t source = TK_SOURCE_FIRE0 + slot, track = TRACK_SOURCE[tk_fire_track[slot]];
+        tk_source_instrument_control[source] = tk_source_instrument_control[track];
+        tk_source_patch_word[source] = tk_source_patch_word[track];
+        tk_source_macro_control[source] = tk_source_macro_control[track];
+        tk_source_shade_control[source] = tk_source_shade_control[track];
+        tk_source_memory_control[source] = tk_source_memory_control[track];
+        tk_source_patch_timing[source] = tk_source_patch_timing[track];
+    }
+    for (slot = 0; slot < 2u; slot++) if (midi_keyboard_mask & (1u << slot)) {
+        uint32_t source = TK_SOURCE_KEYBOARD0 + slot, track = TRACK_SOURCE[tk_keyboard_track[slot]];
+        tk_source_instrument_control[source] = tk_source_instrument_control[track];
+        tk_source_patch_word[source] = tk_source_patch_word[track];
+        tk_source_macro_control[source] = tk_source_macro_control[track];
+        tk_source_shade_control[source] = tk_source_shade_control[track];
+        tk_source_memory_control[source] = tk_source_memory_control[track];
+        tk_source_patch_timing[source] = tk_source_patch_timing[track];
+    }
 }
 /* Main-owned panel references keep an octave change from letting two physical
  * keys with the same resulting pitch stop one another. MIDI emits one pair
@@ -882,8 +1040,11 @@ static void panel_panic(void)
     midi_send(0xB0, 64, 0); midi_send(0xB0, 120, 0);
     tk_panic();
 }
+#include "terkinstein_swing.h"
 typedef struct {
     uint8_t active, source, pitch, step;
+    uint8_t swing, parity;
+    uint32_t phase_ms;
     uint32_t start_ms, period, accumulated_q8;
 } tk_capture_note_t;
 typedef struct {
@@ -901,6 +1062,8 @@ typedef struct {
     uint32_t next_ms, gate_end_ms, last_step_ms;
     uint32_t solo_seen_ms;
     uint8_t phase_origin[TK_TRACKS], bank_changed;
+    uint8_t swing_pair, swing_pending, swing_clock_seen;
+    uint32_t swing_clock_ms, swing_clock_period;
 } tk_transport_t;
 static uint8_t tk_transport_local_step(const tk_transport_t *t,
                                        uint32_t track, uint32_t global, uint32_t length);
@@ -909,7 +1072,9 @@ static uint32_t transport_capture_segment_q8(const tk_capture_note_t *held,
 {
     uint32_t elapsed = now - held->start_ms;
     if (elapsed > held->period * TK_PATTERN_STEPS) elapsed = held->period * TK_PATTERN_STEPS;
-    return (elapsed * 1024u + held->period / 2u) / held->period;
+    if (!held->swing) return (elapsed * 1024u + held->period / 2u) / held->period;
+    return tk_swing_position_q8(held->phase_ms + elapsed, held->period, held->swing, held->parity)
+        - tk_swing_position_q8(held->phase_ms, held->period, held->swing, held->parity);
 }
 static void transport_capture_end(tk_transport_t *t, uint32_t source,
                                   uint32_t pitch, uint32_t now)
@@ -955,6 +1120,8 @@ static void transport_capture_retime(tk_transport_t *t, uint32_t new_period,
         held->accumulated_q8 += transport_capture_segment_q8(held, now);
         if (held->accumulated_q8 > TK_PATTERN_GATE_Q4 * 256u)
             held->accumulated_q8 = TK_PATTERN_GATE_Q4 * 256u;
+        if (held->swing) held->phase_ms =
+            ((held->phase_ms + now - held->start_ms) % (held->period * 2u)) * new_period / held->period;
         held->start_ms = now;
         held->period = new_period;
     }
@@ -982,6 +1149,9 @@ static int transport_capture_start(tk_transport_t *t, uint32_t source,
         held->step = tk_transport_local_step(t, t->selected, t->shown_step, t->record_length);
         held->start_ms = now;
         held->period = period;
+        held->swing = t->mode == TK_MODE_SEQ ? t->swing_pair : 0u;
+        held->parity = t->shown_step & 1u;
+        held->phase_ms = now - t->last_step_ms;
         held->accumulated_q8 = 0;
         break;
     }
@@ -1035,8 +1205,40 @@ static int transport_solo_expire(tk_transport_t *t, const tk_settings_t *s, uint
            transport_solo_set(t, s, TK_TRACKS, now) : 0;
 }
 #include "terkinstein_banks.h"
+#include "terkinstein_persistence.h"
+#include "terkinstein_arrangement.h"
+/* Section muting silences only this track's generated ownership. Live notes,
+ * ARP and all other tracks retain their gates and audio state. */
+static int transport_section_mute_set(tk_transport_t *t, tk_settings_t *s,
+                                      uint32_t track, uint32_t section, uint32_t muted)
+{
+    int changed = tk_section_mutes_set(&s->section_mutes, track, section, muted);
+    if (changed == 1 && muted && t->mode == TK_MODE_SEQ &&
+        tk_transport_local_step(t, track, t->shown_step, s->length[track]) / TK_SECTION_STEPS == section) {
+        transport_release_part(t, track);
+        tk_all_sound_off(TRACK_SOURCE[track]);
+    }
+    return changed;
+}
+static int transport_tick(tk_transport_t *t, tk_settings_t *s, uint32_t now);
 static void transport_stop(tk_transport_t *t)
 {
+    /* A Clock immediately followed by Stop may share one USB read batch. Count
+     * that last step before stopping so Continue retains the same position on
+     * every unit, independent of main-loop/USB delivery timing. Never flush a
+     * fault/backlog; expired clock disables itself before the nested stop. */
+    if (tk_midi_clock.enabled && tk_midi_clock.due && !tk_midi_clock.fault &&
+        t->running && t->mode == TK_MODE_SEQ && tk_banks.settings)
+        transport_tick(t, tk_banks.settings, fm1_ms);
+    if (t->swing_pending && tk_midi_clock.enabled)
+        t->next_step = (uint8_t)((t->next_step + 1u) % TK_PATTERN_STEPS);
+    t->swing_pending = 0u;
+    t->swing_clock_seen = 0u; /* Continue reuses the last rate, never the stopped gap */
+    tk_arr_transport_reset();
+    if (tk_banks.settings) {
+        uint32_t track;
+        for (track = 0; track < TK_TRACKS; track++) { publish_track(tk_banks.settings, track); tk_follow_source_macros(TRACK_SOURCE[track]); }
+    }
     transport_capture_finish(t, fm1_ms);
     transport_release(t);
     t->running = t->recording = 0;
@@ -1045,6 +1247,7 @@ static void transport_stop(tk_transport_t *t)
 }
 static void transport_start(tk_transport_t *t, uint32_t now)
 {
+    tk_arr_transport_reset();
     uint32_t track;
     transport_release(t);
     for (track = 0; track < TK_TRACKS; track++) {
@@ -1054,6 +1257,8 @@ static void transport_start(tk_transport_t *t, uint32_t now)
     t->next_step = t->shown_step = 0;
     tk_metronome_clock_reset(&metro_clock);
     t->next_ms = t->last_step_ms = now;
+    t->swing_pair = t->swing_pending = t->swing_clock_seen = 0u;
+    t->swing_clock_period = 0u;
 }
 static void transport_mode(tk_transport_t *t, uint8_t mode, uint32_t now)
 {
@@ -1107,7 +1312,7 @@ static uint32_t transport_playing_count(const tk_transport_t *t)
         if (t->playing[i].active) count++;
     return count;
 }
-/* A long chord must not starve every later drum hit. When the six voices are
+/* A long chord must not starve every later drum hit. When the voice pool is
  * full, the first new onset in each track may replace one generated note,
  * never a live key. Prefer a track holding several voices, then the target
  * track, then the note due to end soonest. */
@@ -1199,6 +1404,7 @@ static void transport_retime_seq(tk_transport_t *t, uint32_t old_period,
 {
     uint32_t i;
     if (!t->running || t->mode != TK_MODE_SEQ || old_period == new_period) return;
+    if (tk_midi_clock.enabled && t->swing_pair) return; /* external grid owns its period */
     transport_capture_retime(t, new_period, now);
     t->next_ms = transport_scale_deadline(t->next_ms, now, old_period, new_period);
     for (i = 0; i < TK_VOICES; i++)
@@ -1210,18 +1416,50 @@ static void transport_retime_seq(tk_transport_t *t, uint32_t old_period,
  * commands. Late display work skips a step instead of firing a burst of notes. */
 static int transport_tick(tk_transport_t *t, tk_settings_t *s, uint32_t now)
 {
-    uint32_t period, i, step;
+    uint32_t period, i, step, interval;
     uint8_t pitch;
+    if (tk_clock_expired(now)) { transport_stop(t); return 0; }
     if (!t->running) return 0;
     if (t->mode == TK_MODE_ARP) {
         if ((int32_t)(now - t->gate_end_ms) >= 0)
             transport_release_part(t, TK_TRACKS);
     } else transport_release_due(t, now);
-    if ((int32_t)(now - t->next_ms) < 0) return 0;
+    if (tk_midi_clock.enabled && t->mode == TK_MODE_SEQ) {
+        if (!tk_midi_clock.running) return 0;
+        if (tk_midi_clock.due) {
+            /* An unplayed delayed offbeat cannot cross the next grid boundary.
+             * Stop on a stalled main loop instead of releasing a catch-up burst. */
+            if (t->swing_pending) { tk_clock_disable(); tk_midi_clock.fault = 1u; transport_stop(t); return 0; }
+            tk_midi_clock.due = 0u;
+            if (t->swing_clock_seen) t->swing_clock_period = now - t->swing_clock_ms;
+            t->swing_clock_seen = 1u; t->swing_clock_ms = now;
+            period = t->swing_clock_period ? t->swing_clock_period : transport_period(t, s);
+            if (!(t->next_step & 1u)) t->swing_pair = (uint8_t)s->swing;
+            t->next_ms = now + ((t->next_step & 1u) ? tk_swing_shift(period, t->swing_pair) : 0u);
+            t->swing_pending = 1u;
+        }
+        if (!t->swing_pending || (int32_t)(now - t->next_ms) < 0) return 0;
+        t->swing_pending = 0u;
+    } else if ((int32_t)(now - t->next_ms) < 0) return 0;
     if (t->mode == TK_MODE_ARP) transport_release_part(t, TK_TRACKS);
-    period = transport_period(t, s);
+    period = tk_midi_clock.enabled && t->mode == TK_MODE_SEQ && t->swing_pair && t->swing_clock_period ?
+        t->swing_clock_period : transport_period(t, s);
     t->last_step_ms = now;
     step = t->next_step;
+    if (t->mode == TK_MODE_SEQ && !(step & 1u)) t->swing_pair = (uint8_t)s->swing;
+    interval = t->mode == TK_MODE_SEQ ? tk_swing_interval(period, t->swing_pair, step) : period;
+    if (t->mode == TK_MODE_SEQ && t->record_pattern) {
+        /* Carry REC durations through the same warped grid, with bounded main work. */
+        for (i = 0; i < TK_PATTERN_STEPS * TK_PATTERN_NOTES; i++) if (t->capture[i].active &&
+            (t->capture[i].swing || t->swing_pair)) {
+            t->capture[i].accumulated_q8 += transport_capture_segment_q8(&t->capture[i], now);
+            if (t->capture[i].accumulated_q8 > TK_PATTERN_GATE_Q4 * 256u)
+                t->capture[i].accumulated_q8 = TK_PATTERN_GATE_Q4 * 256u;
+            t->capture[i].start_ms = now; t->capture[i].period = period;
+            t->capture[i].swing = t->swing_pair; t->capture[i].parity = step & 1u;
+            t->capture[i].phase_ms = 0u;
+        }
+    }
     t->shown_step = (uint8_t)step;
     t->next_step = (uint8_t)((step + 1u) % TK_PATTERN_STEPS);
     if (t->mode == TK_MODE_ARP) {
@@ -1230,21 +1468,34 @@ static int transport_tick(tk_transport_t *t, tk_settings_t *s, uint32_t now)
         t->gate_end_ms = now + period * ARP_GATE_PERCENT[arp_gate_of(s->arp_mode)] / 100u;
     } else if (t->mode == TK_MODE_SEQ) {
         const tk_pattern_step_t *part[TK_TRACKS];
+        if (tk_arr_scene_boundary(s, t, step)) {
+            t->bank_changed = 1;
+            if (!tk_midi_clock.enabled) period = transport_period(t, s);
+            interval = tk_swing_interval(period, t->swing_pair, step);
+        }
         tk_metronome_clock_configure(&metro_clock, s->metro_beats, s->metro_unit);
         tk_metronome_clock_step(&metro_clock, s->metro_enabled, s->metro_level);
         uint8_t new_admitted[TK_TRACKS] = {0};
         uint32_t track;
-        uint32_t live;
+        uint32_t live, used, budget;
         if (tk_banks_boundary(s, t, step)) t->bank_changed = 1;
-        live = tk_live_voice_count();
-        uint32_t used = live + transport_playing_count(t);
-        uint32_t budget = used < TK_VOICES ? TK_VOICES - used : 0u;
         for (track = 0; track < TK_TRACKS; track++) {
-            part[track] = (t->solo_track ? t->solo_track != track + 1u :
+            uint32_t local = tk_transport_local_step(t, track, step, s->length[track]);
+            int section_muted = tk_section_muted(s->section_mutes, track, local);
+            int condition_passed = tk_arr_step_begin(s, t, track, local);
+            if (section_muted && !(local % TK_SECTION_STEPS)) {
+                /* A held gate or release tail cannot leak into a silent section.
+                 * The engine consumes this source-only fade command atomically. */
+                transport_release_part(t, track);
+                tk_all_sound_off(TRACK_SOURCE[track]);
+            }
+            part[track] = !condition_passed || section_muted || (t->solo_track ? t->solo_track != track + 1u :
                            !!(s->track_mute & (1u << track))) ? 0 :
-                tk_pattern_read(&s->pattern[track],
-                    tk_transport_local_step(t, track, step, s->length[track]));
+                tk_pattern_read(&s->pattern[track], local);
         }
+        live = tk_live_voice_count();
+        used = live + transport_playing_count(t);
+        budget = used < TK_VOICES ? TK_VOICES - used : 0u;
         /* Share scarce voices across tracks. The first note of each active
          * pattern gets a chance before any track takes a second voice. */
         for (i = 0; i < TK_PATTERN_NOTES; i++) {
@@ -1259,8 +1510,8 @@ static int transport_tick(tk_transport_t *t, tk_settings_t *s, uint32_t now)
                     budget++;
                 }
                 if (transport_note(t, track, note->pitch, note->velocity)) {
-                    gate = note->duration_q4 ? period * tk_pattern_gate_q4(note) / 4u :
-                        period * 75u / 100u;
+                    gate = note->duration_q4 ? tk_swing_gate(period, t->swing_pair, step,
+                        tk_pattern_gate_q4(note)) : interval * 75u / 100u;
                     if (!gate) gate = 1u;
                     transport_set_deadline(t, track, note->pitch, now, now + gate);
                     if (!duplicate) {
@@ -1271,9 +1522,10 @@ static int transport_tick(tk_transport_t *t, tk_settings_t *s, uint32_t now)
             }
         }
         for (track = 0; track < TK_TRACKS; track++) tk_banks.head_pending[track] = 0;
+        if (tk_arr.fill) tk_arr.fill--;
     }
-    t->next_ms += period;
-    if ((int32_t)(now - t->next_ms) >= 0) t->next_ms = now + period;
+    t->next_ms += interval;
+    if ((int32_t)(now - t->next_ms) >= 0) t->next_ms = now + interval;
     return 1;
 }
 static int transport_visual_slack(const tk_transport_t *t, uint32_t now)
@@ -1365,7 +1617,7 @@ typedef struct {
 static struct {
     tk_seq_row_view_t row[TK_TRACKS];
     uint8_t row_valid[TK_TRACKS], controls_valid, status_valid, help_valid, head_valid;
-    uint8_t tempo, mask, status, help, global_step;
+    uint8_t tempo, mask, status, help, global_step, preset, context, swing;
 } seq_drawn;
 static uint32_t diagnostics_valid, diagnostics_value[5];
 typedef struct {
@@ -1404,13 +1656,18 @@ static void draw_header(uint32_t page)
 {
     static const char *const PAGE_NAME[] = {
         "HOME", "MEMORY", "DIAGNOSTICS", "ENVELOPE", "FILTER LFO", "ARPEGGIATOR", "SEQUENCER", "SOUND EDIT", "MIDI CONTROL",
-        "FM OPERATOR", "PITCH", "SYNTH GLOBAL", "VOICE MODE", "FX CHAMBER", "METRONOME", "CONTROL FEEL"
+        "FM OPERATOR", "PITCH", "SYNTH GLOBAL", "VOICE MODE", "FX CHAMBER", "METRONOME", "CONTROL FEEL",
+        "ARRANGE", "STEP EDIT", "SCENES", "PIANO ROLL"
     };
     /* The startup art identifies the instrument. A compact page label leaves
      * the rest of the display for live controls and their values. */
-    draw_text_box(8, 8, 144, &FONT_S, PAGE_NAME[page < 16u ? page : 0u], C_ACC, 0);
-    if (page == TK_PAGE_PAD || page == TK_PAGE_GLO)
-        draw_text_box(144, 8, 88, &FONT_S, "v" APP_VER, TK_DIM, 2);
+    draw_text_box(8, 8, 144, &FONT_S,
+        tk_panel_edit_track < TK_TRACKS && page == TK_PAGE_PAD ? "TRACK SOUND" :
+        PAGE_NAME[page < 20u ? page : 0u], C_ACC, 0);
+    if (tk_panel_edit_track < TK_TRACKS || page == TK_PAGE_PAD || page == TK_PAGE_GLO)
+        draw_text_box(144, 8, 88, &FONT_S,
+            tk_panel_edit_track < TK_TRACKS ?
+            TK_SOUND_CONTEXT[tk_panel_edit_track] : "v" APP_VER, TK_DIM, 2);
     ui_thorn_rule(32);
     ui_accent_page = ~0u;
     diagnostics_valid = 0;
@@ -1490,24 +1747,25 @@ static void draw_envelope(const tk_settings_t *s, uint32_t hold)
     uint32_t i, instrument = PRESETS[s->preset].instrument;
     static const char *const pitched[] = {"K1 ATTACK", "K2 RELEASE", "K3 BLOOM", "K4 PANEL HOLD"};
     static const char *const metal[] = {"K1 ATTACK", "K2 TAIL", "K3 ALLOY", "K4 PANEL HOLD"};
-    static const char *const kit[] = {"K1 DECAY", "K2 BODY", "K3 WIRE", "K4 BITE"};
+    static const char *const kit[] = {"K1 LEVEL", "K2 DECAY", "K3 TUNE", "K4 PAN"};
+    if (instrument == TK_INSTRUMENT_DRUM_KIT)
+        draw_text_box(8, 46, 224, &FONT_S, TK_DRUM_NAMES[tk_drum_focus], C_ACC, 0);
     for (i = 0; i < 4u; i++) {
         const char *label = instrument == TK_INSTRUMENT_DRUM_KIT ? kit[i] :
             instrument == TK_INSTRUMENT_METAL ? metal[i] : pitched[i];
         uint32_t value = instrument == TK_INSTRUMENT_DRUM_KIT ?
-            (i == 0u ? s->p.drift : i == 1u ? s->p.shade : i == 2u ? s->p.fracture : s->p.bloom) :
+            ((const uint8_t *)&tk_drum_mix[tk_drum_focus])[i] :
             i == 0u ? s->attack : instrument == TK_INSTRUMENT_METAL ?
             (i == 1u ? s->p.bloom : s->p.drift) : i == 1u ? s->release : s->p.bloom;
-        draw_text_box(8, 50u + i * 26u, 152, &FONT_S, label, TK_DIM, 0);
+        draw_text_box(8, (instrument == TK_INSTRUMENT_DRUM_KIT ? 72u : 50u) + i * 26u, 152, &FONT_S, label, TK_DIM, 0);
         draw_number(number, value);
-        draw_text_box(168, 50u + i * 26u, 64, &FONT_S,
+        draw_text_box(168, (instrument == TK_INSTRUMENT_DRUM_KIT ? 72u : 50u) + i * 26u, 64, &FONT_S,
             i == 3u && instrument != TK_INSTRUMENT_DRUM_KIT ? (hold ? "ON" : "OFF") : number,
             TK_GREEN, 2);
     }
     if (instrument == TK_INSTRUMENT_DRUM_KIT) {
-        draw_text_box(8, 172, 224, &FONT_S, "SCRAP FORGE / ONE SHOTS", C_ACC, 0);
-        draw_text_box(8, 199, 224, &FONT_S, hold ? "EDIT: RELEASE PANEL HOLD" :
-            "64: NEUTRAL DRUM SHAPE", hold ? TK_GREEN : TK_DIM, 0);
+        draw_text_box(8, 181, 224, &FONT_S, "SELECT: CHOOSE DRUM", C_ACC, 0);
+        draw_text_box(8, 200, 224, &FONT_S, "64: UNITY / NEUTRAL", TK_DIM, 0);
         draw_text_box(8, 219, 224, &FONT_S, "ENV OR HOME: BACK", TK_DIM, 0);
         return;
     }
@@ -1569,7 +1827,8 @@ static void draw_lfo(const tk_settings_t *s, uint8_t live_shade)
     }
     cv_blit(8, 176);
     draw_number(number, live_shade);
-    draw_text_box(8, 219, 168, &FONT_S, "LIVE FILTER", TK_DIM, 0);
+    draw_text_box(8, 219, 168, &FONT_S,
+        tk_panel_edit_track < TK_TRACKS ? "TRACK FILTER" : "LIVE FILTER", TK_DIM, 0);
     draw_text_box(184, 219, 48, &FONT_S, number, TK_GREEN, 2);
 }
 enum {
@@ -1759,12 +2018,26 @@ static void draw_seq(const tk_settings_t *s, const tk_transport_t *t)
         (t->recording ? 8u : 0u) | (t->editing ? 16u : 0u);
     uint32_t help = tk_banks.importing ? 4u : t->editing ? 1u : t->recording ? 2u :
         !playing && !(t->mode == TK_MODE_ARP && t->running) ? 3u : 0u;
-    if (!seq_drawn.status_valid || seq_drawn.status != status) {
+    uint32_t context = t->editing ? t->selected : TK_TRACKS;
+    if (!seq_drawn.status_valid || seq_drawn.context != context) {
+        /* Only this small label changes on SELECT; no full-page repaint. */
+        draw_text_box(144, 8, 88, &FONT_S,
+            context < TK_TRACKS ? TK_SOUND_CONTEXT[context] : "", TK_DIM, 2);
+        seq_drawn.context = (uint8_t)context;
+    }
+    if (!seq_drawn.status_valid || seq_drawn.status != status ||
+        (t->editing && seq_drawn.preset != s->track[t->selected].preset)) {
+        char edit_name[32] = "EDIT: ";
+        uint32_t n = 6u, i = 0u;
+        const char *name = PRESETS[s->track[t->selected].preset].name;
+        while (name[i] && n < sizeof edit_name - 1u) edit_name[n++] = name[i++];
+        edit_name[n] = 0;
         draw_text_box(8, 48, 224, &FONT_S,
-            t->recording ? "RECORDING SELECTED" : t->editing ? "EDITING SELECTED" :
+            t->recording ? "RECORDING SELECTED" : t->editing ? edit_name :
             playing ? "FOUR LOOPS PLAYING" : t->mode == TK_MODE_ARP && t->running ?
             "ARP ON / PLAY: START SEQ" : "STOPPED / PLAY TO START", playing ? TK_GREEN : C_ACC, 0);
         seq_drawn.status = (uint8_t)status; seq_drawn.status_valid = 1;
+        seq_drawn.preset = s->track[t->selected].preset;
     }
     for (track = 0; track < TK_TRACKS; track++) {
         tk_seq_row_view_t row = seq_row_view(s, t, track);
@@ -1778,12 +2051,17 @@ static void draw_seq(const tk_settings_t *s, const tk_transport_t *t)
         draw_seq_playhead(s, t, seq_drawn.global_step, t->shown_step);
     seq_drawn.global_step = t->shown_step; seq_drawn.head_valid = 1;
     draw_seq_controls(s);
-    if (!seq_drawn.help_valid || seq_drawn.help != help) {
+    if (!seq_drawn.help_valid || seq_drawn.help != help || seq_drawn.swing != s->swing) {
         draw_text_box(8, 208, 224, &FONT_S, help == 4u ? "SONG IMPORT: CONTROLS LOCKED" :
             help == 2u ? "SELECT / ALG: REC LOCK" : "SELECT TRACK / ALG BANK", TK_DIM, 0);
         draw_text_box(8, 224, 224, &FONT_S, help == 1u ? "K2 LEN K3 STEP REC ERASE" :
             help == 2u ? "K2 LEN / K3 STEP: REC LOCK" : help == 4u ? "WAIT FOR LOAD TO FINISH" :
-            "K2 LEN  K3 STEP IN EDIT", TK_DIM, 0);
+            "K2 LEN  K3 SWING", TK_DIM, 0);
+        if (help == 0u || help == 3u) {
+            char value[4]; draw_number(value, s->swing);
+            draw_text_box(184, 224, 48, &FONT_S, value, TK_GREEN, 2);
+        }
+        seq_drawn.swing = (uint8_t)s->swing;
         seq_drawn.help = (uint8_t)help; seq_drawn.help_valid = 1;
     }
 }
@@ -1877,7 +2155,7 @@ static void draw_diagnostics(void)
     if (repaint_voices) {
         cv_begin(224, 24, C_BLACK);
         for (i = 0; i < TK_VOICES; i++) {
-            int32_t x = 12 + (int32_t)i * 38;
+            int32_t x = 4 + (int32_t)i * (224 / TK_VOICES);
             uint16_t c = i < voices ? TK_GREEN : C_BAR;
             cv_line(x, 18, x + 10, 2, C_ACC);
             cv_line(x + 10, 2, x + 19, 18, TK_DIM);
@@ -1932,8 +2210,11 @@ static void draw_fx(const tk_settings_t *s)
     uint32_t labels = !tk_fx_drawn_valid || now.instrument != tk_fx_drawn.instrument;
     char number[4];
     if (!tk_fx_drawn_valid || now.preset != tk_fx_drawn.preset) {
-        char title[32] = "LIVE: ";
-        uint32_t n = 6u, at = 0;
+        char title[32];
+        const char *context = TK_SOUND_CONTEXT[tk_panel_edit_track];
+        uint32_t n = 0u, at = 0;
+        while (context[n]) { title[n] = context[n]; n++; }
+        title[n++] = ':'; title[n++] = ' ';
         while (PRESETS[now.preset].name[at] && n + 1u < sizeof title)
             title[n++] = PRESETS[now.preset].name[at++];
         title[n] = 0;
@@ -1997,18 +2278,69 @@ static void draw_preset_title(const tk_settings_t *s)
     uint32_t j = 0;
     const char *name = PRESETS[s->preset].name;
     char title[24];
-    title[0] = (char)('0' + (s->preset + 1u) / 10u);
-    title[1] = (char)('0' + (s->preset + 1u) % 10u);
+    title[0] = (char)('0' + (factory_position(s->preset) + 1u) / 10u);
+    title[1] = (char)('0' + (factory_position(s->preset) + 1u) % 10u);
     title[2] = ' ';
     while (j < sizeof title - 4u && name[j]) { title[3u + j] = name[j]; j++; }
+    if (s->preset == 24u || s->preset == 51u) {
+        const char *suffix = " OLD"; uint32_t k=0;
+        while (suffix[k] && j < sizeof title - 4u) title[3u+j++] = suffix[k++];
+    }
     title[3u + j] = '\0';
     draw_text_box(8, 48, 176, &FONT_S, title, C_ACC, 0);
 }
 static uint32_t home_preset_drawn = ~0u, home_modified_drawn = ~0u, home_status_drawn = ~0u;
 static uint32_t home_graft_drawn = ~0u;
+static void draw_home_reset(uint32_t ready)
+{
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+    draw_text_box(8, 16, 224, &FONT_S, "RESET DEFAULTS?", C_ACC, 2);
+    draw_text_box(8, 66, 224, &FONT_S, "REPLACES SONG + SOUNDS", TK_DIM, 1);
+    draw_text_box(8, 88, 224, &FONT_S, "RESETS LOCAL SETUP", TK_DIM, 1);
+    draw_text_box(8, 126, 224, &FONT_S, "RAM ONLY UNTIL SAVE", TK_DIM, 1);
+    draw_text_box(8, 168, 224, &FONT_S,
+        ready ? "PRESS SEL TO RESET" : "RELEASE ALL BUTTONS", ready ? TK_GREEN : C_ACC, 1);
+    draw_text_box(8, 204, 224, &FONT_S, "HOME: CANCEL", TK_GREEN, 1);
+}
+enum {
+    TK_SAVE_NOTICE_NONE, TK_SAVE_NOTICE_WAIT_SOUND, TK_SAVE_NOTICE_WAIT_STOP,
+    TK_SAVE_NOTICE_WAIT_IMPORT, TK_SAVE_NOTICE_SAVED, TK_SAVE_NOTICE_FAILED
+};
+static int tk_save_notice_finished(uint32_t notice)
+{
+    return notice == TK_SAVE_NOTICE_SAVED || notice == TK_SAVE_NOTICE_FAILED;
+}
+/* Main-only, drawn once per state. A successful flash return is the only
+ * route to SAVED; waiting for notes/tails never looks like confirmation. */
+static void draw_save_notice(uint32_t notice)
+{
+    int saved = notice == TK_SAVE_NOTICE_SAVED;
+    int failed = notice == TK_SAVE_NOTICE_FAILED;
+    lcd_fill(0, 0, 240, 240, C_BLACK);
+    draw_text_box(8, 12, 224, &FONT_S, "SAVE", C_ACC, 1);
+    lcd_fill(32, 42, 176, 2, saved ? TK_GREEN : C_ACC);
+    draw_text_box(8, 76, 224, &FONT_L,
+        saved ? "SAVED" : failed ? "NOT SAVED" : "WAITING",
+        saved ? TK_GREEN : C_ACC, 1);
+    draw_text_box(8, 133, 224, &FONT_S,
+        saved ? "ALL 16 PATTERNS" : failed ? "WRITE DID NOT COMPLETE" :
+        notice == TK_SAVE_NOTICE_WAIT_STOP ? "STOP PLAYBACK / RECORD" :
+        notice == TK_SAVE_NOTICE_WAIT_IMPORT ? "FINISH SONG TRANSFER" : "RELEASE KEYS + PEDALS",
+        C_WHITE, 1);
+    draw_text_box(8, 156, 224, &FONT_S,
+        saved ? "SOUNDS + SETTINGS" : failed ? "EDITS STILL IN MEMORY" :
+        notice == TK_SAVE_NOTICE_WAIT_SOUND ? "WAIT FOR SOUND TO END" : "THEN WAIT FOR SILENCE",
+        C_WHITE, 1);
+    draw_text_box(8, 204, 224, &FONT_S,
+        saved ? "KEY / BUTTON / KNOB:" : failed ? "PRESS SAVE TO RETRY" : "SAVE WILL FINISH",
+        TK_DIM, 1);
+    draw_text_box(8, 222, 224, &FONT_S,
+        saved ? "CONTINUE" : failed ? "HOME: RETURN" : "WHEN FULLY SILENT", TK_DIM, 1);
+}
 static void draw_home(const tk_settings_t *s, uint32_t modified, uint32_t saving, uint32_t save_failed)
 {
-    uint32_t status = saving ? 1u : save_failed ? 2u : 0u;
+    uint32_t pending = tk_panel_edit_track != tk_panel_audition_track;
+    uint32_t status = (saving ? 1u : save_failed ? 2u : 0u) | (pending << 2);
     if (home_preset_drawn != s->preset) {
         draw_preset_title(s); home_preset_drawn = s->preset;
     }
@@ -2018,7 +2350,8 @@ static void draw_home(const tk_settings_t *s, uint32_t modified, uint32_t saving
     }
     if (home_status_drawn != status) {
         draw_text_box(8, 219, 224, &FONT_S, saving ? "SAVE WAIT: RELEASE/HOLD" :
-            save_failed ? "SAVE FAILED" : "EDIT: SOUND CONTROLS", TK_DIM, 0);
+            save_failed ? "SAVE FAILED" : pending ? "NEW SOUND: NEXT CHORD" : tk_panel_edit_track < TK_TRACKS ?
+            "EDIT: TRACK / HOME: LIVE" : "EDIT: SOUND CONTROLS", TK_DIM, 0);
         home_status_drawn = status;
     }
     if (home_graft_drawn != s->graft_amount) {
@@ -2122,7 +2455,8 @@ static uint8_t adjust_u8(uint8_t value, int32_t delta, uint32_t lo, uint32_t hi)
 }
 
 /* SEQ gives each encoder one role: SELECT navigates tracks, ALGORITHM chooses
- * A-D patterns. Navigation retains the auditioned sound and never starts play.
+ * A-D patterns. Step entry follows the selected capture; overview keeps LIVE.
+ * Navigation never starts play.
  * Bank changes use the same track-boundary rules as remote controllers. */
 static int tk_seq_encoder(tk_settings_t *s, tk_transport_t *t,
                           uint32_t encoder, int32_t delta)
@@ -2164,7 +2498,7 @@ static int tk_encoder_alias_inactive(uint32_t page)
 static void draw_control_feel(const tk_settings_t *s)
 {
     uint32_t accelerated = s->panel_response == TK_ENCODER_ADAPTIVE;
-    draw_text_box(8, 49, 224, &FONT_S, "FM-1 DETENT RESPONSE", C_ACC, 0);
+    draw_text_box(8, 49, 224, &FONT_S, "FM-1 CONTROL OPTIONS", C_ACC, 0);
     draw_text_box(8, 78, 128, &FONT_S, "K1 RESPONSE", TK_DIM, 0);
     draw_text_box(136, 78, 96, &FONT_S, accelerated ? "ACCEL" : "LINEAR", TK_GREEN, 2);
     cv_begin(224, 66, C_BLACK);
@@ -2179,9 +2513,13 @@ static void draw_control_feel(const tk_settings_t *s)
     } else cv_line(13, 43, 213, 43, TK_GREEN);
     cv_blit(8, 99);
     draw_text_box(8, 171, 224, &FONT_S, accelerated ? "SLOW 1X / QUICK 2X-4X" : "ONE CLICK = ONE UNIT", TK_GREEN, 0);
-    draw_text_box(8, 189, 224, &FONT_S, "FIRE KEEPS FINE CONTROL", TK_DIM, 0);
+    draw_text_box(8, 189, 112, &FONT_S, "K2 HOME", TK_DIM, 0);
+    draw_text_box(120, 189, 112, &FONT_S,
+        tk_home_visual_is_rift(s->home_visual) ? "THORN RIFT" : "HOMUNCULUS", TK_GREEN, 2);
     draw_text_box(8, 207, 224, &FONT_S, "SEL: GLO / SAVE: REMEMBER", TK_DIM, 0);
-    draw_text_box(8, 223, 224, &FONT_S, "K2-K4 UNUSED / HOME BACK", TK_DIM, 0);
+    draw_text_box(8, 223, 224, &FONT_S,
+        "K3-K4 UNUSED / HOME BACK",
+        TK_DIM, 0);
 }
 
 static void draw_metronome(const tk_settings_t *s)
@@ -2212,6 +2550,9 @@ static void draw_metronome(const tk_settings_t *s)
     memcpy(metro_drawn, now, sizeof now); metro_drawn_valid = 1;
 }
 
+#include "terkinstein_arrangement_ui.h"
+#include "terkinstein_piano.h"
+#include "terkinstein_piano_ui.h"
 static void draw_midi_controls(const tk_settings_t *s)
 {
     char number[4], route[] = "PORT BOTH  CHANNEL ALL";
@@ -2256,8 +2597,17 @@ static int tk_page_knob(tk_settings_t *s, tk_transport_t *t, uint32_t page,
     uint8_t *field = 0, next, old;
     (void)live_shade; (void)lfo;
     if (knob > 3u) return 1;
+    { int action = tk_arr_page_knob(s, t, page, knob, delta); if (action) return action; }
     if (page == TK_PAGE_CONTROLS) {
-        if (knob || tk_banks.importing) return 1;
+        if (tk_banks.importing) return 1;
+        if (knob == 1u) {
+            uint32_t current = tk_home_visual_is_rift(s->home_visual);
+            next = adjust_u8((uint8_t)current, delta, 0, 1);
+            if (next == current) return 1;
+            s->home_visual = next ? TK_HOME_VISUAL_RIFT : 0u;
+            return 7;
+        }
+        if (knob) return 1;
         next = adjust_u8(s->panel_response, delta, TK_ENCODER_LINEAR, TK_ENCODER_ADAPTIVE);
         if (next == s->panel_response) return 1;
         s->panel_response = next;
@@ -2289,9 +2639,13 @@ static int tk_page_knob(tk_settings_t *s, tk_transport_t *t, uint32_t page,
         field = knob == 0u ? &s->memory : knob == 1u ? &s->p.shade :
             knob == 2u ? &s->p.fracture : &s->p.bloom;
     } else if (page == TK_PAGE_ENV) {
-        if (instrument == TK_INSTRUMENT_DRUM_KIT)
-            field = knob == 0u ? &s->p.drift : knob == 1u ? &s->p.shade :
-                knob == 2u ? &s->p.fracture : &s->p.bloom;
+        if (instrument == TK_INSTRUMENT_DRUM_KIT) {
+            if (tk_banks.importing) return 1;
+            field = (uint8_t *)&tk_drum_mix[tk_drum_focus] + knob;
+            next = adjust_u8(*field, delta, 0, 127);
+            if (next == *field) return 1;
+            *field = next; tk_set_drum_mix(tk_drum_focus, &tk_drum_mix[tk_drum_focus]); tk_arr_changed(); return 7;
+        }
         else if (knob == 3u) {
             next = adjust_u8((uint8_t)*hold, delta, 0, 1);
             if (next == *hold) return 1;
@@ -2346,7 +2700,13 @@ static int tk_page_knob(tk_settings_t *s, tk_transport_t *t, uint32_t page,
             s->length[track] = next; t->edit_step %= next; return 7;
         }
         if (knob == 2u) {
-            if (!t->editing || t->recording) return 1;
+            if (!t->editing) {
+                if (t->recording) return 1;
+                next = adjust_u8((uint8_t)s->swing, delta, 0u, 100u);
+                if (next == s->swing) return 1;
+                s->swing = next; return 7;
+            }
+            if (t->recording) return 1;
             next = (uint8_t)(((int32_t)t->edit_step + delta % s->length[track]
                 + s->length[track]) % s->length[track]);
             if (next == t->edit_step) return 1;
@@ -2464,6 +2824,10 @@ static void capture_midi_release(tk_transport_t *t, uint32_t source,
 }
 static uint32_t midi_capture_allowed(const tk_transport_t *t, uint32_t source)
 {
+    if (source >= TK_SOURCE_KEYBOARD0 && source < TK_SOURCE_KEYBOARD0 + 2u)
+        return t->selected == tk_keyboard_track[source - TK_SOURCE_KEYBOARD0];
+    if (source >= TK_SOURCE_FIRE0 && source < TK_SOURCE_FIRE0 + 4u)
+        return t->selected == tk_fire_track[source - TK_SOURCE_FIRE0];
     return !midi_live_drum_enabled ||
         (source == TK_SOURCE_LIVE_DRUM ? t->selected == TK_TRACK_DRUM : t->selected != TK_TRACK_DRUM);
 }
@@ -2498,6 +2862,77 @@ static void midi_live_drum_expire(tk_transport_t *t, const tk_settings_t *s, uin
     if (midi_live_drum_enabled && now - midi_live_drum_lease_ms >= TK_PAD_ROUTE_LEASE_MS)
         midi_live_drum_set(t, s, 0u);
 }
+static void midi_fire_set(tk_transport_t *t, const tk_settings_t *s, uint32_t mask, const uint8_t *tracks)
+{
+    uint32_t slot, i;
+    if (mask) midi_fire_lease_ms = fm1_ms;
+    for (slot = 0; slot < 4u; slot++) {
+        uint32_t source = TK_SOURCE_FIRE0 + slot, bit = 1u << slot;
+        if ((midi_fire_mask & bit) == (mask & bit) && tk_fire_track[slot] == tracks[slot]) continue;
+        tk_all_sound_off(source); tk_reset_controllers(source);
+        tk_volume(source,127u); tk_brightness(source,64u); tk_texture(source,64u);
+        tk_set_bend_range(source,s->midi_bend_range);
+        for (i = 0; i < TK_PATTERN_STEPS * TK_PATTERN_NOTES; i++)
+            if (t->capture[i].active && t->capture[i].source == source + 26u)
+                transport_capture_end(t,source + 26u,t->capture[i].pitch,fm1_ms);
+        if ((mask & bit) && !(midi_fire_mask & bit)) {
+            tk_all_sound_off(12u+slot); tk_reset_controllers(12u+slot);
+        }
+        tk_fire_track[slot] = tracks[slot];
+    }
+    midi_fire_mask = (uint8_t)mask;
+    publish_fire_tracks();
+}
+static void midi_fire_disable(tk_transport_t *t, const tk_settings_t *s)
+{
+    uint8_t tracks[4]; uint32_t slot;
+    for (slot = 0; slot < 4u; slot++) tracks[slot] = (uint8_t)tk_fire_track[slot];
+    midi_fire_set(t,s,0u,tracks);
+}
+static void midi_fire_expire(tk_transport_t *t, const tk_settings_t *s, uint32_t now)
+{
+    if (midi_fire_mask && now - midi_fire_lease_ms >= TK_PAD_ROUTE_LEASE_MS) midi_fire_disable(t,s);
+}
+static void midi_keyboard_set(tk_transport_t *t, const tk_settings_t *s, uint32_t mask, const uint8_t *routes)
+{
+    uint32_t slot, i;
+    if (mask) midi_keyboard_lease_ms = fm1_ms;
+    for (slot = 0; slot < 2u; slot++) {
+        uint32_t source = TK_SOURCE_KEYBOARD0 + slot, bit = 1u << slot;
+        uint32_t channel = routes[slot * 2u] - 1u, track = routes[slot * 2u + 1u];
+        if ((midi_keyboard_mask & bit) == (mask & bit) &&
+            midi_keyboard_channel[slot] == channel && tk_keyboard_track[slot] == track) continue;
+        tk_all_sound_off(source); tk_reset_controllers(source);
+        tk_volume(source,127u); tk_brightness(source,64u); tk_texture(source,64u);
+        tk_set_bend_range(source,s->midi_bend_range);
+        midi_rpn_msb[source] = midi_rpn_lsb[source] = 127u;
+        for (i = 0; i < TK_PATTERN_STEPS * TK_PATTERN_NOTES; i++)
+            if (t->capture[i].active && t->capture[i].source == source + 26u)
+                transport_capture_end(t,source + 26u,t->capture[i].pitch,fm1_ms);
+        if ((mask & bit) && (!(midi_keyboard_mask & bit) || midi_keyboard_channel[slot] != channel)) {
+            tk_all_sound_off(channel + 1u); tk_reset_controllers(channel + 1u);
+            midi_rpn_msb[channel + 1u] = midi_rpn_lsb[channel + 1u] = 127u;
+        }
+        midi_keyboard_channel[slot] = (uint8_t)channel;
+        tk_keyboard_track[slot] = track;
+    }
+    midi_keyboard_mask = (uint8_t)mask;
+    publish_fire_tracks();
+}
+static void midi_keyboard_disable(tk_transport_t *t, const tk_settings_t *s)
+{
+    uint8_t routes[4]; uint32_t slot;
+    for (slot = 0; slot < 2u; slot++) {
+        routes[slot * 2u] = midi_keyboard_channel[slot] + 1u;
+        routes[slot * 2u + 1u] = (uint8_t)tk_keyboard_track[slot];
+    }
+    midi_keyboard_set(t,s,0u,routes);
+}
+static void midi_keyboard_expire(tk_transport_t *t, const tk_settings_t *s, uint32_t now)
+{
+    if (midi_keyboard_mask && now - midi_keyboard_lease_ms >= TK_PAD_ROUTE_LEASE_MS)
+        midi_keyboard_disable(t,s);
+}
 static void capture_midi_pedals(tk_transport_t *t, uint32_t now)
 {
     uint32_t i;
@@ -2505,7 +2940,8 @@ static void capture_midi_pedals(tk_transport_t *t, uint32_t now)
     for (i = 0; i < TK_PATTERN_STEPS * TK_PATTERN_NOTES; i++) {
         const tk_capture_note_t *held = &t->capture[i];
         if (held->active == 2u && ((held->source >= 27u && held->source <= 58u)
-            || held->source == TK_SOURCE_LIVE_DRUM + 26u)
+            || held->source == TK_SOURCE_LIVE_DRUM + 26u
+            || (held->source >= TK_SOURCE_FIRE0 + 26u && held->source < TK_SOURCE_KEYBOARD0 + 28u))
             && !tk_note_is_held(held->pitch, held->source - 26u))
             transport_capture_end(t, held->source, held->pitch, now);
     }
@@ -2514,7 +2950,10 @@ static void midi_port_reset(tk_transport_t *t, const tk_settings_t *s, uint32_t 
 {
     uint32_t channel, i;
     if (!port) {
+        if (tk_midi_clock.enabled) { tk_clock_disable(); transport_stop(t); }
         midi_live_drum_set(t, s, 0u);
+        midi_fire_disable(t,s);
+        midi_keyboard_disable(t,s);
         transport_solo_set(t, s, TK_TRACKS, fm1_ms);
     }
     for (channel = 0; channel < 16u; channel++) {
@@ -2536,7 +2975,7 @@ static int midi_control_cc(tk_settings_t *s, tk_transport_t *t, uint8_t port,
                           uint32_t *remote_buttons)
 {
     uint32_t source = midi_source(port, st & 15u), i;
-    if (source == TK_SOURCE_LIVE_DRUM) {
+    if (source == TK_SOURCE_LIVE_DRUM || (source >= TK_SOURCE_FIRE0 && source < TK_SOURCE_FIRE0 + 4u)) {
         /* Pads have deliberate strike dynamics. Keyboard wheels, pedals,
          * mappings and RPN never spill into the captured percussion owner. */
         if (cc == 7u) tk_volume(source, value);
@@ -2546,7 +2985,7 @@ static int midi_control_cc(tk_settings_t *s, tk_transport_t *t, uint8_t port,
         else if (cc == 123u) tk_all_notes_off(source);
         return 0;
     }
-    if (source != TK_SOURCE_LIVE_DRUM && midi_learning && !midi_reserved_cc(cc)) {
+    if (source < TK_SOURCE_FIRE0 && source != TK_SOURCE_LIVE_DRUM && midi_learning && !midi_reserved_cc(cc)) {
         tk_midi_binding_t *binding = &s->midi_bind[midi_focus];
         binding->cc = cc; binding->port = port; binding->channel = st & 15u;
         midi_binding_unique(s, midi_focus);
@@ -2583,6 +3022,7 @@ static int midi_control_cc(tk_settings_t *s, tk_transport_t *t, uint8_t port,
             if (t->capture[i].active && t->capture[i].source == source + 26u)
                 t->capture[i].active = 2u;
     }
+    if (source >= TK_SOURCE_KEYBOARD0) return 0; /* Captured keyboards never edit the global live patch. */
     {
         uint32_t best = TK_MIDI_BINDINGS, score = 0;
         for (i = 0; i < TK_MIDI_BINDINGS; i++) {
@@ -2620,6 +3060,33 @@ static int midi_control_cc(tk_settings_t *s, tk_transport_t *t, uint8_t port,
 }
 
 #include "terkinstein_remote.h"
+#include "terkinstein_panel_edit.h"
+
+/* One main-owned mask drives both the real lettering and mirror telemetry. */
+static uint16_t tk_panel_button_lamps(const tk_settings_t *s, const tk_transport_t *t,
+                                    uint32_t page, uint32_t hold, uint32_t edit_pending,
+                                    uint32_t save_pending)
+{
+    uint32_t mask = 0u;
+    if (s->fx) mask |= 1u << BTN_FX;
+    if (page == TK_PAGE_GLO || page == TK_PAGE_SCENES) mask |= 1u << BTN_GLO;
+    if (page == TK_PAGE_SEQ ? !(s->track_mute & (1u << t->selected)) :
+        page == TK_PAGE_METRONOME ? s->metro_enabled : page == TK_PAGE_MEMORY) mask |= 1u << BTN_SEL;
+    if (page == TK_PAGE_ENV || hold) mask |= 1u << BTN_ENV;
+    if (s->lfo_on) mask |= 1u << BTN_LFO;
+    if (page == TK_PAGE_SOUND_EDIT || (page >= TK_PAGE_OPERATOR && page <= TK_PAGE_VOICE) ||
+        (page == TK_PAGE_FX && PRESETS[s->preset].instrument != TK_INSTRUMENT_DRUM_KIT && s->lfo_on) ||
+        t->editing || edit_pending || page == TK_PAGE_PIANO) mask |= 1u << BTN_EDIT;
+    if (page == TK_PAGE_PAD) mask |= 1u << BTN_HOME;
+    if (t->mode == TK_MODE_ARP || tk_arr.fill) mask |= 1u << BTN_ARP;
+    if (page == TK_PAGE_SEQ || page == TK_PAGE_PIANO || t->mode == TK_MODE_SEQ) mask |= 1u << BTN_SEQ;
+    if (t->running) mask |= 1u << BTN_PLAY;
+    if (t->recording || tk_arr.auto_armed) mask |= 1u << BTN_REC;
+    if (save_pending) mask |= 1u << BTN_SAVE;
+    if (s->octave < 0) mask |= 1u << BTN_OCT_DOWN;
+    if (s->octave > 0) mask |= 1u << BTN_OCT_UP;
+    return (uint16_t)mask;
+}
 
 static void app_main(void)
 {
@@ -2631,6 +3098,7 @@ static void app_main(void)
     static tk_settings_v7_t old7;
     static tk_settings_v8_t old8;
     static tk_settings_v9_t old9;
+    static tk_settings_v11_t old11;
     static tk_settings_v10_t old10;
     static tk_transport_t transport;
     static tk_visual_snapshot_t home_visual;
@@ -2638,10 +3106,14 @@ static void app_main(void)
     tk_lfo_t track_lfo[TK_TRACKS];
     tk_arp_screen_t arp_drawn = {0};
     uint32_t prev = 0, dirty = 0, save_pending = 0, save_failed = 0, changed = 1, last_draw = 0, lit_drawn = ~0u;
+    uint32_t save_notice = TK_SAVE_NOTICE_NONE, save_notice_drawn = TK_SAVE_NOTICE_NONE;
     uint32_t i, page = TK_PAGE_PAD, page_changed = 0, hold = 0;
     uint32_t splash_active = 1, arp_wait_for_page = 0, arp_partial_step_drawn = ~0u, last_lfo = 0;
-    uint32_t home_pressed = 0, play_pressed = 0, home_long = 0, play_long = 0;
-    tk_fx_button_t fx_button = {0}, lfo_button = {0}, arp_button = {0}, seq_button = {0};
+    tk_intro_t intro = {0};
+    uint32_t play_pressed = 0, play_long = 0;
+    tk_home_reset_t home_reset = {0};
+    tk_fx_button_t fx_button = {0}, lfo_button = {0}, arp_button = {0}, seq_button = {0}, sel_button = {0};
+    uint32_t sel_page = TK_PAGE_SEQ;
     tk_encoder_response_t knob_response[4] = {{0}};
     uint32_t remote_buttons = 0;
     uint32_t edit_pending = 0, edit_used = 0, shortcut_keys = 0;
@@ -2651,7 +3123,11 @@ static void app_main(void)
     settings_defaults(&s);
     if (settings_load(&s, sizeof s) || !settings_valid(&s)) {
         settings_defaults(&s);
-        if (!settings_load(&old10, sizeof old10) && settings_upgrade_v10(&s, &old10)) {
+        if (!settings_load(&old11, sizeof old11) && settings_upgrade_v12(&s, &old11)) {
+            /* Reuse the existing3700-byte scratch; preserve schema12 exactly, swing0. */
+        } else if (!settings_load(&old11, sizeof old11) && settings_upgrade_v11(&s, &old11)) {
+            /* Preserve all schema-11 settings; section mutes begin clear. */
+        } else if (!settings_load(&old10, sizeof old10) && settings_upgrade_v10(&s, &old10)) {
             /* Preserve all schema-10 sounds and active patterns; metro starts off. */
         } else if (!settings_load(&old9, sizeof old9) && settings_upgrade_v9(&s, &old9)) {
             /* Keep 0.12 loops, GRAFT, forged drums and controller bindings. */
@@ -2689,15 +3165,18 @@ static void app_main(void)
     }
     tk_banks_init(&s, &transport);
     tk_init();
-    midi_performance_init(&s);
+    tk_drums_defaults(tk_drum_mix);
     tk_visual_init();
     tk_metronome_init();
     tk_panel_activity_init(&tk_panel_activity);
     tk_metronome_clock_init(&metro_clock);
     tk_metronome_clock_configure(&metro_clock, s.metro_beats, s.metro_unit);
-    tk_rift_reset();
+    tk_home_visual_reset();
     tk_arp_init(&transport.arp);
     transport.selected = TK_TRACK_MELODY;
+    tk_persist_load(&s, &transport);
+    publish_drum_mix();
+    midi_performance_init(&s);
     tk_lfo_init(&lfo, fm1_ms);
     live_shade = s.p.shade;
     publish_params(&s, live_shade);
@@ -2711,37 +3190,71 @@ static void app_main(void)
 #endif
     tk_ready = 1;
     draw_splash();
+    intro.logo_ms = fm1_ms;
     for (;;) {
         uint32_t keys, down, up, b, released, base, lit, screen_lit, physical_gesture, remote_flags;
+        uint32_t save_activity, master_activity;
+        uint32_t held_buttons, physical_pressed, old_virtual, canceled, reset_action, reset_was_open;
         uint8_t port, st, d1, d2;
         int32_t delta;
         platform_poll();
+        lcd_cooperative_begin(); /* updater/recovery/fault drawing stays immediate */
         midi_live_drum_expire(&transport, &s, fm1_ms);
+        midi_fire_expire(&transport,&s,fm1_ms);
+        midi_keyboard_expire(&transport,&s,fm1_ms);
         if (transport_solo_expire(&transport, &s, fm1_ms)) changed = 1;
         tk_panel_activity_inputs(&tk_panel_activity, fm1_in.buttons, fm1_in.notes, fm1_ms);
+        master_activity = (uint32_t)platform_master_activity();
+        tk_panel_activity_encoder(&tk_panel_activity, 7u, master_activity, fm1_ms);
         remote_ui_splash = (uint8_t)!!splash_active;
         remote_flags = tk_remote_service(&s, &transport, &live_shade, &lfo, track_lfo, track_shade, page, dirty);
         if (remote_flags & 1u) changed = 1;
         if (remote_flags & 2u) dirty = 1;
+        if (tk_banks.importing) tk_panel_input_cancel();
+        if (tk_banks.importing && tk_panel_edit_track < TK_TRACKS)
+            tk_panel_editor_select(&s, &transport, TK_TRACKS, &live_shade, &lfo, track_lfo, track_shade, &hold);
+        tk_panel_editor_sequence(&s, &transport, page, &live_shade, &lfo, track_lfo, track_shade, &hold);
+        tk_panel_editor_begin(&s, &live_shade, &lfo, track_lfo, track_shade);
         base = (uint32_t)(KEY0 + 12 * s.octave);
         keys = fm1_in.notes;
         down = (keys & ~prev) | fm1_input_note_edges();
         up = (prev | down) & ~keys;
         prev = keys;
-        b = fm1_input_edges(&released);
+        physical_pressed = b = fm1_input_edges(&released);
         tk_panel_activity_press(&tk_panel_activity, b, fm1_ms);
+        old_virtual = (tk_panel_input.held | tk_panel_input.released | tk_panel_input.canceled) & ~tk_panel_input.pressed;
+        tk_panel_input_expire(fm1_ms);
+        held_buttons = fm1_in.buttons | tk_panel_input.held;
+        b = (b & ~old_virtual) | (tk_panel_input.pressed & ~fm1_in.buttons);
+        released = (released & ~tk_panel_input.held) | (tk_panel_input.released & ~fm1_in.buttons);
+        canceled = tk_panel_input.canceled & ~fm1_in.buttons;
+        released &= ~canceled;
+        if (canceled & (1u << BTN_FX)) memset(&fx_button, 0, sizeof fx_button);
+        if (canceled & (1u << BTN_LFO)) memset(&lfo_button, 0, sizeof lfo_button);
+        if (canceled & (1u << BTN_ARP)) memset(&arp_button, 0, sizeof arp_button);
+        if (canceled & (1u << BTN_SEQ)) memset(&seq_button, 0, sizeof seq_button);
+        if (canceled & (1u << BTN_SEL)) memset(&sel_button, 0, sizeof sel_button);
+        if (canceled & (1u << BTN_EDIT)) edit_pending = edit_used = 0u;
+        tk_panel_input.pressed = tk_panel_input.released = tk_panel_input.canceled = 0u;
         physical_gesture = down | b;
         b |= remote_buttons; remote_buttons = 0;
+        save_activity = down | b | master_activity | (remote_flags & 3u);
+        reset_was_open = home_reset.prompt;
+        reset_action = tk_home_reset_event(&home_reset, physical_pressed, fm1_in.buttons, b,
+            down || master_activity || (remote_flags & 2u) || tk_banks.importing || save_pending,
+            fm1_ms);
+        if (reset_was_open) b &= ~((1u << BTN_HOME) | (1u << BTN_SEL));
+        if (reset_action) { page_changed = changed = 1u; last_draw = fm1_ms - 250u; }
         if (tk_banks.importing) {
             b &= ~((1u << BTN_REC) | (1u << BTN_PLAY) | (1u << BTN_ARP) | (1u << BTN_SAVE));
             if (page == TK_PAGE_SEQ) b &= ~(1u << BTN_SEL);
         }
-        if ((b & (1u << BTN_EDIT)) && (fm1_in.buttons & (1u << BTN_EDIT))) {
+        if ((b & (1u << BTN_EDIT)) && (held_buttons & (1u << BTN_EDIT))) {
             edit_pending = 1; edit_used = 0; b &= ~(1u << BTN_EDIT);
         }
         for (i = 0; i < 27u; i++) {
             uint32_t bit = 1u << i;
-            if ((down & bit) && (fm1_in.buttons & (1u << BTN_EDIT)) && !panel_down[i]) {
+            if ((down & bit) && (held_buttons & (1u << BTN_EDIT)) && !panel_down[i]) {
                 int action = tk_label_action(&s, i, &page);
                 if (action) {
                     shortcut_keys |= bit; edit_used = 1;
@@ -2751,7 +3264,13 @@ static void app_main(void)
             }
             if (shortcut_keys & bit) { down &= ~bit; up &= ~bit; }
             if (down >> i & 1u) {
+                tk_panel_editor_bind(&s, &transport, 1u);
                 panel_press(i, base + i);
+                if (page == TK_PAGE_PIANO) {
+                    tk_piano.pitch = (uint8_t)(base + i);
+                    tk_piano_read(&tk_piano, &s.pattern[transport.selected], transport.edit_step);
+                    changed = 1;
+                }
             }
             if (up >> i & 1u) panel_release(i);
         }
@@ -2764,13 +3283,41 @@ static void app_main(void)
         if ((b & (1u << BTN_OCT_UP)) && s.octave < 2) { s.octave++; dirty = changed = 1; }
         {
             uint32_t fx_action = tk_fx_button_event(&fx_button, b & (1u << BTN_FX),
-                released & (1u << BTN_FX), fm1_in.buttons & (1u << BTN_FX), fm1_ms);
+                released & (1u << BTN_FX), held_buttons & (1u << BTN_FX), fm1_ms);
             if (fx_action & 1u) { graft_bake(&s); s.fx ^= 1u; dirty = changed = 1; }
             if (fx_action & 2u) { page = TK_PAGE_FX; page_changed = changed = 1; }
         }
-        if (b & (1u << BTN_GLO)) { page = page == TK_PAGE_GLO ? TK_PAGE_PAD : TK_PAGE_GLO; page_changed = changed = 1; }
+        if (b & (1u << BTN_GLO)) {
+            page = page == TK_PAGE_ARRANGE || page == TK_PAGE_STEP_EDIT ? TK_PAGE_SCENES :
+                page == TK_PAGE_SCENES ? TK_PAGE_ARRANGE : page == TK_PAGE_GLO ? TK_PAGE_PAD : TK_PAGE_GLO;
+            page_changed = changed = 1;
+        }
+        if (sel_button.pending && !sel_button.long_press && page != sel_page)
+            memset(&sel_button, 0, sizeof sel_button);
+        if (page == TK_PAGE_SEQ || page == TK_PAGE_STEP_EDIT || page == TK_PAGE_PIANO || sel_button.pending) {
+            if (b & (1u << BTN_SEL)) sel_page = page;
+            uint32_t action = tk_fx_button_event(&sel_button, b & (1u << BTN_SEL),
+                released & (1u << BTN_SEL), held_buttons & (1u << BTN_SEL), fm1_ms);
+            b &= ~(1u << BTN_SEL);
+            if (action & 1u) b |= 1u << BTN_SEL;
+            if (action & 2u) {
+                if (page == TK_PAGE_STEP_EDIT && !transport.recording) {
+                    page = TK_PAGE_PIANO; transport.editing = 0u;
+                    tk_piano_read(&tk_piano, &s.pattern[transport.selected], transport.edit_step);
+                } else if (page == TK_PAGE_PIANO) page = TK_PAGE_STEP_EDIT;
+                else { page = TK_PAGE_ARRANGE; tk_arr_lock_edit = 0; }
+                page_changed = changed = 1;
+            }
+        }
         if (b & (1u << BTN_SEL)) {
-            if (page == TK_PAGE_FX) {
+            if (page == TK_PAGE_PIANO) {
+                int action = tk_piano_button(&s, &transport, 1u);
+                if (action & 2) dirty = 1;
+                changed = 1;
+            } else if (page == TK_PAGE_ARRANGE || page == TK_PAGE_STEP_EDIT) {
+                page = page == TK_PAGE_ARRANGE ? TK_PAGE_STEP_EDIT : TK_PAGE_ARRANGE; page_changed = changed = 1;
+            } else if (page == TK_PAGE_SCENES) { if (!tk_banks.importing) tk_scene_store_current(&s); changed = 1; }
+            else if (page == TK_PAGE_FX) {
                 graft_bake(&s); s.fx ^= 1u; dirty = changed = 1;
             } else if (page == TK_PAGE_CONTROLS) {
                 page = TK_PAGE_GLO; page_changed = changed = 1;
@@ -2806,14 +3353,22 @@ static void app_main(void)
         if (b & (1u << BTN_ENV)) { page = page == TK_PAGE_ENV ? TK_PAGE_PAD : TK_PAGE_ENV; page_changed = changed = 1; }
         {
             uint32_t action = tk_fx_button_event(&lfo_button, b & (1u << BTN_LFO),
-                released & (1u << BTN_LFO), fm1_in.buttons & (1u << BTN_LFO), fm1_ms);
+                released & (1u << BTN_LFO), held_buttons & (1u << BTN_LFO), fm1_ms);
             if ((action & 1u) && PRESETS[s.preset].instrument != TK_INSTRUMENT_DRUM_KIT) {
                 graft_bake(&s); s.lfo_on ^= 1u; dirty = changed = 1;
             }
             if (action & 2u) { page = TK_PAGE_LFO; page_changed = changed = 1; }
         }
         if (b & (1u << BTN_EDIT)) {
-            if (page == TK_PAGE_FX) {
+            if (page == TK_PAGE_PIANO) { page = TK_PAGE_STEP_EDIT; page_changed = changed = 1; }
+            else if (page == TK_PAGE_ARRANGE) { tk_arr_lock_edit ^= 1u; changed = 1; }
+            else if (page == TK_PAGE_STEP_EDIT) {
+                if (!tk_banks.importing) { tk_arr_song.step[transport.selected][tk_banks.active[transport.selected]][transport.edit_step].mask_condition &= 112u; tk_arr_changed(); }
+                changed = 1;
+            } else if (page == TK_PAGE_SCENES) {
+                if (!tk_banks.importing) { tk_arr_song.scene[tk_scene_focus].enabled ^= 1u; tk_arr_changed(); }
+                changed = 1;
+            } else if (page == TK_PAGE_FX) {
                 if (PRESETS[s.preset].instrument != TK_INSTRUMENT_DRUM_KIT) {
                     graft_bake(&s); s.lfo_on ^= 1u; dirty = 1;
                 }
@@ -2858,42 +3413,64 @@ static void app_main(void)
             changed = 1;
         }
         if (b & (1u << BTN_HOME)) {
+            if (!transport.recording && !tk_banks.importing)
+                tk_panel_editor_select(&s, &transport,
+                    page == TK_PAGE_SEQ || page == TK_PAGE_PIANO ? transport.selected :
+                    page == TK_PAGE_PAD ? TK_TRACKS : tk_panel_edit_track,
+                    &live_shade, &lfo, track_lfo, track_shade, &hold);
             page = TK_PAGE_PAD; transport.editing = 0;
-            home_pressed = fm1_ms; home_long = 0;
             page_changed = changed = 1;
         }
         {
             uint32_t action = tk_fx_button_event(&arp_button, b & (1u << BTN_ARP),
-                released & (1u << BTN_ARP), fm1_in.buttons & (1u << BTN_ARP), fm1_ms);
+                released & (1u << BTN_ARP), held_buttons & (1u << BTN_ARP), fm1_ms);
             if ((action & 1u) && !tk_banks.importing) {
-                transport_mode(&transport, transport.mode == TK_MODE_ARP ? TK_MODE_OFF : TK_MODE_ARP, fm1_ms);
-                transport_refresh_arp(&transport);
+                if (page == TK_PAGE_ARRANGE || page == TK_PAGE_STEP_EDIT) tk_arr.fill = (uint8_t)(16u - transport.next_step % 16u);
+                else {
+                    transport_mode(&transport, transport.mode == TK_MODE_ARP ? TK_MODE_OFF : TK_MODE_ARP, fm1_ms);
+                    transport_refresh_arp(&transport);
+                }
                 arp_wait_for_page = 0; changed = 1;
             }
             if (action & 2u) { page = TK_PAGE_ARP; page_changed = changed = 1; }
         }
         {
             uint32_t action = tk_fx_button_event(&seq_button, b & (1u << BTN_SEQ),
-                released & (1u << BTN_SEQ), fm1_in.buttons & (1u << BTN_SEQ), fm1_ms);
+                released & (1u << BTN_SEQ), held_buttons & (1u << BTN_SEQ), fm1_ms);
             if (action & 1u) {
                 /* Navigation never starts playback, including active REC/ARP. */
+                if (page != TK_PAGE_SEQ && !transport.recording)
+                    tk_panel_editor_select(&s, &transport, TK_TRACKS, &live_shade, &lfo, track_lfo, track_shade, &hold);
                 page = page == TK_PAGE_SEQ ? TK_PAGE_PAD : TK_PAGE_SEQ;
                 page_changed = changed = 1;
             }
             if (action & 2u) { page = TK_PAGE_METRONOME; page_changed = changed = 1; }
         }
         if (b & (1u << BTN_PLAY)) {
-            if (transport.mode == TK_MODE_OFF || (page == TK_PAGE_SEQ && transport.mode != TK_MODE_SEQ)) {
+            if (page == TK_PAGE_SCENES) { tk_arr_scene_launch(&s, &transport, tk_scene_focus); }
+            else if (transport.mode == TK_MODE_OFF || ((page == TK_PAGE_SEQ || page == TK_PAGE_PIANO) && transport.mode != TK_MODE_SEQ)) {
                 transport_mode(&transport, TK_MODE_SEQ, fm1_ms);
                 arp_wait_for_page = 0;
-                page = TK_PAGE_SEQ; page_changed = 1;
+                if (page != TK_PAGE_ARRANGE && page != TK_PAGE_STEP_EDIT && page != TK_PAGE_PIANO) { page = TK_PAGE_SEQ; page_changed = 1; }
             } else if (transport.running) transport_stop(&transport);
             else transport_start(&transport, fm1_ms);
             play_pressed = fm1_ms; play_long = 0; changed = 1;
         }
         if (b & (1u << BTN_REC)) {
-            tk_banks.pending[transport.selected] = TK_BANK_NONE;
-            if (page == TK_PAGE_SEQ && transport.editing) {
+            if (tk_panel_edit_track < TK_TRACKS && !transport.recording &&
+                page != TK_PAGE_ARRANGE && page != TK_PAGE_STEP_EDIT && page != TK_PAGE_PIANO &&
+                !(page == TK_PAGE_SEQ && transport.editing))
+                transport.selected = tk_panel_edit_track;
+            if (page != TK_PAGE_PIANO) tk_banks.pending[transport.selected] = TK_BANK_NONE;
+            if (page == TK_PAGE_PIANO) {
+                int action = tk_piano_button(&s, &transport, 0u);
+                if (action & 2) dirty = 1;
+                changed = 1;
+            } else if (page == TK_PAGE_ARRANGE) {
+                tk_arr.auto_armed ^= (uint8_t)(1u << transport.selected); tk_arr.auto_touched[transport.selected] = 0; changed = 1;
+            } else if (page == TK_PAGE_STEP_EDIT && !transport.recording && !tk_banks.importing) {
+                tk_pattern_clear_step(&s.pattern[transport.selected], transport.edit_step); tk_banks_observe(&s); dirty = changed = 1;
+            } else if (page == TK_PAGE_SEQ && transport.editing) {
                 tk_pattern_clear_step(&s.pattern[transport.selected], transport.edit_step);
                 dirty = 1;
             } else if (transport.recording) {
@@ -2905,11 +3482,11 @@ static void app_main(void)
                 transport_release_part(&transport, transport.selected);
                 tk_all_sound_off(TRACK_SOURCE[transport.selected]);
                 tk_pattern_clear(&s.pattern[transport.selected]);
-                if (!(midi_live_drum_enabled && transport.selected == TK_TRACK_DRUM)) {
+                if (tk_panel_edit_track >= TK_TRACKS && !(midi_live_drum_enabled && transport.selected == TK_TRACK_DRUM)) {
                     if (transport.selected == TK_TRACK_DRUM &&
                         PRESETS[s.preset].instrument != TK_INSTRUMENT_DRUM_KIT) {
                         preset_apply(&s, TK_KIT_PRESET_INDEX);
-                        tk_forget_memory();
+                        tk_forget_live_memory();
                         tk_lfo_init(&lfo, fm1_ms);
                         live_shade = s.p.shade;
                     }
@@ -2933,9 +3510,11 @@ static void app_main(void)
             transport_mode(&transport, TK_MODE_OFF, fm1_ms);
             arp_wait_for_page = 0;
             save_pending = 1; save_failed = 0;
+            save_notice = TK_SAVE_NOTICE_WAIT_SOUND;
             page = TK_PAGE_PAD; page_changed = changed = 1;
         }
-        if ((fm1_in.buttons & (1u << BTN_HOME)) && !home_long && fm1_ms - home_pressed >= 700u) {
+        if (reset_action & TK_RESET_CONFIRM) {
+            tk_panel_editor_select(&s, &transport, TK_TRACKS, &live_shade, &lfo, track_lfo, track_shade, &hold);
             tk_banks.importing = 0; tk_banks_cancel_pending();
             panel_panic(); transport_mode(&transport, TK_MODE_OFF, fm1_ms);
             transport_solo_set(&transport, &s, TK_TRACKS, fm1_ms);
@@ -2948,9 +3527,9 @@ static void app_main(void)
                 track_shade[i] = s.track[i].p.shade;
                 publish_track(&s, i);
             }
-            page = TK_PAGE_PAD; page_changed = dirty = changed = home_long = 1;
+            page = TK_PAGE_PAD; page_changed = dirty = changed = 1;
         }
-        if ((fm1_in.buttons & (1u << BTN_PLAY)) && !play_long && fm1_ms - play_pressed >= 700u) {
+        if ((held_buttons & (1u << BTN_PLAY)) && !play_long && fm1_ms - play_pressed >= 700u) {
             tk_banks.importing = 0; tk_banks_cancel_pending();
             panel_panic(); transport_mode(&transport, TK_MODE_OFF, fm1_ms);
             transport_solo_set(&transport, &s, TK_TRACKS, fm1_ms);
@@ -2964,9 +3543,9 @@ static void app_main(void)
         {
             uint8_t old_step = transport.shown_step;
             if (!arp_wait_for_page && transport_tick(&transport, &s, fm1_ms)
-                && page == TK_PAGE_SEQ) {
-                if (changed || page_changed || transport.bank_changed) changed = 1;
-                else draw_seq_playhead(&s, &transport, old_step, transport.shown_step);
+                && (page == TK_PAGE_SEQ || page == TK_PAGE_PIANO)) {
+                if (page == TK_PAGE_PIANO || changed || page_changed || transport.bank_changed) changed = 1;
+                else if (!save_notice) draw_seq_playhead(&s, &transport, old_step, transport.shown_step);
             }
             if (transport.bank_changed) { dirty = changed = 1; transport.bank_changed = 0; }
         }
@@ -2982,7 +3561,7 @@ static void app_main(void)
                     tk_pattern_record(&s.pattern[transport.selected], step, panel_note[i], 100u);
                 if (accepted) {
                     dirty = 1;
-                    if (!splash_active && page == TK_PAGE_SEQ && !page_changed && !changed)
+                    if (!splash_active && !save_notice && page == TK_PAGE_SEQ && !page_changed && !changed)
                         draw_seq_cell(&s, &transport, transport.selected, step);
                     else changed = 1;
                 }
@@ -2992,21 +3571,40 @@ static void app_main(void)
             for (i = 0; i < 27u; i++)
                 if (up >> i & 1u)
                     transport_capture_end(&transport, i, panel_note[i], fm1_ms);
+        tk_panel_editor_sequence(&s, &transport, page, &live_shade, &lfo, track_lfo, track_shade, &hold);
         delta = fm1_enc_take(ENC_PRESETS);
+        if (delta) save_activity = 1;
         tk_panel_activity_encoder(&tk_panel_activity, ENC_PRESETS, delta, fm1_ms);
+        delta += tk_panel_input_encoder(ENC_PRESETS);
+        if (delta) save_activity = 1;
+        if (delta && home_reset.prompt) { tk_home_reset_cancel(&home_reset); page_changed = changed = 1u; }
+        if (page == TK_PAGE_PIANO) delta = 0; /* No hidden sound replacement in a note editor. */
         if (delta) {
-            int32_t count = (int32_t)TK_PRESET_COUNT;
-            int32_t next = ((int32_t)s.preset + delta % count + count) % count;
+            int32_t next = (int32_t)factory_next(s.preset, delta);
             if (next != s.preset) {
                 preset_apply(&s, (uint32_t)next);
-                tk_forget_memory();
+                if (tk_panel_edit_track < TK_TRACKS) tk_forget_panel_memory();
+                else tk_forget_live_memory();
                 tk_lfo_init(&lfo, fm1_ms);
                 live_shade = s.p.shade;
                 dirty = changed = 1;
             }
         }
         delta = fm1_enc_take(ENC_SELECT);
+        if (delta) save_activity = 1;
         tk_panel_activity_encoder(&tk_panel_activity, ENC_SELECT, delta, fm1_ms);
+        delta += tk_panel_input_encoder(ENC_SELECT);
+        if (delta) save_activity = 1;
+        if (delta && home_reset.prompt) { tk_home_reset_cancel(&home_reset); page_changed = changed = 1u; }
+        if (delta) {
+            int action = page == TK_PAGE_PIANO ? tk_piano_encoder(&s, &transport, 0u, delta) :
+                tk_arr_page_encoder(&s, &transport, page, 0u, delta);
+            if (action) { if (action & 2) dirty = 1; if (action & 4) changed = 1; delta = 0; }
+        }
+        if (delta && page == TK_PAGE_ENV && PRESETS[s.preset].instrument == TK_INSTRUMENT_DRUM_KIT) {
+            tk_drum_focus = (uint8_t)(((int32_t)tk_drum_focus + delta % 12 + 12) % 12);
+            changed = 1; delta = 0;
+        }
         if (tk_encoder_alias_inactive(page)) delta = 0;
         if (delta && page == TK_PAGE_SEQ) {
             int action = tk_seq_encoder(&s, &transport, 0u, delta);
@@ -3037,7 +3635,16 @@ static void app_main(void)
             changed = 1;
         }
         delta = fm1_enc_take(ENC_ALGORITHM);
+        if (delta) save_activity = 1;
         tk_panel_activity_encoder(&tk_panel_activity, ENC_ALGORITHM, delta, fm1_ms);
+        delta += tk_panel_input_encoder(ENC_ALGORITHM);
+        if (delta) save_activity = 1;
+        if (delta && home_reset.prompt) { tk_home_reset_cancel(&home_reset); page_changed = changed = 1u; }
+        if (delta) {
+            int action = page == TK_PAGE_PIANO ? tk_piano_encoder(&s, &transport, 1u, delta) :
+                tk_arr_page_encoder(&s, &transport, page, 1u, delta);
+            if (action) { if (action & 2) dirty = 1; if (action & 4) changed = 1; delta = 0; }
+        }
         if (tk_encoder_alias_inactive(page)) delta = 0;
         if (delta && page == TK_PAGE_SEQ) {
             int action = tk_seq_encoder(&s, &transport, 1u, delta);
@@ -3064,9 +3671,19 @@ static void app_main(void)
         }
         for (i = 0; i < 4u; i++) {
             delta = fm1_enc_take(ENC_KNOB1 + i);
+            if (delta) save_activity = 1;
             tk_panel_activity_encoder(&tk_panel_activity, ENC_KNOB1 + i, delta, fm1_ms);
             delta = tk_physical_knob(&knob_response[i], &s, page, i, delta, fm1_ms);
+            delta += tk_panel_input_encoder(ENC_KNOB1 + i);
+            if (delta) save_activity = 1;
+            if (delta && home_reset.prompt) { tk_home_reset_cancel(&home_reset); page_changed = changed = 1u; }
             if (delta) {
+                if (page == TK_PAGE_PIANO) {
+                    int action = tk_piano_encoder(&s, &transport, i + 2u, delta);
+                    if (action & 2) dirty = 1;
+                    if (action & 4) changed = 1;
+                    continue;
+                }
                 int panel_action = tk_panel_knob(&s, page, i, delta);
                 if (panel_action) { if (panel_action & 2) dirty = changed = 1; continue; }
                 panel_action = tk_page_knob(&s, &transport, page, i, delta, &hold, &live_shade, &lfo);
@@ -3091,6 +3708,8 @@ static void app_main(void)
                 dirty = changed = 1;
             }
         }
+        tk_panel_editor_sequence(&s, &transport, page, &live_shade, &lfo, track_lfo, track_shade, &hold);
+        if (tk_panel_editor_end(&s, &transport, &live_shade, &lfo, track_lfo, track_shade)) dirty = changed = 1;
         {
             uint32_t lost = midi_take_overflow();
             if (lost & 1u) midi_port_reset(&transport, &s, 0u);
@@ -3099,6 +3718,23 @@ static void app_main(void)
         for (i = 0; i < 64u && midi_get_from(&port, &st, &d1, &d2); i++) {
             uint32_t source;
             if (port > 1u) continue;
+            if (tk_midi_clock.enabled && port != 0u && st >= 0xF8u) continue;
+            if (tk_midi_clock.enabled && port == 0u && st >= 0xF8u) {
+                if (st == 0xFAu || st == 0xFBu) {
+                    uint8_t keep_recording = transport.recording;
+                    if (tk_banks.importing) continue;
+                    if (st == 0xFAu || transport.mode != TK_MODE_SEQ)
+                        transport_mode(&transport, TK_MODE_SEQ, fm1_ms);
+                    else transport.running = 1u;
+                    transport.recording = keep_recording;
+                    arp_wait_for_page = 0; changed = 1;
+                } else if (st == 0xFCu || st == 0xFFu) {
+                    transport_stop(&transport); changed = 1;
+                    if (st == 0xFFu) tk_clock_disable();
+                }
+                tk_clock_event(st, fm1_ms);
+                if (st != 0xFFu) continue;
+            }
             if (st == 0xFAu) {
                 if (tk_banks.importing) continue;
                 transport_mode(&transport, TK_MODE_SEQ, fm1_ms); arp_wait_for_page = 0; changed = 1;
@@ -3111,16 +3747,18 @@ static void app_main(void)
             } else if (st == 0xFCu) { transport_stop(&transport); changed = 1; continue; }
             else if (st == 0xFFu) { midi_port_reset(&transport, &s, port); continue; }
             if (st < 0x80u || st >= 0xF0u || d1 > 127u || d2 > 127u) continue;
+            save_activity = 1;
             source = midi_source(port, st & 15u);
             if ((st & 0xF0u) == 0x90u && d2) {
                 if (source == TK_SOURCE_LIVE_DRUM) publish_live_drum();
+                if (source >= TK_SOURCE_FIRE0 && source < TK_SOURCE_KEYBOARD0 + 2u) publish_fire_tracks();
                 tk_note_on(d1, d2, source);
                 if (transport.mode == TK_MODE_SEQ && transport.recording
                     && midi_capture_allowed(&transport, source)
                     && transport_capture_start(&transport, source + 26u, d1, d2,
                         fm1_ms, transport_period(&transport, &s))) {
                     dirty = 1;
-                    if (!splash_active && page == TK_PAGE_SEQ && !page_changed && !changed)
+                    if (!splash_active && !save_notice && page == TK_PAGE_SEQ && !page_changed && !changed)
                         draw_seq_cell(&s, &transport, transport.selected,
                             tk_transport_local_step(&transport, transport.selected, transport.shown_step, s.length[transport.selected]));
                     else changed = 1;
@@ -3130,12 +3768,13 @@ static void app_main(void)
                 tk_note_off(d1, source);
                 capture_midi_release(&transport, source, d1, fm1_ms);
             }
-            else if ((st & 0xF0u) == 0xE0u && source != TK_SOURCE_LIVE_DRUM)
+            else if ((st & 0xF0u) == 0xE0u && source != TK_SOURCE_LIVE_DRUM &&
+                     (source < TK_SOURCE_FIRE0 || source >= TK_SOURCE_KEYBOARD0))
                 tk_pitch_bend(source, (uint32_t)d1 | ((uint32_t)d2 << 7));
             else if ((st & 0xF0u) == 0xD0u) tk_channel_pressure(source, d1);
             else if ((st & 0xF0u) == 0xA0u) tk_poly_pressure(d1, source, d2);
-            else if ((st & 0xF0u) == 0xC0u && d1 < TK_PRESET_COUNT && source != TK_SOURCE_LIVE_DRUM) {
-                preset_apply(&s, d1); tk_forget_memory(); tk_lfo_init(&lfo, fm1_ms);
+            else if ((st & 0xF0u) == 0xC0u && d1 < TK_PRESET_COUNT && source != TK_SOURCE_LIVE_DRUM && source < TK_SOURCE_FIRE0) {
+                preset_apply(&s, d1); tk_forget_live_memory(); tk_lfo_init(&lfo, fm1_ms);
                 live_shade = s.p.shade; dirty = changed = 1;
             }
             else if ((st & 0xF0u) == 0xB0u) {
@@ -3156,16 +3795,19 @@ static void app_main(void)
                 const tk_track_patch_t *track = &s.track[i];
                 next_shade = tk_lfo_eval(&track_lfo[i], fm1_ms, track->lfo_rate,
                     track->lfo_on ? track->lfo_depth : 0u,
-                    track->lfo_shape, track->p.shade);
-                if (next_shade != track_shade[i]) {
+                    track->lfo_shape, (tk_arr.lock_mask[i] & 1u) ? tk_arr.value[i][0] : track->p.shade);
+                if (next_shade != track_shade[i] || tk_source_shade_control[TRACK_SOURCE[i]] != next_shade) {
                     track_shade[i] = next_shade;
                     tk_set_source_shade(TRACK_SOURCE[i], next_shade);
                 }
             }
         }
         publish_live_drum();
+        publish_fire_tracks();
         if (!s.graft_amount) { track_patch_capture(&s.graft_base, &s); s.fm[5] = s.fm[0]; }
         publish_params(&s, live_shade);
+        tk_panel_editor_bind(&s, &transport, 0u);
+        tk_panel_editor_publish(&s);
         base = (uint32_t)(KEY0 + 12 * s.octave);
         lit = tk_active_notes(base);
         screen_lit = lit;
@@ -3178,46 +3820,62 @@ static void app_main(void)
                 if (panel_refs[base + i]) screen_lit |= 1u << i;
         }
         for (i = 0; i < 27u; i++) fm1_led_key(KEY_LED(i), lit >> i & 1u);
-        if (fm1_in.buttons & (1u << BTN_EDIT))
+        if (held_buttons & (1u << BTN_EDIT))
             for (i = 0; i < 10u; i++) fm1_led_key(KEY_LED(TK_LABEL_KEYS[i]), 1);
-        fm1_led_key(BTN_FX, s.fx);
-        fm1_led_key(BTN_GLO, page == TK_PAGE_GLO);
-        fm1_led_key(BTN_SEL, page == TK_PAGE_SEQ ?
-            !(s.track_mute & (1u << transport.selected)) :
-            page == TK_PAGE_METRONOME ? s.metro_enabled : page == TK_PAGE_MEMORY);
-        fm1_led_key(BTN_ENV, page == TK_PAGE_ENV || hold);
-        fm1_led_key(BTN_LFO, s.lfo_on);
-        fm1_led_key(BTN_EDIT, page == TK_PAGE_SOUND_EDIT ||
-            (page >= TK_PAGE_OPERATOR && page <= TK_PAGE_VOICE) ||
-            (page == TK_PAGE_FX && PRESETS[s.preset].instrument != TK_INSTRUMENT_DRUM_KIT && s.lfo_on) ||
-            transport.editing || edit_pending);
-        fm1_led_key(BTN_HOME, page == TK_PAGE_PAD);
-        fm1_led_key(BTN_ARP, transport.mode == TK_MODE_ARP);
-        fm1_led_key(BTN_SEQ, page == TK_PAGE_SEQ || transport.mode == TK_MODE_SEQ);
-        fm1_led_key(BTN_PLAY, transport.running);
-        fm1_led_key(BTN_REC, transport.recording);
-        fm1_led_key(BTN_SAVE, save_pending);
-        fm1_led_key(BTN_OCT_DOWN, s.octave < 0);
-        fm1_led_key(BTN_OCT_UP, s.octave > 0);
-        if (save_pending && !keys && tk_quiet() && tk_metronome_quiet()) {
-            if (!settings_save(&s, sizeof s)) { dirty = save_pending = save_failed = 0; changed = 1; }
-            else { save_pending = 0; save_failed = changed = 1; } /* no repeated flash writes on an error */
+        tk_panel_editor_begin(&s, &live_shade, &lfo, track_lfo, track_shade);
+        tk_panel_activity.leds = tk_panel_button_lamps(&s, &transport, page, hold, edit_pending, save_pending);
+        tk_panel_editor_end(&s, &transport, &live_shade, &lfo, track_lfo, track_shade);
+        for (i = 0; i < TK_PANEL_BUTTONS; i++) fm1_led_key(i, tk_panel_activity.leds >> i & 1u);
+        if (tk_arr.dirty) { dirty = changed = 1; tk_arr.dirty = 0; }
+        /* Dismiss only a previous result, not the SAVE press that creates it.
+         * The gesture still performs its normal action; release edges and
+         * read-only companion polling cannot erase the confirmation. */
+        if (tk_save_notice_finished(save_notice) &&
+            (save_activity || (save_notice == TK_SAVE_NOTICE_SAVED && dirty)))
+            save_notice = TK_SAVE_NOTICE_NONE;
+        if (save_pending && tk_persist_safe(&transport, keys)) {
+            if (!tk_persist_save(&s, &transport, keys)) {
+                for (i = 0; i < TK_TRACKS; i++) tk_banks.dirty[i] = 0;
+                tk_arr.dirty = 0;
+                dirty = save_pending = save_failed = 0; changed = 1;
+                save_notice = TK_SAVE_NOTICE_SAVED;
+            }
+            else {
+                save_pending = 0; save_failed = changed = 1;
+                save_notice = TK_SAVE_NOTICE_FAILED;
+            } /* no repeated flash writes on an error */
         }
-        /* Only a physical press dismisses the art. Process that same press
-         * above so the first key sounds or the first button still acts. */
+        else if (save_pending)
+            save_notice = transport.running || transport.recording ? TK_SAVE_NOTICE_WAIT_STOP :
+                tk_banks.importing ? TK_SAVE_NOTICE_WAIT_IMPORT : TK_SAVE_NOTICE_WAIT_SOUND;
+        /* Panel keys/buttons (including virtual panel buttons) skip the art.
+         * Process the gesture above so the first note/button still acts. */
+        if (splash_active && !physical_gesture) {
+            tk_intro_tick(&intro);
+        }
         if (splash_active && physical_gesture) {
             splash_active = 0;
+            remote_ui_splash = 0;
             page_changed = changed = 1;
             last_draw = fm1_ms - 250u; /* redraw the selected page immediately */
         }
-        tk_visual_set_enabled(!splash_active && page == TK_PAGE_PAD);
-        /* The keyboard belongs to SOUND EDIT. HOME uses the audio-driven rift. */
-        if (!splash_active && page == TK_PAGE_SOUND_EDIT && !page_changed && !changed
+        if (!splash_active && save_notice && save_notice != save_notice_drawn) {
+            draw_save_notice(save_notice);
+            save_notice_drawn = save_notice;
+        } else if (!save_notice && save_notice_drawn) {
+            save_notice_drawn = TK_SAVE_NOTICE_NONE;
+            page_changed = changed = 1;
+            last_draw = fm1_ms - 250u;
+        }
+        tk_panel_editor_begin(&s, &live_shade, &lfo, track_lfo, track_shade);
+        tk_visual_set_enabled(!splash_active && !save_notice && !home_reset.prompt && page == TK_PAGE_PAD);
+        /* The keyboard belongs to SOUND EDIT. HOME uses the audio-driven visual. */
+        if (!splash_active && !save_notice && page == TK_PAGE_SOUND_EDIT && !page_changed && !changed
             && screen_lit != lit_drawn) {
             draw_patch_keyboard(base, screen_lit);
             lit_drawn = screen_lit;
         }
-        if (!splash_active && page == TK_PAGE_ARP && !page_changed) {
+        if (!splash_active && !save_notice && page == TK_PAGE_ARP && !page_changed) {
             tk_arp_screen_t now = arp_screen_state(&s, &transport);
             uint32_t fields = arp_screen_diff(&arp_drawn, &now);
             /* LCD transfers block this transport's main-loop clock. Draw
@@ -3247,7 +3905,11 @@ static void app_main(void)
              * cause a blocking redraw while short pulses are playing. */
             changed = 0;
         }
-        if (!splash_active && (page == TK_PAGE_GLO || changed)
+        if (!splash_active && !save_notice && home_reset.prompt && changed) {
+            draw_home_reset(home_reset.ready);
+            page_changed = changed = 0u; last_draw = fm1_ms;
+        }
+        if (!splash_active && !save_notice && !home_reset.prompt && (page == TK_PAGE_GLO || changed)
             && fm1_ms - last_draw >= (page == TK_PAGE_GLO ? 250u : 50u)) {
             if (page_changed) {
                 lcd_fill(0, 0, 240, 240, C_BLACK);
@@ -3255,9 +3917,10 @@ static void app_main(void)
                 if (page == TK_PAGE_PAD) {
                     home_preset_drawn = home_modified_drawn = home_status_drawn = home_graft_drawn = ~0u;
                     memset(&home_visual, 0, sizeof home_visual);
-                    tk_rift_reset();
+                    tk_home_visual_reset();
                 }
                 page_changed = 0;
+                if (page == TK_PAGE_PIANO) tk_piano_paint.valid = 0u;
             }
             if (page == TK_PAGE_GLO) draw_diagnostics();
             else if (page == TK_PAGE_MEMORY) draw_memory(&s);
@@ -3268,9 +3931,11 @@ static void app_main(void)
                 draw_arp(&arp_drawn);
             }
             else if (page == TK_PAGE_SEQ) draw_seq(&s, &transport);
+            else if (page == TK_PAGE_PIANO) draw_piano(&s, &transport);
             else if (page == TK_PAGE_MIDI) draw_midi_controls(&s);
             else if (page == TK_PAGE_METRONOME) draw_metronome(&s);
             else if (page == TK_PAGE_CONTROLS) draw_control_feel(&s);
+            else if (page == TK_PAGE_ARRANGE || page == TK_PAGE_STEP_EDIT || page == TK_PAGE_SCENES) draw_arrangement(&s, &transport, page);
             else if (page == TK_PAGE_FX) draw_fx(&s);
             else if (page == TK_PAGE_OPERATOR) tk_draw_operator(&s);
             else if (page == TK_PAGE_PITCH) tk_draw_pitch(&s);
@@ -3287,19 +3952,28 @@ static void app_main(void)
                 arp_wait_for_page = 0;
             }
         }
-        if (!splash_active && page == TK_PAGE_PAD && !page_changed &&
+        if (!splash_active && !save_notice && !home_reset.prompt && page == TK_PAGE_PAD && !page_changed &&
             transport_visual_slack(&transport, fm1_ms)) {
             if (tk_visual_bus.sequence != home_visual.generation)
                 tk_visual_read(&home_visual); /* rejected/torn copies keep the last valid input */
-            tk_rift_prepare(&home_visual, fm1_ms, s.preset);
-            if (tk_rift_pending()) tk_rift_upload();
+            tk_home_visual_select(s.home_visual);
+            tk_home_visual_prepare(&home_visual, fm1_ms, s.preset);
+            if (tk_home_visual_pending()) tk_home_visual_upload();
             /* The next loop starts with platform_poll and services transport
              * before another short batch; no animation-wide LCD transfer. */
         }
-        if (!splash_active && page != TK_PAGE_PAD && !page_changed && !changed
+        if (!splash_active && !save_notice && page != TK_PAGE_PAD && !page_changed && !changed
             && transport_visual_slack(&transport, fm1_ms))
             ui_accent_tick(page, &s, &transport, fm1_ms, screen_lit, live_shade);
-        tk_screen_set_home(!splash_active && page == TK_PAGE_PAD && !page_changed);
+        if (!splash_active && !save_notice && page == TK_PAGE_PIANO && !page_changed &&
+            transport_visual_slack(&transport, fm1_ms)) tk_piano_upload();
+        tk_panel_editor_end(&s, &transport, &live_shade, &lfo, track_lfo, track_shade);
+        /* Only Thorn Rift uses the negotiated coarse HOME codec. The portrait
+         * retains native pixels/colours. Deliver bounded physical tiles before
+         * the mirror may snapshot them; audio never participates in drawing. */
+        tk_screen_set_home(!splash_active && !save_notice && !home_reset.prompt && page == TK_PAGE_PAD && !page_changed
+            && tk_home_visual_is_rift(s.home_visual));
+        if (transport_visual_slack(&transport, fm1_ms)) lcd_cooperative_upload();
         tk_remote_screen_service(transport_visual_slack(&transport, fm1_ms));
     }
 }

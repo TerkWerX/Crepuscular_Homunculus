@@ -47,6 +47,15 @@ static void reset_fixture(void)
 static uint32_t command(uint32_t which, const uint8_t *payload, uint32_t count)
 {
     tk_remote_message_t request;
+    uint8_t modern[19]={0},transaction=1u;
+    /* Explicitly migrate these older metronome fixtures to swing-aware wire1.
+     * Actual legacy-wire refusal is covered separately in test_swing_app. */
+    if(which==TK_REMOTE_SONG_BEGIN&&!count){payload=&transaction;count=1u;}
+    if(which==TK_REMOTE_SONG_GLOBAL&&(count==10u||count==14u)){
+        memcpy(modern,payload,count);
+        if(count==10u){modern[11]=32u;modern[12]=4u;modern[13]=4u;}
+        payload=modern;count=19u;
+    }
     request.direction = TK_REMOTE_REQUEST; request.command = (uint8_t)which;
     request.id = 1u; request.length = (uint8_t)count; request.payload = payload;
     memset(reply, 0xA5, sizeof reply);
@@ -82,8 +91,8 @@ static void migration_checks(void)
         fixture.fm[track + 1u].feedback = (uint8_t)(71u + track);
     }
     check(settings_valid(&fixture), "dense migration fixture has valid FM, GRAFT and all four patterns");
-    check(sizeof fixture == 3700u && sizeof legacy == 3696u && TK_SCHEMA == 11u,
-          "schema 11 uses exactly 3700 bytes and retains schema-10's 3696-byte type");
+    check(sizeof fixture == 3704u && sizeof legacy == 3696u && TK_SCHEMA == 13u,
+          "schema 13 uses exactly 3704 bytes and retains schema-10's 3696-byte type");
     check(offsetof(tk_settings_t, metro_enabled) == offsetof(tk_settings_v10_t, mono) + 1u,
           "metronome follows the last real schema-10 field without moving any prior field");
     memcpy(&legacy, &fixture, sizeof legacy); legacy.schema = 10u;
@@ -92,7 +101,7 @@ static void migration_checks(void)
         ((uint8_t *)&legacy)[byte] = 0xDAu;
     check(settings_upgrade_v10(&migrated, &legacy) && settings_valid(&migrated),
           "valid schema-10 FM save migrates despite nonzero tail padding");
-    check(migrated.schema == 11u && !migrated.metro_enabled && migrated.metro_level == 32u &&
+    check(migrated.schema == 13u && !migrated.metro_enabled && migrated.metro_level == 32u &&
           migrated.metro_beats == 4u && migrated.metro_unit == 4u,
           "migration starts with silent metronome defaults rather than interpreting old padding");
     check(migrated.panel_response == TK_ENCODER_LINEAR,
@@ -116,12 +125,12 @@ static void migration_checks(void)
     corrupt = legacy; corrupt.midi_bind[6].cc = 64u;
     check(!settings_upgrade_v10(&migrated, &corrupt), "reserved old learned controller binding is rejected");
     check(settings_upgrade_v10(&migrated, &legacy), "valid old save still migrates after rejection checks");
-    before = migrated; migrated.metro_enabled = 2u; check(!settings_valid(&migrated), "schema-11 enable flag is bounded");
-    migrated = before; migrated.metro_level = 128u; check(!settings_valid(&migrated), "schema-11 click level is bounded");
-    migrated = before; migrated.metro_beats = 0u; check(!settings_valid(&migrated), "schema-11 meter needs at least one beat");
-    migrated = before; migrated.metro_beats = 13u; check(!settings_valid(&migrated), "schema-11 meter allows at most twelve beats");
-    migrated = before; migrated.metro_unit = 16u; check(!settings_valid(&migrated), "schema-11 unit accepts only quarter/eighth");
-    migrated = before; migrated.panel_response = 2u; check(!settings_valid(&migrated), "schema-11 panel response accepts only LINEAR/ACCEL");
+    before = migrated; migrated.metro_enabled = 2u; check(!settings_valid(&migrated), "schema-12 enable flag is bounded");
+    migrated = before; migrated.metro_level = 128u; check(!settings_valid(&migrated), "schema-12 click level is bounded");
+    migrated = before; migrated.metro_beats = 0u; check(!settings_valid(&migrated), "schema-12 meter needs at least one beat");
+    migrated = before; migrated.metro_beats = 13u; check(!settings_valid(&migrated), "schema-12 meter allows at most twelve beats");
+    migrated = before; migrated.metro_unit = 16u; check(!settings_valid(&migrated), "schema-12 unit accepts only quarter/eighth");
+    migrated = before; migrated.panel_response = 2u; check(!settings_valid(&migrated), "schema-12 panel response accepts only LINEAR/ACCEL");
 }
 
 static void remote_checks(void)
@@ -194,7 +203,7 @@ static void song_checks(void)
         reset_fixture(); fill_song(); expected_song = tk_bank_pool.stage;
         command(TK_REMOTE_SONG_BEGIN, 0, 0); before = fixture;
         check(!command(TK_REMOTE_SONG_GLOBAL, globals, extended ? 14u : 10u) && reply[0] == TK_REMOTE_OK,
-            "SONG_GLOBAL accepts both legacy ten-byte and extended fourteen-byte forms");
+            "explicitly converted legacy and extended metronome fixtures stage completely");
         check(!memcmp(&fixture,&before,sizeof fixture), "staging metronome/global data cannot mutate live song settings");
         command(TK_REMOTE_SONG_STEP, note, sizeof note);
         check(reply[0] == TK_REMOTE_OK, "transaction can also stage a held note in an alternate bank");

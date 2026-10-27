@@ -33,3 +33,10 @@ licence. The source artwork is credited in `assets/splash/README.md`.
 
 "Felucca" and "Hügelton Instruments" are names of Hügelton Instruments; "M-VAVE" and "FM-1" belong to their
 owners. TERKINSTEIN is not made or endorsed by them.
+
+## Homunculus artwork
+
+The supplied character frames in assets/crepuscular-homunculus/ and their
+deterministic generated C/GIF conversions are original project artwork under
+GPL-3.0-only. Source frames, generation provenance and manifests are included.
+The existing TERKINSTEIN creator splash is unchanged.

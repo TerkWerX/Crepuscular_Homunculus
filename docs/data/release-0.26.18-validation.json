@@ -1,0 +1,81 @@
+{
+  "version": "0.26.18-dev",
+  "firmware_sha256": "835f69c88cb746f0ba9f1dc2abef13efeda9cedbaa2bd2ceeda8c4a57ca6e7a6",
+  "native_sources_unchanged_in_packaging": true,
+  "target": {
+    "sha256": "835f69c88cb746f0ba9f1dc2abef13efeda9cedbaa2bd2ceeda8c4a57ca6e7a6",
+    "package_bytes": 610143,
+    "model_CRC_loader_verified": true,
+    "image": 220032,
+    "image_limit": 581564,
+    "static_RAM": 81904,
+    "static_RAM_limit": 98304,
+    "pool": 319876,
+    "pool_limit": 344064,
+    "ramtext": 2888
+  },
+  "host_tests": {
+    "optimized": {
+      "catalog_revision_app": "PASS catalog revision: 1155 checks; legacy/new complete native SAVE, four independent tracks and bounded tails",
+      "song_persistence": "song persistence: 22 checks passed; 23556-byte payload",
+      "swing_app": "PASS swing: 480197 checks, native0/100 grid/gates/REC/clock/Stop/Continue/legacy/save/controls",
+      "panel_track_edit_app": "PASS: 5780 captured-track panel checks (host only)",
+      "home_reset_app": "PASS HOME reset guard/LCD/dense fixture: 2020 checks; host only",
+      "lcd_clock_app": "PASS LCD/clock: 2560 checks; pending/mirror/physical ownership, pixels and phase-varied service model",
+      "remote_protocol": "PASS remote protocol: 6286 checks",
+      "preset_bank_app": "PASS: 8556 actual-app preset bank checks (host only)",
+      "usb-normal": "PASS exact UTF-16LE product name, descriptor length/type, EP0 bound and revision",
+      "usb-update": "PASS exact UTF-16LE product name, descriptor length/type, EP0 bound and revision"
+    },
+    "asan": {
+      "catalog_revision_app": "PASS catalog revision: 1155 checks; legacy/new complete native SAVE, four independent tracks and bounded tails",
+      "song_persistence": "song persistence: 22 checks passed; 23556-byte payload",
+      "swing_app": "PASS swing: 480197 checks, native0/100 grid/gates/REC/clock/Stop/Continue/legacy/save/controls",
+      "panel_track_edit_app": "PASS: 5780 captured-track panel checks (host only)",
+      "home_reset_app": "PASS HOME reset guard/LCD/dense fixture: 2020 checks; host only",
+      "lcd_clock_app": "PASS LCD/clock: 2560 checks; pending/mirror/physical ownership, pixels and phase-varied service model",
+      "remote_protocol": "PASS remote protocol: 6286 checks",
+      "preset_bank_app": "PASS: 8556 actual-app preset bank checks (host only)",
+      "usb-normal": "PASS exact UTF-16LE product name, descriptor length/type, EP0 bound and revision",
+      "usb-update": "PASS exact UTF-16LE product name, descriptor length/type, EP0 bound and revision"
+    }
+  },
+  "PCM": {
+    "optimized": {
+      "probes": 304,
+      "unclipped": true,
+      "complete_tails": true,
+      "original64_PCM_exact": true,
+      "approved_redesign_PCM_exact": true
+    },
+    "asan": {
+      "probes": 304,
+      "unclipped": true,
+      "complete_tails": true,
+      "original64_PCM_exact": true,
+      "approved_redesign_PCM_exact": true
+    }
+  },
+  "attended": {
+    "revised_sounds_accepted": true,
+    "captured_LIVE_independence": true,
+    "mixed_load_seconds": 60,
+    "MAX_RENDER_us": 4677,
+    "LATE_BLOCKS": 0,
+    "mixed_load_final_voices": 0,
+    "peak_voice_count": null,
+    "USB48000_recording_seconds": 151.06,
+    "USB48000_musical_signal_span_seconds": 146.925208,
+    "complete_native_SAVE_and_owner_restart_readback": true,
+    "banks": 16,
+    "steps": 1024,
+    "captured_patches_with_FM": 4,
+    "source": "Retained owner reports, exact-package install record, complete read-only backup comparisons and WAV inspection; personal music/configuration is not distributed."
+  },
+  "scope_limits": [
+    "App-render timer excludes complete USB/DAC/ISR/main workload.",
+    "Stack high-water and exhaustive worst-case CPU margin are unmeasured.",
+    "Earlier44.1kHz, clock and control checks remain earlier-lineage evidence.",
+    "Native interrupted-save recovery tested offline, not deliberate hardware power-cut fault injection."
+  ]
+}

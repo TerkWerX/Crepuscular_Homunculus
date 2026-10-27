@@ -1,5 +1,7 @@
 # The 64-sound TERKINSTEIN bank
 
+Factory positions25/52 now select revised SULFUR TONGUE METAL and WICKED FELT FM. Original definitions remain in older captures as OLD. There are64 browser choices and66 stored definitions; see CATALOG_REVISION_2.md. The following catalog expansion history retains its original context.
+
 The local **0.20.0-dev** bank extends the existing machinery, ritual and decay vocabulary
 with parts that can form a complete four-track piece. The original 36 slots
 keep their order and factory settings. Slots 37–64 add six basses, six leads,
@@ -56,7 +58,7 @@ wash. Try them against ASH CHOIR, VEIL ENGINE, PALLID CHOIR or MIRROR INK.
 These fill the gap between OBSIDIAN KEYS and TERKINSTEIN's ringing metal
 strikes. PAD and METAL keys follow the held gate: VELLUM PRONG's short release
 begins when the key is released, rather than creating an automatic pluck.
-WICKED FELT behaves similarly. The FM keys have independent operator decay;
+The original WICKED FELT PAD behaved similarly; the revised factory choice is a dry FM key with its own operator envelopes. The FM keys have independent operator decay;
 BONE SPARKS and OXIDE CHIMES fade while held, while GLASS VERTEBRA leaves a
 small sustained remainder. They are synthesized textures rather than recordings
 of the instruments suggested by their names.
@@ -66,7 +68,7 @@ of the instruments suggested by their names.
 | 49 | BONE SPARKS | FM | Three short pairs create bright ceramic-like strikes for arpeggios |
 | 50 | VELLUM PRONG | PAD | Dry papery key, following note length with a short released tail |
 | 51 | OXIDE CHIMES | FM | Branching chime whose upper modulation fades before its carrier |
-| 52 | WICKED FELT | PAD | Fast, muted key with little detune and corrosion bypassed |
+| 52 | WICKED FELT | FM | Revised dry, muted FM key with distinct attack and decay; four-FM voice limit |
 | 53 | GLASS VERTEBRA | FM | Twin chains with long glassy decay and only a small held remainder |
 | 54 | LANTERN RATTLE | METAL | Moderately corroded metallic key with a ringing released tail |
 
@@ -162,10 +164,9 @@ in competition with another. They are starting points, not supplied patterns.
 Start with a simple drum pattern, a single bass line, a sparse melody and one
 or two held atmosphere notes. Extend ATMOS to 32 or 64 steps when the buildup
 needs more time. REC captures held-note duration; existing loops retain their
-captured sound while a new live preset is selected. Re-record a track when
-you want it to capture the newly auditioned sound.
+captured sound while a new live preset is selected. Use SEQ -> select track -> HOME/TRACK SOUND to change that capture independently; HOME again returns to LIVE.
 
-The six shared voices and provisional four-FM-voice limit still apply.
+The eight shared voices and four-FM-voice limit apply.
 Storing 64 presets does not add voices or processing stages. The selected
 engine, active notes, overlapping releases and operator routing determine
 the actual render work. Dense combinations need an attended listening and
