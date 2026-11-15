@@ -1,0 +1,200 @@
+{
+  "firmware_version": "0.26.23-ns1",
+  "hardware_photographs": false,
+  "capture": "Native release host preview; no hardware, MIDI device, audio playback or firmware change. All captures are exact native 240x240 pixels converted losslessly from PPM to PNG.",
+  "firmware_source_sha256": "850f57d832f0a6a80925c28c538bc7a9b966b96f38fdaf9805c5cf2642454292",
+  "factory_bank_sha256": "4903f6a0abc511f5f5c321ad96e86849a7e74974adeb656e043b5be71f871ab8",
+  "host_executable_sha256": "684bb63e96072e1f6397d06162cf9d79825f0e31e6ee3411c524fcb168940d53",
+  "images": {
+    "home.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "34d2b42d6fe89f76e020f2f6cdb36e768ccbe19fbd2b710c1fd5e1b6d9ff161c",
+      "sha256": "636e17e1cd25f378c043bb364204c1ecab55683edfb48722acf0c625b7bbc323",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "night-suture.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "2d2f619de2e224dd60063335e4c57500071e89cc5fad9c61e46f466dcc45583d",
+      "sha256": "921483fcc8d9639545ae1f8c20a63dbcfb9df5c1eedf7fff3d8b243a7deb4ee5",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "night-suture-old.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "0a171ccbc42f5c936afcf777af4d911968a9a119b3c04f2d7c290acd6fdf9e2f",
+      "sha256": "6e905883bcc94916c746c393e3bc24c3db82969254ab1101f29cbc42cd73f1d3",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "memory.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "a8811cd27e516e1bb61348ce6c5b82fcfaae3a3a9572161b6104b6eb5430757e",
+      "sha256": "730de01fcbcaa17a511193facd703af52bb2b0e95737ee68d583b8d55f2fd026",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "piano-roll.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "62136b776d9daeacacb5839381dcb1188b9e6ca86eb23be35750e98eb38a84a6",
+      "sha256": "f9a5c118455e6167bbe50d59cf84207e0eeffe843e102288c49cb0ce5a9a71d6",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "sound-edit.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "7407cd1825b59629b1106a02338d231a57a8db0a4c668a739911dcb1579d923e",
+      "sha256": "9c9c7d230d669754f4aaa761595239040e46db68e7091e95a11547a5ba8c4933",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "track-sound.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "f64941b4b36195d811bc981d1967b9cd7108b60eac607bffb7a578a6e32a04c6",
+      "sha256": "dd5834b73e24607ca52fbe1a5f451c842c37c11f810e8d18e6dcc66ba6a737ca",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "sequencer.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "c370e652c87ec20781814b0e0372afa68f86fd6fe75942db8d3af5630449d444",
+      "sha256": "aba45cbe8e4433a8c03efa666cbbbf8d47ac37725578b30752d9a5f8588def25",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "step-entry.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "695a3b939d3207f02c58d71a70e3f364106c0c1de2cdfea6cb1aa6b006102bd9",
+      "sha256": "6e51cb9a73a44e9439fccdd9b2333d1bcccf48bc6a96b6c4abf690811ffc0b73",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "envelope.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "a6c5143d9b83fbd8e20b3be18a764ceca68f13ce22c65c07f4fa423de3f5240c",
+      "sha256": "c7ce679c301867e55182665fe0368ba9f13d2e636377036aeeb6e170806c747d",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "fx.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "fc1922d01a1324381301e2f678800df5edde2406c23126a7ecc8bb2ff34dc921",
+      "sha256": "fadb9b12e006fcebb72e8f439b0e325db8751701abb7191a5a2aaf1ab9db9f2a",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "lfo.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "5864fbfede88483b1f29174a34a3e70968d4271f528b5b79637cc42b6d0280e8",
+      "sha256": "7f8c40a33731cfb39ebfb32ff8bc3b0abe069b56abc91332ac53fb17d0cf85bd",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "arpeggiator.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "143cd1c00509ca197d104a64f75581b0d774df6bac08114bd71c316090bd1388",
+      "sha256": "38e8a1daa1fcec75e67ed7aba0dfa38a56061fb92253a23a0bd3613a27e9da9c",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "arrangement.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "b8371173932ae46fa70d9b78c4e9e7ce057cc7e5f5af1d9507e8149c5c543245",
+      "sha256": "462db70fb70e41fa45e9db8b9027c8ea831f9f9b13677ded73f3baad75a1e209",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "step-edit.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "f5158e1600b308dd2ad4a292629b74363b4df3a34206445e176be95755eedff3",
+      "sha256": "f04721382b9c9ac8cea22c554b560d338f5d3d3b9db9aa4b268dc51a0aacf84e",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "control-feel.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "dafcf7b0c0fa9a6a21237ecf98f3178712a8f23535e8d84b81b7537e9c33d515",
+      "sha256": "c0eeb6dc706c7db89284f8e11732ab5168a67d7cbe27365585554781e62b5bd0",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "metronome.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "3e53452820906d68265762d6553cc933a5bf0fabb302483aaa0c2d6e067e6522",
+      "sha256": "2ec9189981d5b15397d16dd6eefcd66b24c1a06fb25ac139be8dd4b316990df7",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "saved.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "4b9c503751faf292c8e9e12d597e468ecf11853579bd97c0ac52105c90459f9f",
+      "sha256": "5033ddad5294e1d07f2d54fc5b1af17898851e70287c34d711fa42ef5c711a84",
+      "pixels": [
+        240,
+        240
+      ]
+    },
+    "reset-warning.png": {
+      "kind": "native host capture",
+      "source_frame_ms": 4200,
+      "script_sha256": "23d7f9f1e9d5fe4fe948e6a04d9b3198351fc7020fe7e1d5233c4a52a2734826",
+      "sha256": "ab7caf6c4f8c8d40b1f7d80da86adec81b64b5b68071c1f8b7dfc72e2d061512",
+      "pixels": [
+        240,
+        240
+      ]
+    }
+  }
+}

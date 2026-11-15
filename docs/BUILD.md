@@ -32,3 +32,21 @@ Check authored assets with `python3 tools/generate_presets.py --check`,
 `python3 tools/make_homunculus_gif.py --check`. Pillow is required for images.
 
 `tests/` contains host C checks and timed control scripts. A host preview proves code paths, not device timing or MIDI/USB behavior. The splash image and preset catalog are in `assets/`; generated C headers in `firmware/gen/` are tracked so the source is complete.
+
+
+## Regenerate the illustrated guide images
+
+In a fresh checkout with Python, Pillow and a desktop C compiler available, run:
+
+```sh
+python tools/capture_illustrated_guide.py
+```
+
+The script builds the real application against fake hardware, seeds synthetic
+lesson patterns, checks each setup reply, and writes the versioned PNGs under
+`assets/tutorial/0.26.23-ns1/`. Native frames, scripts and capture provenance stay
+under `build/illustrated-guide/`. That capture directory must not already exist;
+use a fresh checkout for a repeat run. `--cc` selects a compiler and `--host`
+accepts an already-built matching native host. No MIDI/audio devices are opened,
+no sound is played, and no firmware is installed. Host captures do not qualify
+physical audio, device CPU time or flash operation.

@@ -1,4 +1,6 @@
-# Crepuscular Homunculus 0.26.19-dev controls
+# Crepuscular Homunculus 0.26.23-ns1 controls
+
+The control tables apply to the current firmware. Earlier version notes below explain when individual features were introduced. For a step-by-step walkthrough, see the [current illustrated guide](ILLUSTRATED_GUIDE.md).
 
 ## Candidate 0.26.17: confirmed HOME reset
 

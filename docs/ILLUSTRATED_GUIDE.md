@@ -1,10 +1,10 @@
 # Crepuscular Homunculus: illustrated guide
 
-**For firmware 0.26.19. Learn the physical controls, build a pattern and save a four-track song.**
+**For firmware 0.26.23-ns1. Learn the physical controls, build a pattern and save a four-track song.**
 
-The pictures show the actual firmware screens, captured from the native desktop emulator. They are screen captures, not camera photographs. Example sounds, notes and values may differ from your song. You can click a picture to view it at full size.
+The pictures below were regenerated from the 0.26.23-ns1 source using the native desktop emulator. They show the actual firmware screens. They are screen captures, not camera photographs. Example sounds, notes and values may differ from your song. You can click a picture to view it at full size.
 
-[Back to the project](../README.md) · [Download the firmware](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.19) · [Full control reference](PANEL_CONTROLS.md)
+[Back to the project](../README.md) · [Download the firmware](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.23-ns1) · [Full control reference](PANEL_CONTROLS.md)
 
 ## Choose a lesson
 
@@ -17,6 +17,7 @@ The pictures show the actual firmware screens, captured from the native desktop 
 | [5. Add tracks, banks and swing](#5-add-tracks-banks-and-swing) | [11. Hold SEQ: open METRONOME](#11-hold-seq-open-metronome) |
 | [6. Hold SEL: reach the piano roll](#6-hold-sel-reach-the-piano-roll) | [12. Choose the HOME artwork and knob feel](#12-choose-the-home-artwork-and-knob-feel) |
 | [13. Save your song](#13-save-your-song) | [14. Recognize and cancel the reset warning](#14-recognize-and-cancel-the-reset-warning) |
+| [15. Explore chord afterimages](#15-explore-chord-afterimages) | [New and saved sounds](#new-and-saved-sounds) |
 
 ## 1. Taps, holds and knobs
 
@@ -43,7 +44,7 @@ Start with PLAY stopped and a comfortable listening volume. If you already have 
 
 **Action: tap HOME → HOME.** If you see TRACK SOUND, tap HOME once more to reach the independent LIVE sound.
 
-<a href="../assets/tutorial/home.png"><img src="../assets/tutorial/home.png" width="400" alt="HOME: ASH CHOIR, firmware 0.26.19, Homunculus artwork and EDIT: SOUND CONTROLS footer"></a>
+<a href="../assets/tutorial/0.26.23-ns1/home.png"><img src="../assets/tutorial/0.26.23-ns1/home.png" width="400" alt="HOME: ASH CHOIR, firmware 0.26.23-ns1, Homunculus artwork and EDIT: SOUND CONTROLS footer"></a>
 
 1. Turn **PRESETS** to choose a sound, such as **ASH CHOIR**.
 2. Play the FM-1's note keys. OCT− and OCT+ move new notes down or up an octave.
@@ -51,11 +52,36 @@ Start with PLAY stopped and a comfortable listening volume. If you already have 
 
 **Action: HOME → tap EDIT → SOUND EDIT.**
 
-<a href="../assets/tutorial/sound-edit.png"><img src="../assets/tutorial/sound-edit.png" width="400" alt="SOUND EDIT: SHADE, FRACTURE, DRIFT and BLOOM with their current values"></a>
+<a href="../assets/tutorial/0.26.23-ns1/sound-edit.png"><img src="../assets/tutorial/0.26.23-ns1/sound-edit.png" width="400" alt="SOUND EDIT: SHADE, FRACTURE, DRIFT and BLOOM with their current values"></a>
 
 Turn one of Knobs 1–4 while playing a note, then release the note and listen to its fade. Read the label beside that knob: the controls depend on the sound type. For ASH CHOIR the four labels are SHADE, FRACTURE, DRIFT and BLOOM. Kit presets instead show BODY, WIRE, DECAY and BITE.
 
 **To leave:** tap EDIT again or tap HOME. Changing a LIVE sound does not replace the captured sounds already assigned to your tracks.
+
+### New and saved sounds
+
+The PRESETS browser still has **64 choices**. The current bank includes more distinct
+pads, metallic sounds, FM instruments and kits. **NIGHT SUTURE** is now the fuller,
+sustained Pad sound shown here:
+
+<a href="../assets/tutorial/0.26.23-ns1/night-suture.png"><img src="../assets/tutorial/0.26.23-ns1/night-suture.png" width="400" alt="Current HOME screen: 48 NIGHT SUTURE, the fuller pad sound, on firmware 0.26.23-ns1"></a>
+
+An existing saved song can still use its previous sound definition. **OLD** means
+a retained version, not a broken preset or missing sound. For example, a saved
+FM NIGHT SUTURE remains available alongside the new Pad version:
+
+<a href="../assets/tutorial/0.26.23-ns1/night-suture-old.png"><img src="../assets/tutorial/0.26.23-ns1/night-suture-old.png" width="400" alt="Current HOME screen: 48 NIGHT SUTURE OLD, retaining the earlier FM sound for saved music"></a>
+
+Updating does not replace the sounds in your song. To try a current version,
+turn PRESETS in LIVE, or use TRACK SOUND for the intended track as described
+below. SAVE only after you want to keep those edits. See the [sound guide](PRESET_GUIDE.md)
+for descriptions of the current bank.
+
+**Playing response:** velocity defaults are part of each sound. Some swelling
+textures keep a consistent amplitude for light MIDI-keyboard taps; other sounds,
+including NIGHT SUTURE, respond to velocity. A pluck or drum still decays naturally
+with sustain held. Give slow attacks time to develop, and allow release tails
+to fade before judging silence or switching to another sound.
 
 ## 3. Give a track its own sound
 
@@ -63,7 +89,7 @@ Each of the four tracks has a captured sound. The track names are **DRUM, MELODY
 
 **Action: tap SEQ → turn SELECT to DRUM → tap HOME → TRACK SOUND / DRUM.**
 
-<a href="../assets/tutorial/track-sound.png"><img src="../assets/tutorial/track-sound.png" width="400" alt="TRACK SOUND with DRUM at top right and 31 SCRAP ALTAR selected"></a>
+<a href="../assets/tutorial/0.26.23-ns1/track-sound.png"><img src="../assets/tutorial/0.26.23-ns1/track-sound.png" width="400" alt="TRACK SOUND with DRUM at top right and 31 SCRAP ALTAR selected"></a>
 
 1. On the SEQUENCER page, turn **SELECT** to highlight DRUM.
 2. Tap **HOME**. Check that the title says **TRACK SOUND** and the upper-right label says **DRUM**.
@@ -76,13 +102,13 @@ Each of the four tracks has a captured sound. The track names are **DRUM, MELODY
 
 **Start on the SEQUENCER overview.** If you followed lesson 3, you are already there; otherwise tap SEQ from HOME. Choose DRUM with SELECT and an **empty A–D bank** with ALGORITHM. The screenshots use A as an example; use another empty bank if A contains work.
 
-<a href="../assets/tutorial/sequencer.png"><img src="../assets/tutorial/sequencer.png" width="400" alt="SEQUENCER: four track rows, DRUM A selected, 16 steps, BPM 90 and SWING 50"></a>
+<a href="../assets/tutorial/0.26.23-ns1/sequencer.png"><img src="../assets/tutorial/0.26.23-ns1/sequencer.png" width="400" alt="SEQUENCER: four track rows, DRUM A selected, 16 steps, BPM 90 and SWING 50"></a>
 
 For this exercise, keep PLAY stopped. Set **Knob 1 to BPM 90**, **Knob 2 to 16 steps**, **Knob 3 to SWING 0** and **Knob 4 to MASK OFF**. The illustration above shows swing 50 to identify its readout; start straight at zero.
 
 **Action: on SEQUENCER, tap EDIT → step entry.**
 
-<a href="../assets/tutorial/step-entry.png"><img src="../assets/tutorial/step-entry.png" width="400" alt="Sequencer step entry: EDIT: SCRAP ALTAR, DRUM selected, K3 STEP and REC ERASE in the footer"></a>
+<a href="../assets/tutorial/0.26.23-ns1/step-entry.png"><img src="../assets/tutorial/0.26.23-ns1/step-entry.png" width="400" alt="Sequencer step entry: EDIT: SCRAP ALTAR, DRUM selected, K3 STEP and REC ERASE in the footer"></a>
 
 The title still says SEQUENCER, but **EDIT: SCRAP ALTAR** and **K3 STEP / REC ERASE** identify step-entry mode. Knob 3 now selects a step instead of changing swing.
 
@@ -134,19 +160,19 @@ Use this route to edit individual notes, lengths and velocities. **SEQ EDIT and 
 
 Choose a track and bank in SEQ. **Hold SEL for at least 700 ms, then release.**
 
-<a href="../assets/tutorial/arrangement.png"><img src="../assets/tutorial/arrangement.png" width="400" alt="ARRANGE: DRUM A, captured track sound controls, SEL NOTES and GLO SCENES"></a>
+<a href="../assets/tutorial/0.26.23-ns1/arrangement.png"><img src="../assets/tutorial/0.26.23-ns1/arrangement.png" width="400" alt="ARRANGE: DRUM A, captured track sound controls, SEL NOTES and GLO SCENES"></a>
 
 **What opens:** ARRANGE. It offers captured-sound and arrangement controls. For this lesson, leave its values alone and **tap SEL once**.
 
 ### Short tap: ARRANGE → STEP EDIT
 
-<a href="../assets/tutorial/step-edit.png"><img src="../assets/tutorial/step-edit.png" width="400" alt="STEP EDIT: DRUM A, length, velocity, chance and condition; HOLD: PIANO ROLL in the footer"></a>
+<a href="../assets/tutorial/0.26.23-ns1/step-edit.png"><img src="../assets/tutorial/0.26.23-ns1/step-edit.png" width="400" alt="STEP EDIT: DRUM A, length, velocity, chance and condition; HOLD: PIANO ROLL in the footer"></a>
 
 **What opens:** STEP EDIT, with length, velocity, chance and condition fields. From this page, **hold SEL for at least 700 ms again, then release**.
 
 ### Second hold: STEP EDIT → PIANO ROLL
 
-<a href="../assets/tutorial/piano-roll.png"><img src="../assets/tutorial/piano-roll.png" width="480" alt="PIANO ROLL: a MELODY A example with individual note bars, step and pitch cursor, length and velocity controls"></a>
+<a href="../assets/tutorial/0.26.23-ns1/piano-roll.png"><img src="../assets/tutorial/0.26.23-ns1/piano-roll.png" width="480" alt="PIANO ROLL: a MELODY A example with individual note bars, step and pitch cursor, length and velocity controls"></a>
 
 This picture uses a separate MELODY example to make the note bars clear; your selected track, bank and notes stay yours.
 
@@ -171,7 +197,7 @@ Try making one bass note longer, or lowering one snare's velocity. Four notes fi
 
 **Action: from HOME, tap ENV → ENVELOPE. No hold is needed.**
 
-<a href="../assets/tutorial/envelope.png"><img src="../assets/tutorial/envelope.png" width="400" alt="ENVELOPE for ASH CHOIR: attack, release, bloom and panel hold"></a>
+<a href="../assets/tutorial/0.26.23-ns1/envelope.png"><img src="../assets/tutorial/0.26.23-ns1/envelope.png" width="400" alt="ENVELOPE for ASH CHOIR: attack, release, bloom and panel hold"></a>
 
 With ASH CHOIR, Knob 1 changes **ATTACK**, the time the sound takes to arrive; Knob 2 changes **RELEASE**, how it fades after you release a key. Try a short note with a longer release and wait for the tail to finish. Other sound types show their own envelope labels.
 
@@ -183,9 +209,9 @@ With ASH CHOIR, Knob 1 changes **ATTACK**, the time the sound takes to arrive; K
 
 **Action: hold FX for at least 700 ms → FX CHAMBER. Release FX when it opens.**
 
-<a href="../assets/tutorial/fx.png"><img src="../assets/tutorial/fx.png" width="400" alt="FX CHAMBER for ASH CHOIR: corrosion on, corrosion amount, dark filter, afterimage and filter motion"></a>
+<a href="../assets/tutorial/0.26.23-ns1/fx.png"><img src="../assets/tutorial/0.26.23-ns1/fx.png" width="400" alt="FX CHAMBER for ASH CHOIR: corrosion bypassed, corrosion amount, dark filter, afterimage and filter motion"></a>
 
-The hold opens the page **without changing the on/off state**. With ASH CHOIR, read Knobs 1–4 as CORROSION, DARK FILTER, AFTERIMAGE and FILTER MOTION. Kit presets expose their kit controls instead.
+The hold opens the page **without changing the on/off state**. The current ASH CHOIR example shows **CORROSION BYPASS**. With ASH CHOIR, read Knobs 1–4 as CORROSION, DARK FILTER, AFTERIMAGE and FILTER MOTION. Kit presets expose their kit controls instead.
 
 To compare the corrosion/BITE processing, **tap FX briefly**. This toggles that processing; it is not a bypass of every sound-shaping control. Listen to a new note after each change.
 
@@ -195,9 +221,9 @@ To compare the corrosion/BITE processing, **tap FX briefly**. This toggles that 
 
 **Action: hold LFO for at least 700 ms → FILTER LFO. Release it when the page opens.**
 
-<a href="../assets/tutorial/lfo.png"><img src="../assets/tutorial/lfo.png" width="400" alt="FILTER LFO: motion off, rate, depth, triangle shape and base filter"></a>
+<a href="../assets/tutorial/0.26.23-ns1/lfo.png"><img src="../assets/tutorial/0.26.23-ns1/lfo.png" width="400" alt="FILTER LFO: motion on, rate, depth, triangle shape and base filter"></a>
 
-The example shows **FILTER MOTION: OFF**. A short **LFO** tap enables it for a pitched sound. Knob 1 changes speed, Knob 2 depth, Knob 3 shape and Knob 4 the base filter. Start with a small depth so you can hear what the motion changes.
+The current ASH CHOIR example starts with **FILTER MOTION: ON**. A short **LFO** tap turns it off; tap again to compare the moving sound. Knob 1 changes speed, Knob 2 depth, Knob 3 shape and Knob 4 the base filter. Start with a small depth so you can hear what the motion changes.
 
 The kit has no filter LFO. Holding the button opens the page without toggling the feature.
 
@@ -209,7 +235,7 @@ Stop the sequence and start from HOME for this exercise.
 
 **Action: hold ARP for at least 700 ms → ARPEGGIATOR. Release it when the page opens.**
 
-<a href="../assets/tutorial/arpeggiator.png"><img src="../assets/tutorial/arpeggiator.png" width="400" alt="ARPEGGIATOR stopped: UP order, BPM 90, rate 1/16, gate 75 percent and zero held keys"></a>
+<a href="../assets/tutorial/0.26.23-ns1/arpeggiator.png"><img src="../assets/tutorial/0.26.23-ns1/arpeggiator.png" width="400" alt="ARPEGGIATOR stopped: UP order, BPM 90, rate 1/16, gate 75 percent and zero held keys"></a>
 
 The hold lets you inspect the settings without starting the arpeggiator. Knobs 1–4 set **BPM, note order, rate and gate**. Gate controls how much of each arp interval the note is held.
 
@@ -221,7 +247,7 @@ Tap **ARP** briefly to enable it, then hold two or three note keys. You should h
 
 **Action: hold SEQ for at least 700 ms → METRONOME. Release it when the page opens.**
 
-<a href="../assets/tutorial/metronome.png"><img src="../assets/tutorial/metronome.png" width="400" alt="METRONOME: click off, 4/4, BPM 90, click level 32, four beats and quarter-note beat unit"></a>
+<a href="../assets/tutorial/0.26.23-ns1/metronome.png"><img src="../assets/tutorial/0.26.23-ns1/metronome.png" width="400" alt="METRONOME: click off, 4/4, BPM 90, click level 32, four beats and quarter-note beat unit"></a>
 
 Tap **SEL** to turn the click on/off. Knobs 1–4 set BPM, click level, beats per measure and beat unit. The click follows sequencer PLAY/REC; changing its meter changes the click grouping, not the length of your patterns.
 
@@ -237,7 +263,7 @@ This differs from **REC in sequencer step entry or STEP EDIT**, which erases one
 
 **Action: from HOME, tap GLO → DIAGNOSTICS; tap SEL → CONTROL FEEL.**
 
-<a href="../assets/tutorial/control-feel.png"><img src="../assets/tutorial/control-feel.png" width="400" alt="CONTROL FEEL: response LINEAR and HOME HOMUNCULUS, with SAVE: REMEMBER footer"></a>
+<a href="../assets/tutorial/0.26.23-ns1/control-feel.png"><img src="../assets/tutorial/0.26.23-ns1/control-feel.png" width="400" alt="CONTROL FEEL: response LINEAR and HOME HOMUNCULUS, with SAVE: REMEMBER footer"></a>
 
 Turn **Knob 1** to choose LINEAR or ACCEL. LINEAR gives regular increments; ACCEL moves eligible continuous parameters faster when you turn quickly, while slow turns remain precise.
 
@@ -247,7 +273,7 @@ Turn **Knob 2** to choose **HOMUNCULUS** or **THORN RIFT**. Tap HOME to see the 
 
 **Action: stop PLAY → release keys and pedals → let tails fade → tap SAVE → wait for SAVED.**
 
-<a href="../assets/tutorial/saved.png"><img src="../assets/tutorial/saved.png" width="400" alt="SAVE confirmation: SAVED, ALL 16 PATTERNS, SOUNDS + SETTINGS"></a>
+<a href="../assets/tutorial/0.26.23-ns1/saved.png"><img src="../assets/tutorial/0.26.23-ns1/saved.png" width="400" alt="SAVE confirmation: SAVED, ALL 16 PATTERNS, SOUNDS + SETTINGS"></a>
 
 The confirmation covers all **four tracks × four banks**, captured sounds and settings. You do not need to save each bank separately. Saving can wait while notes or release tails are active; pressing the button alone is not proof that the write has finished.
 
@@ -257,9 +283,30 @@ After SAVED, continue with a key, button or knob. Native SAVE retains the song t
 
 **Action: holding HOME for at least 700 ms opens RESET DEFAULTS?** This is not ordinary navigation.
 
-<a href="../assets/tutorial/reset-warning.png"><img src="../assets/tutorial/reset-warning.png" width="400" alt="RESET DEFAULTS? warns that it replaces song and sounds and resets local setup; HOME: CANCEL"></a>
+<a href="../assets/tutorial/0.26.23-ns1/reset-warning.png"><img src="../assets/tutorial/0.26.23-ns1/reset-warning.png" width="400" alt="RESET DEFAULTS? warns that it replaces song and sounds and resets local setup; HOME: CANCEL"></a>
 
 **Tap HOME to cancel.** The warning also expires after ten seconds. Opening it alone does not reset anything. Reset requires releasing the buttons and then pressing physical SEL to confirm; that deliberately replaces the song, sounds and local setup in RAM. You do not need it for any lesson in this guide.
+
+## 15. Explore chord afterimages
+
+**Action: from HOME with a Pad sound, tap SEL → MEMORY.** This is different
+from SEL on the sequencer, where it mutes a track.
+
+<a href="../assets/tutorial/0.26.23-ns1/memory.png"><img src="../assets/tutorial/0.26.23-ns1/memory.png" width="400" alt="MEMORY page with K1 MEMORY, K2 DARK FILTER, K3 CORROSION, K4 BLOOM and EDIT: FORGET OLD TIMBRE"></a>
+
+1. Choose a Pad such as ASH CHOIR, then tap SEL to open MEMORY.
+2. Start with **Knob 1 / MEMORY at zero**. Play and release a few notes.
+3. Raise MEMORY gently and play another small chord. Earlier timbres influence
+   nearby pitches, creating a changing color rather than a repeated audio echo.
+4. Tap **EDIT** on this page to **FORGET OLD TIMBRE**. Release held keys/pedals
+   before playing a new gesture if you want to build a fresh history.
+
+Afterimages keep up to four timbre snapshots. They do not record audio, add voices
+or give each track its own extra synth. MEMORY at zero removes the afterimage
+influence. This feature applies to **Pad** sounds; Metal, Kit and FM sounds do not
+become Pad afterimage instruments when you turn the knob.
+
+**To leave:** tap SEL again or HOME.
 
 ## Quick fixes
 
@@ -272,6 +319,7 @@ After SAVED, continue with a key, button or knob. Native SAVE retains the song t
 | A bank change is waiting | During playback it waits for that track's loop boundary; A>B shows the pending bank |
 | A track is silent | Check its selected bank for notes and its mute state; tap SEL on the overview to toggle mute |
 | Long chords lose older notes | Tracks and tails share eight voices, with at most four FM voices; shorten tails or simplify the overlap |
+| A sound has OLD after its name | It is a retained saved sound; choose a current version with PRESETS if you want to replace it |
 | SAVE has not confirmed | Stop playback, release all keys/pedals and panel hold, and wait for the sound to finish |
 
 [Back to the top](#crepuscular-homunculus-illustrated-guide) · [Full controls](PANEL_CONTROLS.md) · [Sound guide](PRESET_GUIDE.md) · [Piano roll](PIANO_ROLL.md)

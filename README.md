@@ -14,7 +14,7 @@ complete songs on the FM-1 itself.
 
 **[Learn with the illustrated tutorial](docs/ILLUSTRATED_GUIDE.md)** — follow each button press, hold and resulting screen.
 
-![Crepuscular Homunculus HOME display](assets/hub/home-0.26.19.png)
+![Crepuscular Homunculus HOME display](assets/tutorial/0.26.23-ns1/home.png)
 
 ## What you can do
 
