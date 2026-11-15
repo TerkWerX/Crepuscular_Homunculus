@@ -3,7 +3,7 @@ param(
     [string]$Toolchain = $env:JIELI_TOOLCHAIN,
     [string]$Sdk = $env:AC79_SDK,
     [string]$Release,
-    [string]$Product = 'FM-1_960'
+    [string]$Product = 'FM-1_986'
 )
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot

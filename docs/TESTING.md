@@ -1,32 +1,17 @@
-# Validation and limits — 0.26.19
+# Validation — 0.26.23-ns1
 
-Release 0.26.19 is rebuilt from the retained hardware-tested 0.26.19-dev source.
-The only native source change is APP_VER: `0.26.19-dev` becomes `0.26.19`.
-The sound engine, presets, control behavior, save formats, USB identities, loader,
-recovery and flash guards are unchanged. Documentation clarifies piano-roll entry.
+Current evidence is in [data/release-0.26.23-ns1.json](data/release-0.26.23-ns1.json).22 native whole-fixture ASan suites passed, including 75 factory/save-reload checks and independent VST/firmware parity. All 127 stored app_audio reference scenes remain unchanged. Target image 224016/581564, static RAM 86208/98304, pool 319876/344064; ram_text 909/no calls, register guards, identity/headerCRC pass. No exact-build physical CPU/USB/DAC/listening/install qualification is claimed. Historical evidence below retains its original scope.
 
-The final package SHA-256 is
-`985c1000dc58dd0afeafb18185a5de980795908166e9356d4c72fd07e656708f`.
-The prior 0.26.19-dev package remains sealed with SHA-256
+---
+
+# Validation and limits — 0.26.19-dev
+
+The package is the exact tested19 binary, SHA-256
 `6d345d659275634492c7cb4ed65bfea4b492c83981abd1789d4518453ab9baa5`.
+Exact 0.26.19 hardware results and unchanged-lineage musical results are distinguished
+below. Host runs and compilation are not hardware qualification.
 
-The final version-label build has offline/target verification only; it was not
-flashed or tested on a physical unit during this preparation. Hardware results
-below belong to the named earlier builds. Host checks do not measure device CPU.
-
-## Final release-label checks
-
-See [release-label evidence](data/release-0.26.19-label.json) for the focused
-host, ASan, piano-navigation/save, silent PCM parity, target and package results.
-The target uses 220,028 image bytes, 81,904 static RAM bytes, 319,876 pool bytes
-and 2,888 flash-operation RAM-code bytes. The image shrinks by four bytes;
-other allocations remain unchanged. These allocations are not measured spare stack.
-
-Rebuilding this source with the former `0.26.19-dev` macro reproduces the sealed
-development package byte-for-byte. Final loader and flash-operation RAM code are
-also byte-identical. No program behavior was changed to remove the suffix.
-
-## Retained 0.26.19-dev hardware checks completed October 26, 2026
+## Exact 0.26.19 hardware checks completed October 26, 2026
 
 | Check | Result |
 | --- | --- |
@@ -53,7 +38,7 @@ explicit hub submission requirement.
 [Public hardware summary](data/release-0.26.19-hardware.json) contains aggregate
 results only. Personal songs, raw backups and controller settings are excluded.
 
-## Retained 0.26.19-dev offline and target checks
+## Exact 0.26.19 offline and target checks
 
 Twenty host groups pass optimized and ASan. Normal/recovery/loader replies,
 compile overrides and USB descriptors pass. Target app bytes equal18 except

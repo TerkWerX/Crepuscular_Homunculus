@@ -1,180 +1,131 @@
-# The 64-sound TERKINSTEIN bank
+# Crepuscular Homunculus — current FM-1 factory sound guide
 
-In 0.26.19, factory positions 25/52 select revised SULFUR TONGUE METAL and WICKED FELT FM. Original definitions remain in older captures as OLD. There are 64 browser choices (23 PAD, 22 METAL, 5 KIT and 14 FM) and 66 stored definitions; see [sound revisions](CATALOG_REVISION_2.md). The following catalog expansion history retains its original context.
+Names match the VST. Pitched plucks decay naturally even with sustain; pedal holds gates, not infinite energy. OLD definitions remain for existing songs.
 
-The local **0.20.0-dev** bank extends the existing machinery, ritual and decay vocabulary
-with parts that can form a complete four-track piece. The original 36 slots
-keep their order and factory settings. Slots 37–64 add six basses, six leads,
-six keys/plucks, four kit configurations and six atmospheres. Track roles
-below are suggestions: any track can capture any instrument.
-That original bank contained 24 PAD, 22 METAL, 5 KIT and 13 FM sounds. The
-source of their settings is the [curated catalog](../assets/presets/terkinstein-presets.json).
+01. **ASH CHOIR** — Dark breath swell: slow attack, soft low-pass, gently beating stereo.
 
-## What the existing bank already supplies
+02. **RUST HALO** — Rusty struck tine: strong initial metallic transient which decays into a soft fundamental.
 
-| Slots | Existing character | What the expansion adds beside it |
-| --- | --- | --- |
-| 01–11 | ASH CHOIR through CATHODE MOTH: dark pads, long gestures and moving textures | More defined bass, melody and key attacks underneath or above them |
-| 12–21 | IRON PSALM through QUAKE ENGINE: metallic strikes, bowed entrances and rough pulses | Quieter melodic contrast and low-end anchors |
-| 22–30 | HOLLOW ROOT through MIRROR INK: bass, keys, bells and additional pads | Several distinct choices for each of those jobs |
-| 31 | SCRAP ALTAR: the neutral SCRAP FORGE kit | Four contrasting BODY/WIRE/DECAY/BITE configurations |
-| 32 | RIVEN SIGNAL: moving metallic lead | Six leads with different attack and sustain priorities |
-| 33–36 | NERVE CHOIR, CRUCIBLE, BONE WIRE and SPECTRAL GRAFT: the first four FM voices | Additional independent FM settings for bass, melody, keys and atmosphere |
+03. **BLACK GLASS** — Hard black-glass mallet: inharmonic attack, no held organ sustain.
 
-## Added basses
+04. **VEIL ENGINE** — Veiled rising sweep: long bloom and broad slow ramp.
 
-These are intended for low-register lines that leave the upper register to
-the existing pads and metals. Begin around C2–C3 and use one note at a time
-when building a dense sequence.
+05. **CHAPEL GLASS** — Chapel glass bell: two long decaying partial clusters, no constant sustained carrier.
 
-| Slot | Name | Engine | Musical role |
-| ---: | --- | --- | --- |
-| 37 | TAR MARROW | METAL | Immediate corroded low note with zero DRIFT and a short released tail |
-| 38 | COIL BURROW | FM | Brief branching growl that settles into a held fundamental |
-| 39 | MOSS CAPACITOR | PAD | Rounded, nearly undetuned bass with corrosion bypassed and a quick release |
-| 40 | CINDER PISTON | METAL | Harder corroded bass strike with a controlled tail |
-| 41 | HUSK CURRENT | FM | Three muted pairs decay while held, for syncopated bass plucks |
-| 42 | ROOT TERMINAL | PAD | Soft, nearly clean bass support for harsher drums and metal parts |
+06. **WIRE HYMNS** — Plucked wire with a brief falling spectral attack and a thin sustained core.
 
-HUSK CURRENT intentionally decays even if you hold the key. Use COIL BURROW,
-MOSS CAPACITOR or ROOT TERMINAL when the bass must sustain through a long gate.
+07. **ASHEN TIDE** — Wide tidal beating with a much quicker brightness cycle.
 
-## Added leads
+08. **GRAVE CLOCK** — Dry wooden clock tick: fast amplitude decay, slightly pitched downward transient.
 
-The new leads favor a recognizable melodic line instead of a large chord
-wash. Try them against ASH CHOIR, VEIL ENGINE, PALLID CHOIR or MIRROR INK.
+09. **NOCTURNE 13** — Almost-static low dark drone: gradual onset and exceptionally long fade.
 
-| Slot | Name | Engine | Musical role |
-| ---: | --- | --- | --- |
-| 43 | FANG RELAY | METAL | Sharp entrance for angular melodic phrases |
-| 44 | ION STITCH | FM | Forked wiry line with a brief downward pitch bite and sustained body |
-| 45 | VELVET FAULT | PAD | Softer lead with restrained detune and corrosion bypassed |
-| 46 | SCAR VOLTAGE | METAL | Abrasive foreground line for sparse arrangements |
-| 47 | MOTH CIRCUIT | FM | Gently arriving hollow line with quiet upper modulation |
-| 48 | NIGHT SUTURE | PAD | Soft lead with gentle filter motion above a dry rhythm |
+10. **SALT STATIC** — Short noisy salt burst: high-ratio sidebands dissolve quickly.
 
-## Added keys and plucks
+11. **CATHODE MOTH** — Narrow insect chirp: rising pitch onset, fading upper spectrum.
 
-These fill the gap between OBSIDIAN KEYS and TERKINSTEIN's ringing metal
-strikes. PAD and METAL keys follow the held gate: VELLUM PRONG's short release
-begins when the key is released, rather than creating an automatic pluck.
-The original WICKED FELT PAD behaved similarly; the revised factory choice is a dry FM key with its own operator envelopes. The FM keys have independent operator decay;
-BONE SPARKS and OXIDE CHIMES fade while held, while GLASS VERTEBRA leaves a
-small sustained remainder. They are synthesized textures rather than recordings
-of the instruments suggested by their names.
+12. **IRON PSALM** — Dry hammered iron: immediate aggressive ring, very short tail.
 
-| Slot | Name | Engine | Musical role |
-| ---: | --- | --- | --- |
-| 49 | BONE SPARKS | FM | Three short pairs create bright ceramic-like strikes for arpeggios |
-| 50 | VELLUM PRONG | PAD | Dry papery key, following note length with a short released tail |
-| 51 | OXIDE CHIMES | FM | Branching chime whose upper modulation fades before its carrier |
-| 52 | WICKED FELT | FM | Revised dry, muted FM key with distinct attack and decay; four-FM voice limit |
-| 53 | GLASS VERTEBRA | FM | Twin chains with long glassy decay and only a small held remainder |
-| 54 | LANTERN RATTLE | METAL | Moderately corroded metallic key with a ringing released tail |
+13. **FURNACE VOW** — Slow furnace rise with dark beating overtones.
 
-## Added SCRAP FORGE kits
+14. **SHARD CROWN** — Sharp crystalline shard: sparse high odd-ratio carriers, short bright ping.
 
-All five kits use the same twelve synthesized key roles, so a drum pattern
-can be auditioned with contrasting factory macro settings. These are four
-new configurations of TERKINSTEIN's existing recipes, not imported samples
-or emulations of a named drum machine.
+15. **ANVIL SERAPH** — Long resonant anvil with a clear bright initial strike.
 
-| Slot | Name | Curation role |
-| ---: | --- | --- |
-| 31 | SCRAP ALTAR | The original centered reference |
-| 55 | RIVET WAKE | Tight industrial rhythm with room for longer atmosphere notes |
-| 56 | BOILER TEETH | Weight and grit for harder bass-led arrangements |
-| 57 | DUST CASKET | Shorter, softer contrast to aggressive melodic parts |
-| 58 | CHROME FUNERAL | Ringing metallic accents for slower, more open pieces |
+16. **VOLT TEETH** — Brittle electrical buzz with fast pulse movement.
 
-Their factory macro values make the contrast explicit. Higher BODY raises
-the recipes' pitch; higher DECAY lengthens their tails. WIRE changes tonal/noise
-balance. BITE below 64 uses the existing SAND shaping and above 64 the BURN
-corrosion; 64 is the neutral reference, not a separate processor.
+17. **RUST TALON** — Tight claw bass: half-ratio sub plus a short rasp transient.
 
-| Kit | BODY | WIRE | DECAY | BITE |
-| --- | ---: | ---: | ---: | ---: |
-| SCRAP ALTAR | 64 | 64 | 64 | 64 |
-| RIVET WAKE | 78 | 40 | 26 | 28 |
-| BOILER TEETH | 94 | 101 | 69 | 103 |
-| DUST CASKET | 56 | 18 | 32 | 15 |
-| CHROME FUNERAL | 60 | 114 | 92 | 52 |
+18. **BLADE REQUIEM** — Long bowed-metal sweep, strongly detuned and slow to bloom.
 
-The mapping repeats in every octave:
+19. **TOMB CURRENT** — Hollow tomb bass: clean half-ratio body under an octave knock.
 
-| Key | Drum | Key | Drum |
-| --- | --- | --- | --- |
-| C | Kick | F♯ | Alloy hat |
-| C♯ | Sub boom | G | Low tom |
-| D | Snare | G♯ | High tom |
-| D♯ | Clap | A | Rim |
-| E | Closed hat | A♯ | Struck bell |
-| F | Open hat | B | Broken-clock click |
+20. **SLAG PULSE** — Short dark industrial pulse; minimal ring.
 
-For rapid double-bass parts, start with the C kick in **RIVET WAKE** or
-**DUST CASKET**. Their factory DECAY settings (26 and 32) are shorter than
-the neutral kit's 64. Turn DECAY down further if repeated kicks blur together;
-use the longer C♯ sub boom for occasional low accents. All tracks, LIVE notes
-and release tails share eight voices, with at most four FM voices. Listen for
-missing hits when a dense melody and atmosphere are playing at the same time.
+21. **QUAKE ENGINE** — Low filtered quake with a slow heavy tail.
 
-Choose the desired kit before recording DRUM. DRUM REC keeps the live kit
-and its sculpted settings when a kit is already selected. The four sound
-knobs are BODY, WIRE, DECAY and BITE. Several different drums can share a
-step within the existing four-note step limit.
+22. **HOLLOW ROOT** — Pure decaying sub: low sine body with almost no upper harmonic content.
 
-For louder or more expressive hits, the kit responds to MIDI note velocity.
-The kit macro knobs shape its sound; they are not a separate output-level
-mixer.
+23. **GRIT PILGRIM** — Forward gritty strike; narrow pitch beating and short damp.
 
-## Added atmospheres
+24. **OBSIDIAN KEYS** — Obsidian muted electric key: woody transient and fast damping, velocity expressive.
 
-The bank already has long, full pads. These additions are intended to leave
-holes for the newly added bass and melody parts: different entrances,
-degrees of motion and pitched versus metallic texture.
+25. **SULFUR TONGUE** — Sulfur reed: snarling short modulator transient into a nasal sustained carrier.
 
-| Slot | Name | Engine | Musical role |
-| ---: | --- | --- | --- |
-| 59 | VEIN WEATHER | PAD | Shaded slow entrance with moderate corrosion and gentle filter motion |
-| 60 | NOCTILUCE VAT | FM | Softly arriving parallel harmonics for a dusky organ-like bed |
-| 61 | LICHEN VECTOR | PAD | Dim, detuned filtered texture behind clean bass and short percussion |
-| 62 | SUTURE FOG | METAL | Bowed metallic tension with less corrosion than BLADE REQUIEM |
-| 63 | HOLLOW EMBER | PAD | Broad warm corrosion and mild drift, without periodic LFO motion |
-| 64 | PHANTOM LOOM | FM | Slowly opening chain with later upper modulation and ramped filter motion |
+26. **TARNISH BELL** — Tarnished tubular bell: wide noninteger-like partial spacing and very long decay.
 
-Hold NOCTILUCE VAT and PHANTOM LOOM for several seconds to hear their build.
-Their operator attacks are deliberately different; PHANTOM LOOM's carrier
-reaches its full attack at roughly seven seconds under the factory settings,
-with some modulation continuing to open later. That estimate follows the
-existing fixed-point envelope code; it is not a device performance measurement.
+27. **SABLE NEEDLES** — Needle staccato: high bright additive spikes, nearly instant damping.
 
-## Four-track starting combinations
+28. **GRAVE HAMMER** — Heavy hammer bass: brief downward pitch strike followed by a round decay.
 
-These combine new and existing sounds rather than placing every new sound
-in competition with another. They are starting points, not supplied patterns.
+29. **PALLID CHOIR** — Pale shifting choir: three unusual carrier ratios with staggered spectral decay.
 
-| Piece direction | DRUM | MELODY | ATMOS | BASS |
-| --- | --- | --- | --- | --- |
-| Mechanical lullaby | 55 RIVET WAKE | 49 BONE SPARKS | 04 VEIL ENGINE | 37 TAR MARROW |
-| Furnace signal | 56 BOILER TEETH | 43 FANG RELAY | 62 SUTURE FOG | 38 COIL BURROW |
-| Worn miniature | 57 DUST CASKET | 52 WICKED FELT | 11 CATHODE MOTH | 39 MOSS CAPACITOR |
-| Open metal chamber | 58 CHROME FUNERAL | 51 OXIDE CHIMES | 61 LICHEN VECTOR | 22 HOLLOW ROOT |
-| Haunted wiring | 31 SCRAP ALTAR | 24 OBSIDIAN KEYS | 64 PHANTOM LOOM | 41 HUSK CURRENT |
+30. **MIRROR INK** — Mirrored delayed-onset partials: six additive tones arrive at different times and decay independently.
 
-Start with a simple drum pattern, a single bass line, a sparse melody and one
-or two held atmosphere notes. Extend ATMOS to 32 or 64 steps when the buildup
-needs more time. REC captures held-note duration; existing loops retain their
-captured sound while a new live preset is selected. Use SEQ -> select track -> HOME/TRACK SOUND to change that capture independently; HOME again returns to LIVE.
+31. **SCRAP ALTAR** — Retained distinct drum kit; old complete patch preserved.
 
-The eight shared voices and four-FM-voice limit apply.
-Storing 64 presets does not add voices or processing stages. The selected
-engine, active notes, overlapping releases and operator routing determine
-the actual render work. Dense combinations need an attended listening and
-GLO timing check; host previews do not establish FM-1 CPU timing.
+32. **RIVEN SIGNAL** — Broken radio pulse: dense nested sidebands, short bright chirp then sparse sustain.
 
-The factory bank is stored as constants. The save/song layout does not grow
-to store those 28 descriptors, but older firmware does not recognize their
-preset indices. Keep a full current song backup before downgrading.
+33. **NERVE CHOIR** — Breathing FM choir: carrier swells while modulators fade, shifting from rough to pure.
 
-For the focused comparison against other published preset names and the
-independent authorship record, see [PRESET_PROVENANCE.md](PRESET_PROVENANCE.md).
+34. **CRUCIBLE** — Crucible brass: quick spectral flare into a strong broad held tone.
+
+35. **BONE WIRE** — Bone wire harp: two contrasting plucked strings with nearly absent sustain.
+
+36. **SPECTRAL GRAFT** — Spectral graft: staggered FM swells and unequal releases, slowly changing overtone balance.
+
+37. **TAR MARROW** — Thick low tar grind with audible moving sidebands.
+
+38. **COIL BURROW** — Coiled acid bass: bright short squelch over a low held sub carrier.
+
+39. **MOSS CAPACITOR** — Damped moss pulse with asymmetrical brightness opening.
+
+40. **CINDER PISTON** — Sharp piston click with rapid gate-like colour.
+
+41. **HUSK CURRENT** — Dry husk marimba: low, rounded paired plucks with a short upper knock.
+
+42. **ROOT TERMINAL** — Terminal sub thud: short filtered amplitude decay and a deep downward pitch transient.
+
+43. **FANG RELAY** — Fanged sync-like lead: harsh nested modulation with a sharp decaying bite.
+
+44. **ION STITCH** — Ionic rising laser: obvious upward pitch sweep with a bright rapidly thinning tail.
+
+45. **VELVET FAULT** — Velvet thumb piano: soft low-partial pluck, short release and no held sustain.
+
+46. **SCAR VOLTAGE** — Bright scarred stereo tremor with moderate ring.
+
+47. **MOTH CIRCUIT** — Moth shimmer: delayed upper partials, high overtone cluster and soft irregular decay.
+
+48. **NIGHT SUTURE** — A full, sustained dark pad with slow attack, a long release and gentle triangle-LFO movement.
+
+49. **BONE SPARKS** — Bone sparks: three tiny bell attacks with very high short sidebands.
+
+50. **VELLUM PRONG** — Vellum prong: dry low metallic kalimba with a pitched paper-like transient.
+
+51. **OXIDE CHIMES** — Oxide chimes: bright six-tone cluster with progressively longer high partial decays.
+
+52. **WICKED FELT** — Wicked felt piano: hard hammer transient into three muted decaying partial pairs.
+
+53. **GLASS VERTEBRA** — Glass vertebra: thin high struck glass with a long low body and short high splinters.
+
+54. **LANTERN RATTLE** — Lantern rattle: noisy short falling ring, high feedback and rapidly decaying modulators.
+
+55. **RIVET WAKE** — Retained distinct drum kit; old complete patch preserved.
+
+56. **BOILER TEETH** — Retained distinct drum kit; old complete patch preserved.
+
+57. **DUST CASKET** — Long dirty high-body kit: noisy wire and extended ringing decay.
+
+58. **CHROME FUNERAL** — Bright tight tuned kit: raised body pitch, dry wire, sharply damped decay.
+
+59. **VEIN WEATHER** — Hard-edged pulsing weather: strong square-wave timbral motion.
+
+60. **NOCTILUCE VAT** — Noctiluce bowed glass: very slow additive rise with soft dissonant partial entries.
+
+61. **LICHEN VECTOR** — Fast drifting stereo ramp with a shorter attack than the other pads.
+
+62. **SUTURE FOG** — Soft inharmonic fog, extreme detuning and restrained drive.
+
+63. **HOLLOW EMBER** — Hollow ember: low decaying sine with a small hot overtone which dies much faster.
+
+64. **PHANTOM LOOM** — Phantom loom: slow spectral crossing; modulators swell after the carrier, then thin out.

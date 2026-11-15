@@ -1,6 +1,12 @@
+# Current architecture — 0.26.23-ns1
+
+Catalog revision 3 retains 127 stored definitions and 64 factory browser choices. Settings schema 13 and native journal format 3 remain. The restored NIGHT SUTURE browser entry selects immutable PAD 47; previous FM 112 remains available to saved sounds. See [bank compatibility](NIGHT_SUTURE.md). Older architecture notes below describe their named releases.
+
+---
+
 # Crepuscular Homunculus architecture
 
-Current0.26.19 retains the0.26.18 architecture and musical/save code; only updater identity and displayed version change. Settings schema13 is3,704 bytes; full journal format3/catalog revision2 is23,556 bytes. The older schema12 details below describe lineage; see CATALOG_REVISION_2.md for current migration and TESTING.md for completed hardware evidence.
+Current0.26.19 retains the0.26.18 architecture and musical/save code; only updater identity and displayed version change. Settings schema 13 is3,704 bytes; full journal format 3/catalog revision2 is23,556 bytes. The older schema12 details below describe lineage; see CATALOG_REVISION_2.md for current migration and TESTING.md for completed hardware evidence.
 
 The isolated0.26.11-dev mirror correction makes the existing compact HOME
 context apply only when the saved artwork choice is Thorn Rift. Homunculus
@@ -8,7 +14,7 @@ uses the existing lossless raw/RLE/local-palette tiles at native detail, even
 on a negotiated compact subscription. The existing decoder accepts both types.
 Changing the context cancels an incomplete tile and refreshes coverage, avoiding
 stale coarse pixels. Menus, startup, actual LCD rendering and all audio remain
-unchanged. No new state, buffer or wire field is added.
+unchanged. No new state, buffer, wire field or companion implementation is added.
 Main retains the same slack guard and bounded USB admission. Measured device
 load with the higher-detail portrait is still an attended acceptance step.
 

@@ -14,8 +14,8 @@ static void init(void){
     memset(&t,0,sizeof t);settings_defaults(&s);tk_banks_init(&s,&t);
 }
 static void dense(int revised){
-    unsigned tr,b,i;static const unsigned old[4]={24,51,32,30},fresh[4]={64,65,24,51};
-    init();preset_apply(&s,revised?65:51);s.p.bloom=67;graft_reset(&s);
+    unsigned tr,b,i;static const unsigned old[4]={24,51,32,30},fresh[4]={66,67,125,126};
+    init();preset_apply(&s,revised?126:51);s.p.bloom=67;graft_reset(&s);
     s.graft_target=revised?32:0;s.graft_amount=39;graft_apply(&s);s.swing=50;s.tempo=90;
     for(tr=0;tr<4;tr++){
         track_factory_apply(&s,tr,revised?fresh[tr]:old[tr]);
@@ -34,6 +34,7 @@ static void dense(int revised){
     ck(settings_valid(&s)&&tk_song_valid(&song),"dense all-bank/captured/LIVE/GRAFT fixture valid");
 }
 static void reload(void){
+    printf("reload checks=%u\n",checks);
     init();ck(!tk_persist_load(&s,&t),"journal loads without defaulting");
     ck(!memcmp(&s,&expected,sizeof s),"complete LIVE/GRAFT/FM/settings byte-exact");
     memset(&tk_bank_pool.stage,0,sizeof tk_bank_pool.stage);tk_song_clone(&s,&t);
@@ -47,26 +48,31 @@ static int legacy_pull(void *ctx,uint32_t at,uint8_t *out,uint32_t n){
         if(at+i>=12&&at+i<16)out[i]=0;
     }return 0;
 }
+static int revision2_pull(void *ctx,uint32_t at,uint8_t *out,uint32_t n){
+    uint32_t i;if(tk_persist_pull(ctx,at,out,n))return -1;
+    for(i=0;i<n;i++)if(at+i==12)out[i]=2;
+    return 0;
+}
 static int foreign_pull(void *ctx,uint32_t at,uint8_t *out,uint32_t n){
     uint32_t i;if(tk_persist_pull(ctx,at,out,n))return -1;
-    for(i=0;i<n;i++)if(at+i==12)out[i]=3;
+    for(i=0;i<n;i++)if(at+i==12)out[i]=4;
     return 0;
 }
 int main(void){
-    unsigned i,j,tr,slot,len,gen,seen[66]={0};tk_track_patch_t patch;tk_fm_patch_t fm;
+    unsigned i,j,tr,slot,len,gen,seen[127]={0};tk_track_patch_t patch;tk_fm_patch_t fm;
     host_journal_import();
-    ck(TK_PRESET_COUNT==66&&TK_FACTORY_COUNT==64&&TK_CATALOG_REVISION==2,"explicit storage/selection/catalog capacities");
+    ck(TK_PRESET_COUNT==127&&TK_FACTORY_COUNT==64&&TK_CATALOG_REVISION==3,"explicit storage/selection/catalog capacities");
     ck(TK_VOICES==8&&TK_FM_VOICE_LIMIT==4,"existing eight/four limits retained");
     for(i=0;i<64;i++){
-        unsigned id=TK_FACTORY_SOUND[i];ck(id<66&&!seen[id]++,"unique current factory choice");
+        unsigned id=TK_FACTORY_SOUND[i];ck(id<127&&!seen[id]++,"unique current factory choice");
         ck(factory_position(id)==i,"stable visible positions");
         ck(factory_next(id,1)==TK_FACTORY_SOUND[(i+1)%64],"forward traversal and wrap");
         ck(factory_next(id,-1)==TK_FACTORY_SOUND[(i+63)%64],"reverse traversal and wrap");
         ck(factory_next(id,128)==id,"accelerated full turns");
     }
-    ck(!seen[24]&&!seen[51]&&seen[64]&&seen[65],"old definitions retained outside normal browsing");
+    ck(!seen[24]&&!seen[51]&&!seen[64]&&!seen[65]&&seen[66]&&seen[126],"old definitions retained outside normal browsing");
     ck(PRESETS[51].instrument==TK_INSTRUMENT_PAD&&PRESETS[65].instrument==TK_INSTRUMENT_FM,"old PAD never reinterpreted as new FM");
-    for(i=0;i<66;i++)for(tr=0;tr<4;tr++){
+    for(i=0;i<127;i++)for(tr=0;tr<4;tr++){
         init();before=s;track_factory_apply(&s,tr,i);
         ck(settings_valid(&s),"every stored sound usable on every track");
         track_patch_factory(&patch,i);fm_for_preset(&fm,i);
@@ -76,6 +82,7 @@ int main(void){
     }
     dense(0);ck(!tk_store_save(TK_PERSIST_BYTES,legacy_pull,&s),"exact old format2 admitted");reload();
     ck(!tk_persist_save(&s,&t,0),"legacy native SAVE upgrades explicitly to catalog2");reload();
+    dense(0);ck(!tk_store_save(TK_PERSIST_BYTES,revision2_pull,&s),"catalog2 source preserved");reload();
     dense(1);ck(!tk_persist_save(&s,&t,0),"revised and original captures saved together");reload();
     ck(!tk_store_save(TK_PERSIST_BYTES,foreign_pull,&s),"CRC-valid foreign catalog fixture");reload();
     ck(!tk_store_latest(&slot,&len,&gen),"newest slot exists");
@@ -83,7 +90,8 @@ int main(void){
     reload(); /* Header-last power-loss: previous complete slot remains valid. */
     dense(1);ck(!tk_store_save(TK_PERSIST_BYTES,legacy_pull,&s),"invalid old-format new-ID fixture stored");
     reload(); /* Refuse impossible pre-revision IDs, keep previous complete song. */
-    for(i=64;i<66;i++){
+    dense(1);ck(!tk_persist_save(&s,&t,0),"valid recovery slot before separate forged case");ck(!tk_store_save(TK_PERSIST_BYTES,revision2_pull,&s),"forged catalog2 with new IDs");reload();
+    for(i=66;i<127;i++){
         init();preset_apply(&s,i);publish_params(&s,s.p.shade);
         tk_note_on(60,100,1);{int32_t pcm[512]={0};app_audio(pcm,256);}
         ck(tk_persist_save(&s,&t,0)!=0,"sound defers SAVE");tk_note_off(60,1);

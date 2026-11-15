@@ -1,4 +1,4 @@
-# Updater identity — 0.26.19
+# Updater identity correction — 0.26.19-dev
 
 The package and normal application report **FM-1_986**. The update loader reports
 **ota-FM-1_986**. USB display names remain Crepuscular Homunculus and Crepuscular
@@ -26,17 +26,12 @@ The [hub identity guide](https://thefirmwarehub.com/kb/#identity) describes this
 Offline acceptance includes real updater handshake code over memory-only SysEx,
 normal/recovery/loader replies, descriptor names, package CRC/loader validation,
 target binary comparison with18, native save/recovery and silent audio regression.
-The preceding 0.26.19-dev target app bytes differ from 0.26.18 only in identity/version strings; loader bytes
+Target app bytes differ from 0.26.18 only in identity/version strings; loader bytes
 differ only in its identity string. These are offline results; the following paragraph records separate hardware acceptance.
 
-Exact 0.26.19-dev hardware checks are complete: custom 0.26.18 and Sloop entry, official V15
+Exact 0.26.19 hardware checks are complete: custom 0.26.18 and Sloop entry, official V15
 entry, outgoing V15 update, normal/loader identity readback and a controlled
 host-transfer interruption followed by ordinary same 0.26.19 completion. Full song
 and queryable LIVE comparisons matched after completed SAVE. Power/USB stayed
 connected during the interruption. See [validation](TESTING.md). This does not
 qualify a power cut or every unqueryable setting across unrelated firmware.
-
-The final 0.26.19 rebuild changes only APP_VER from 0.26.19-dev to 0.26.19.
-Identity, USB descriptors, updater and recovery sources are unchanged. Its
-new hashes and offline results are recorded in TESTING.md; it was not installed
-during release preparation. Historical development-build hashes are retained.

@@ -52,7 +52,9 @@ int main(int argc, char **argv)
     uint32_t i, x, y;
     tk_visual_snapshot_t sound = {0};
     check(argc == 2, "preview output folder supplied");
-    settings_defaults(&state);
+    settings_defaults(&state);preset_apply(&state,0u);
+    track_factory_apply(&state,0u,30u);track_factory_apply(&state,1u,0u);
+    track_factory_apply(&state,2u,28u);track_factory_apply(&state,3u,24u); /* Explicit pre-palette migration fixture. */
     check(sizeof state == 3704u && offsetof(tk_settings_t, home_visual) == 3697u
           && offsetof(tk_settings_t, section_mutes) == 3698u
           && offsetof(tk_settings_t, swing) == 3700u,
@@ -63,7 +65,9 @@ int main(int argc, char **argv)
         check(settings_valid(&state), "cosmetic legacy padding cannot reject a valid song");
         check(tk_home_visual_is_rift(i) == (i == TK_HOME_VISUAL_RIFT), "only the explicit tag selects Rift");
     }
-    settings_defaults(&state);expected = state;
+    settings_defaults(&state);preset_apply(&state,0u);
+    track_factory_apply(&state,0u,30u);track_factory_apply(&state,1u,0u);
+    track_factory_apply(&state,2u,28u);track_factory_apply(&state,3u,24u); /* Explicit pre-palette migration fixture. */expected = state;
     check(turn(1, 1) == 7, "Knob 2 marks a saved display change");
     expected.home_visual = TK_HOME_VISUAL_RIFT;
     check(!memcmp(&state, &expected, sizeof state), "K2 changes no musical or response setting");

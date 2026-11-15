@@ -335,7 +335,7 @@ void fm1_alnk0_irq(void)                       /* via isr_alnk0 (hal/fm1_isr.S) 
         for (b = 0; b < HALF_FRAMES; b += 32u)
             uac_tap(o + 2u * b, 32u);           /* the computer records what the speaker plays */
         for (i = 0; i < HALF_WORDS; i++)
-            o[i] <<= 7;
+            o[i] *= 256; /* peak protected Q15 -> Q23, no signed-shift UB */
         fm1_audio_ack_half();
     }
     in_audio = 0;

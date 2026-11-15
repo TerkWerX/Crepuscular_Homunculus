@@ -71,33 +71,31 @@ static struct {
 #endif
 
 #if FELUCCA_UAC
-/* USB audio input. The I2S clock is not locked to USB (about 44,117.6 Hz against the host's 44,100):
- * the endpoint is asynchronous, so each 1 ms packet carries what the ring holds, 44 or 45 frames
- * (the 44.1 pattern) and one more or one fewer while the ring's fill drifts out of its band.
- * The render writes HALF_FRAMES (128) frames every 2.9 ms; the fill measured when a render starts is
- * the low point of that saw tooth, and is kept in UA_LO..UA_HI. A frame waits in the ring for that fill
- * plus its place in the render: 80..256 frames, ~3.8 ms on average (256-frame halves and a 96..160
- * band: ~5.8 ms). Measured under load (65 % CPU): a 64..112 band started renders at
- * 48..119 with no glitch; one render was once seen 29 frames under the floor: a packet (46) must
- * still be in hand then. */
-#define UA_N 512u                /* ring, frames (16-bit L | R << 16); a power of two */
-#define UA_PRIME 104u            /* silence ahead of the first rendered frame */
+/* USB audio input. The I2S clock is independent of USB. A bounded low-pass
+ * estimate of current fill adjusts the fractional packet rate once per
+ * prepared packet, rather than reusing a pre-render snapshot throughout the
+ * render. Starting silence supplies finite headroom for a delayed half block.
+ * This is an experimental control policy: device timing is not yet qualified. */
+#define UA_N 1024u               /* ring, frames (16-bit L | R << 16); a power of two */
+#define UA_PRIME 512u            /* silence ahead of the first rendered frame */
 #define UA_LO 80u                /* a render may start late: keep a packet and more in hand */
 #define UA_HI 128u
 #define UAC_RATE 44100u
 #if FELUCCA_UAC_48K
 /* 48 kHz: the same times in 48 kHz frames (x 160 / 147); a render of HALF_FRAMES gives 139..140 frames */
-#define UA_PRIME48 113u
+#define UA_PRIME48 512u
 #define UA_LO48 87u
 #define UA_HI48 139u
 #define UA_REND48 ((HALF_FRAMES * 160u + 146u) / 147u)
 #define UA_MAXF 49u              /* frames in the largest packet: 48 + 1 */
 _Static_assert(UA_HI48 + UA_REND48 + UA_MAXF < UA_N, "the ring holds the band, a render and a packet (48 kHz)");
+_Static_assert(UA_PRIME48 + UA_REND48 + UA_MAXF < UA_N, "48 kHz prime plus render and packet fits");
 #else
 #define UA_MAXF 46u              /* frames in the largest packet */
 #endif
 #define UAC_MAXP (UA_MAXF * 4u)
 _Static_assert(UA_HI + HALF_FRAMES + UA_MAXF < UA_N, "the ring holds the band, a render and a packet");
+_Static_assert(UA_PRIME + HALF_FRAMES + UA_MAXF < UA_N, "44.1 kHz prime plus render and packet fits");
 static uint32_t ua_ring[UA_N];
 static volatile uint32_t ua_w, ua_r;
 static uint32_t ep4tx[UA_MAXF] __attribute__((aligned(4)));
@@ -108,11 +106,13 @@ static struct {
     volatile uint8_t go;         /* the ring is primed: the consumer reads it (0: silence packets) */
     volatile uint8_t flowing;    /* the host takes our packets (it may set alt 1 well before it reads) */
     uint8_t queued;              /* a packet was queued since the stream (re)started */
-    uint8_t feed;                /* this render feeds the ring (sampled when it starts) */
+    volatile uint8_t feed;       /* producer feeds this render; consumer may revoke on invalid fill */
     uint8_t wait;                /* polls the queued packet has waited */
     uint8_t e0_rx;               /* SET_CUR sampling frequency: data stage pending */
     volatile uint32_t fill_min;  /* ring fill when the last render started */
-    uint32_t acc;                /* 44.1 frames per ms: 0.1 frame steps */
+    uint32_t acc;                /* fractional 10.14 packet phase */
+    uint32_t nominal_acc;        /* uncorrected 10.14 phase for adjustment counters */
+    int32_t fill_q8;             /* filtered occupancy; packet consumer owns after priming */
     uint32_t last;               /* the last frame sent, repeated on an underrun */
     uint32_t starts, pkts, frames;               /* frames in packets sent from the ring */
     uint32_t underruns, overruns, missed;        /* glitches: ring empty (repeat), ring full (drop), no packet ready */
@@ -120,6 +120,7 @@ static struct {
     uint32_t adj_up, adj_down;                   /* packets one frame longer / shorter than the pattern */
     uint32_t fill_lo, fill_hi;                   /* range of fill_min since the stream started */
     uint32_t rate_sets;                          /* SET_CUR sampling frequency requests */
+    uint32_t bad_fill;                            /* consumer rejected impossible ring occupancy */
 } uac;
 #if FELUCCA_UAC_48K
 #include "uac_fir.h"
@@ -373,6 +374,7 @@ static void uac_stream(uint32_t alt)                    /* SET_INTERFACE, config
     RING_PUBLISH();
     uac.alt = (uint8_t)alt;
     uac.acc = 0;
+    uac.nominal_acc = 0;
     uac.last = 0;
     if (alt) {                                          /* (the fill range of the last stream stays readable) */
         uac.starts++;
@@ -395,6 +397,7 @@ static void uac_rate_set(uint32_t hz)
     RING_PUBLISH();
     uac.r48 = r48;
     uac.acc = 0;
+    uac.nominal_acc = 0;
     uac.pkts = uac.frames = 0;
 }
 #endif
@@ -944,6 +947,7 @@ static __attribute__((noinline)) void uac_render_start(void)   /* audio ISR, bef
         RING_PUBLISH();
         ua_w = r + prime;
         uac.fill_min = prime;
+        uac.fill_q8 = (int32_t)(prime * 256u);
         RING_PUBLISH();
         uac.go = 1;
         return;
@@ -971,6 +975,11 @@ static __attribute__((noinline)) void uac_tap48(const int32_t *out, uint32_t n)
     uint32_t w = ua_w, i, j, k = 0, h = rs.w, ph = rs.ph;
     if (UA_N - (w - ua_r) < n + n / 8u + 2u) {         /* nobody reads: drop the block (<= n * 160 / 147 + 1) */
         uac.overruns++;
+        /* Discard the remainder of this render and re-prime the 48-kHz FIR
+         * on the next render; never join old FIR history to new source time. */
+        uac.feed = 0;
+        RING_PUBLISH();
+        uac.go = 0;
         return;
     }
     for (i = 0; i < n; i++) {
@@ -1050,31 +1059,42 @@ static __attribute__((noinline)) void uac_tap(const int32_t *out, uint32_t n)   
  * primed, silence. An empty ring repeats the last frame. Returns the frame count. */
 static uint32_t uac_packet(uint32_t *d)
 {
-    uint32_t n = 44u, r, fill, k, i, lo = UA_LO, hi = UA_HI;
+    uint32_t n, baseline, r, fill, k, i, nominal_step = (UAC_RATE * 16384u) / 1000u;
+    int32_t correction = 0;
 #if FELUCCA_UAC_48K
-    if (uac.r48) {                                      /* 48 frames a ms, no pattern */
-        n = 48u;
-        lo = UA_LO48;
-        hi = UA_HI48;
-    } else
+    if (uac.r48)
+        nominal_step = (48000u * 16384u) / 1000u;
 #endif
-    {
-        uac.acc += UAC_RATE % 1000u;
-        if (uac.acc >= 1000u) {
-            uac.acc -= 1000u;
-            n++;
+    uac.nominal_acc += nominal_step;
+    baseline = uac.nominal_acc >> 14;
+    uac.nominal_acc &= 16383u;
+    if (uac.go && uac.ring48 == uac.r48) {
+        /* One consumer owns ua_r; ua_w is published by the interrupted
+         * producer. Refuse impossible occupancy and re-prime next render. */
+        fill = ua_w - ua_r;
+        if (fill > UA_N) {
+            uac.bad_fill++;
+            uac.feed = 0;
+            RING_PUBLISH();
+            uac.go = 0;
+        } else {
+            uac.fill_q8 += ((int32_t)(fill * 256u) - uac.fill_q8) / 64;
+            correction = (uac.fill_q8 - (int32_t)(UA_PRIME * 256u)) / 4;
+            if (correction > 8192) correction = 8192;
+            if (correction < -8192) correction = -8192;
         }
     }
+    uac.acc += (uint32_t)((int32_t)nominal_step + correction);
+    n = uac.acc >> 14;
+    uac.acc &= 16383u;
     if (!uac.go || uac.ring48 != uac.r48) {             /* not primed (at this rate) yet */
         for (i = 0; i < n; i++)
             d[i] = 0;
         return n;
     }
-    if (uac.fill_min > hi) {
-        n++;
+    if (n > baseline) {
         uac.adj_up++;
-    } else if (uac.fill_min < lo) {
-        n--;
+    } else if (n < baseline) {
         uac.adj_down++;
     }
     r = ua_r;

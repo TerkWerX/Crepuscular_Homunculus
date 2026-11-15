@@ -1,9 +1,7 @@
 # Standalone quick start
 
-Prefer pictures? The [illustrated tutorial](ILLUSTRATED_GUIDE.md) shows each action, button hold and resulting screen.
-
-Crepuscular Homunculus runs on the FM-1 by itself. Play, edit, sequence and save
-directly on the instrument.
+Crepuscular Homunculus runs on the FM-1 by itself. The optional PC companion and
+Fire controllers are not required to play, edit, sequence or save on the instrument.
 Use a comfortable listening level.
 
 ## Play a sound
@@ -28,19 +26,6 @@ SWING 0-100 and Knob 4 sets Ghost Mask. In SEQ EDIT, Knob 3 selects the step ins
 Zero swing is straight. Each bank stores all 64 steps; shortening a pattern hides
 later steps without erasing them. Up to four notes can be stored on one step.
 PLAY starts or stops playback. See the full control map for recording and piano roll.
-
-## Edit individual notes in the piano roll
-
-1. Open **SEQ**, select a track with SELECT and its A–D bank with ALGORITHM.
-2. Hold **SEL** for 700 ms, then release it: **ARRANGEMENT** opens.
-3. Tap **SEL**: **STEP EDIT** opens.
-4. Hold **SEL** for 700 ms, then release it: **PIANO ROLL** opens.
-
-This STEP EDIT page is different from SEQ EDIT, which the EDIT button opens.
-In the roll, SELECT moves the step cursor and ALGORITHM moves the pitch cursor.
-Tap SEL to add a note; REC deletes the note at the cursor. Knob 1 edits its
-length and Knob 2 its velocity. EDIT returns to STEP EDIT.
-See the [piano-roll guide](PIANO_ROLL.md) for track/bank controls and limits.
 
 ## Save your work
 

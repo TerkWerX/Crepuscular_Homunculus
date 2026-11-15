@@ -3,6 +3,7 @@
 #define TERKINSTEIN_ENGINE_H
 
 #include <stdint.h>
+#include "terkinstein_output_level.h"
 #include "terkinstein_memory.h"
 #include "terkinstein_drums.h"
 
@@ -184,6 +185,13 @@ static void tk_set_source_memory(uint32_t source, uint32_t amount)
         tk_source_memory_control[source] = amount > 127u ? 127u : amount;
 }
 
+/* Main publishes response; each voice snapshots amplitude only at note start.
+ * Ordinary panel/USB/TRS owners follow LIVE; captured/host/controller owners
+ * carry their own target's policy. Incoming MIDI/PC clip velocities are never rewritten. */
+static volatile uint32_t tk_live_fixed_velocity,tk_source_fixed_velocity[TK_SOURCES];
+static void tk_set_live_fixed_velocity(uint32_t fixed){tk_live_fixed_velocity=!!fixed;}
+static void tk_set_source_fixed_velocity(uint32_t source,uint32_t fixed){if(source>=TK_SOURCE_SEQUENCE&&source<TK_SOURCES)tk_source_fixed_velocity[source]=!!fixed;}
+static uint32_t tk_fixed_velocity(uint32_t source){if(source>=TK_SOURCES)return 0u;return source<TK_SOURCE_SEQUENCE?tk_live_fixed_velocity:tk_source_fixed_velocity[source];}
 static void tk_set_instrument(uint32_t mode)
 {
     tk_instrument_control = mode <= TK_INSTRUMENT_FM ? mode : TK_INSTRUMENT_PAD;
@@ -562,8 +570,8 @@ static void tk_start(tk_voice_t *v, uint32_t cmd, uint32_t slot)
     uint32_t note = cmd & 127u, patch, timing, amount;
     int32_t shade = tk_macro[0], fracture = tk_macro[1];
     v->base_inc = tk_inc_c9[note % 12u] >> (10u - note / 12u);
-    v->level = ((cmd >> 7) & 127u) * 32u;
     v->source = (cmd >> 14) & 63u;
+    v->level = (tk_fixed_velocity(v->source)?127u:((cmd >> 7) & 127u))*32u;
     v->audio_note = note;
     v->instrument = tk_source_instrument(v->source);
     timing = tk_source_has_patch(v->source) ? tk_source_patch_timing[v->source] : 0u;
@@ -955,7 +963,9 @@ static void tk_control(const tk_params_t *p)
 
 static void tk_init(void)
 {
+    tk_output_reset();
     uint32_t v;
+    tk_live_fixed_velocity=0u;for(v=0;v<TK_SOURCES;v++)tk_source_fixed_velocity[v]=0u;
     tk_panel_patch_bank = 0u;
     tk_panel_forget_seen = tk_panel_forget_revision = 0u;
     tk_fm_init();
@@ -1372,6 +1382,7 @@ static uint32_t tk_active_notes(uint32_t base)
 
 static int tk_quiet(void)
 {
+    if(tk_output_pending())return 0;
     uint32_t v;
     for (v = 0; v < TK_VOICES; ++v)
         if ((tk_voice[v].command & TK_GATE) || tk_voice[v].tail) return 0;

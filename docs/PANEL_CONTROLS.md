@@ -1,6 +1,4 @@
-# Crepuscular Homunculus 0.26.19 controls
-
-For a guided introduction with screen pictures, start with the [illustrated tutorial](ILLUSTRATED_GUIDE.md). This page is the detailed control reference.
+# Crepuscular Homunculus 0.26.19-dev controls
 
 ## Candidate 0.26.17: confirmed HOME reset
 
@@ -41,8 +39,8 @@ uses exact native pixels/colours, including its animated skin and lightning;
 THORN RIFT retains its reduced-detail/four-colour interior stream. Switching
 restores all mirror tiles, with no manual PC setting. The FM-1 LCD is unchanged.
 Both reuse existing compression, dirty tiles, lease and USB admission budgets.
-There is no new screen command or saved field. The existing compact-capable
-mirror protocol accepts lossless tiles on the same negotiated subscription.
+There is no new screen command or saved field. An existing compact-capable
+companion accepts the lossless tiles on the same negotiated subscription.
 
 ## Homunculus HOME choice — 0.26.10-dev
 
@@ -51,12 +49,8 @@ HOMUNCULUS (left/default) or THORN RIFT (right). HOME returns; SAVE remembers
 after complete silence. The creator splash is unchanged.
 
 In SEQ, select one of the four tracks and press HOME to edit its captured
-sound independently; HOME again returns to LIVE. To open the piano roll:
-**SEQ → hold SEL (700 ms) for ARRANGEMENT → tap SEL for STEP EDIT →
-hold SEL (700 ms) for PIANO ROLL**. Release SEL between gestures.
-STEP EDIT is the arrangement note editor; it is different from the SEQ EDIT
-step-entry mode opened with the EDIT button. EDIT or held SEL returns from
-the piano roll to STEP EDIT. See [piano-roll controls](PIANO_ROLL.md).
+sound independently; HOME again returns to LIVE. In step editing, hold SEL
+for the piano roll to edit individual note lengths/velocities.
 
 The FM-1's detented Knobs 1–4 have distinct jobs on each parameter page.
 SELECT chooses the sequencer track, ALGORITHM chooses its A–D bank, and
@@ -185,9 +179,8 @@ The control remap adds no instrument voices or captured-patch fields. The
 metronome adds a small click generator included in GLO's render timing and four
 saved fields in **schema 11, 3,700 bytes**. Existing schema-10 settings migrate
 with the click off at level 32 and 4/4. After a 0.19 SAVE, downgrading to 0.18
-or earlier starts with factory settings. Current physical SAVE retains all sixteen pattern banks, captures and settings.
-See [save compatibility](CATALOG_REVISION_2.md) for the current journal and migration.
-Save separate copies of important patterns before changing firmware.
+or earlier starts with factory settings. Physical SAVE retains four active
+patterns. Save separate copies of important patterns before changing firmware.
 CONTROL FEEL reuses a previously reserved byte without changing schema 11's
 size or song protocol. Host tests and previews do not qualify physical encoder/hold response, device
 audio timing or USB latency. See [testing](TESTING.md).

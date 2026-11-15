@@ -2,7 +2,7 @@
   "version": 1,
   "legacy_count": 36,
   "default_drum_preset": 30,
-  "bank_version": "0.26.18-dev",
+  "bank_version": "0.26.23-night-suture1",
   "authorship": "New slots 37\u00e2\u20ac\u201c64 independently authored for TERKINSTEIN from its own engine controls. No external patch data, sample files or bank dumps were imported.",
   "presets": [
     {
@@ -2424,78 +2424,3923 @@
         "pitch_depth": 24,
         "pitch_time": 0
       }
+    },
+    {
+      "id": 66,
+      "name": "ASH CHOIR",
+      "instrument": 0,
+      "macros": [
+        22,
+        0,
+        42,
+        116
+      ],
+      "memory": 30,
+      "fx": 0,
+      "attack": 110,
+      "release": 115,
+      "lfo": [
+        1,
+        0,
+        17,
+        17
+      ],
+      "role": "atmosphere",
+      "description": "Dark breath swell: slow attack, soft low-pass, gently beating stereo.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 67,
+      "name": "RUST HALO",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Rusty struck tine: strong initial metallic transient which decays into a soft fundamental.",
+      "fm_index": 14,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            118,
+            0,
+            63,
+            5,
+            32
+          ],
+          [
+            3,
+            58,
+            0,
+            19,
+            0,
+            32
+          ],
+          [
+            7,
+            32,
+            0,
+            11,
+            0,
+            32
+          ],
+          [
+            2,
+            17,
+            0,
+            28,
+            0,
+            32
+          ],
+          [
+            9,
+            9,
+            0,
+            8,
+            0,
+            32
+          ],
+          [
+            13,
+            5,
+            0,
+            6,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 8,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 68,
+      "name": "BLACK GLASS",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Hard black-glass mallet: inharmonic attack, no held organ sustain.",
+      "fm_index": 15,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            120,
+            0,
+            51,
+            0,
+            43
+          ],
+          [
+            7,
+            45,
+            0,
+            12,
+            0,
+            13
+          ],
+          [
+            2,
+            74,
+            0,
+            64,
+            0,
+            57
+          ],
+          [
+            11,
+            28,
+            0,
+            17,
+            0,
+            21
+          ],
+          [
+            5,
+            45,
+            0,
+            74,
+            0,
+            68
+          ],
+          [
+            17,
+            17,
+            0,
+            24,
+            0,
+            27
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 69,
+      "name": "VEIL ENGINE",
+      "instrument": 0,
+      "macros": [
+        92,
+        8,
+        12,
+        124
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 119,
+      "release": 103,
+      "lfo": [
+        1,
+        2,
+        25,
+        57
+      ],
+      "role": "atmosphere",
+      "description": "Veiled rising sweep: long bloom and broad slow ramp.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 70,
+      "name": "CHAPEL GLASS",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Chapel glass bell: two long decaying partial clusters, no constant sustained carrier.",
+      "fm_index": 16,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            119,
+            0,
+            113,
+            0,
+            113
+          ],
+          [
+            3,
+            66,
+            0,
+            67,
+            0,
+            70
+          ],
+          [
+            8,
+            25,
+            0,
+            36,
+            0,
+            40
+          ],
+          [
+            2,
+            80,
+            0,
+            106,
+            0,
+            105
+          ],
+          [
+            5,
+            35,
+            0,
+            82,
+            0,
+            80
+          ],
+          [
+            13,
+            14,
+            0,
+            42,
+            0,
+            45
+          ]
+        ],
+        "algorithm": 1,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 71,
+      "name": "WIRE HYMNS",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "Plucked wire with a brief falling spectral attack and a thin sustained core.",
+      "fm_index": 17,
+      "fm_patch": {
+        "operators": [
+          [
+            2,
+            125,
+            0,
+            37,
+            13,
+            32
+          ],
+          [
+            7,
+            108,
+            0,
+            21,
+            0,
+            32
+          ],
+          [
+            11,
+            71,
+            0,
+            13,
+            0,
+            32
+          ],
+          [
+            3,
+            48,
+            0,
+            9,
+            0,
+            32
+          ],
+          [
+            19,
+            30,
+            0,
+            6,
+            0,
+            32
+          ],
+          [
+            29,
+            15,
+            0,
+            4,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 0,
+        "feedback": 24,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 72,
+      "name": "ASHEN TIDE",
+      "instrument": 0,
+      "macros": [
+        67,
+        6,
+        115,
+        92
+      ],
+      "memory": 50,
+      "fx": 0,
+      "attack": 85,
+      "release": 98,
+      "lfo": [
+        1,
+        0,
+        74,
+        49
+      ],
+      "role": "atmosphere",
+      "description": "Wide tidal beating with a much quicker brightness cycle.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 73,
+      "name": "GRAVE CLOCK",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Dry wooden clock tick: fast amplitude decay, slightly pitched downward transient.",
+      "fm_index": 18,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            116,
+            0,
+            14,
+            0,
+            8
+          ],
+          [
+            2,
+            33,
+            0,
+            9,
+            0,
+            8
+          ],
+          [
+            5,
+            20,
+            0,
+            7,
+            0,
+            8
+          ],
+          [
+            9,
+            12,
+            0,
+            6,
+            0,
+            8
+          ],
+          [
+            13,
+            8,
+            0,
+            4,
+            0,
+            8
+          ],
+          [
+            21,
+            4,
+            0,
+            3,
+            0,
+            8
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 29,
+        "pitch_time": 6
+      },
+      "velocity": true
+    },
+    {
+      "id": 74,
+      "name": "NOCTURNE 13",
+      "instrument": 0,
+      "macros": [
+        4,
+        0,
+        2,
+        127
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 127,
+      "release": 127,
+      "lfo": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "role": "atmosphere",
+      "description": "Almost-static low dark drone: gradual onset and exceptionally long fade.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 75,
+      "name": "SALT STATIC",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Short noisy salt burst: high-ratio sidebands dissolve quickly.",
+      "fm_index": 19,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            113,
+            0,
+            28,
+            0,
+            32
+          ],
+          [
+            13,
+            100,
+            0,
+            9,
+            0,
+            32
+          ],
+          [
+            19,
+            68,
+            0,
+            13,
+            0,
+            32
+          ],
+          [
+            7,
+            53,
+            0,
+            7,
+            0,
+            32
+          ],
+          [
+            23,
+            41,
+            0,
+            6,
+            0,
+            32
+          ],
+          [
+            31,
+            28,
+            0,
+            4,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 0,
+        "feedback": 91,
+        "pitch_depth": 27,
+        "pitch_time": 4
+      },
+      "velocity": true
+    },
+    {
+      "id": 76,
+      "name": "CATHODE MOTH",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "Narrow insect chirp: rising pitch onset, fading upper spectrum.",
+      "fm_index": 20,
+      "fm_patch": {
+        "operators": [
+          [
+            2,
+            112,
+            0,
+            37,
+            17,
+            32
+          ],
+          [
+            9,
+            62,
+            0,
+            13,
+            0,
+            32
+          ],
+          [
+            1,
+            27,
+            0,
+            20,
+            0,
+            32
+          ],
+          [
+            7,
+            18,
+            0,
+            11,
+            0,
+            32
+          ],
+          [
+            17,
+            8,
+            0,
+            7,
+            0,
+            32
+          ],
+          [
+            29,
+            4,
+            0,
+            5,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 0,
+        "pitch_depth": 17,
+        "pitch_time": 18
+      },
+      "velocity": true
+    },
+    {
+      "id": 77,
+      "name": "IRON PSALM",
+      "instrument": 1,
+      "macros": [
+        120,
+        127,
+        0,
+        12
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 5,
+      "lfo": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "role": "keys",
+      "description": "Dry hammered iron: immediate aggressive ring, very short tail.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 78,
+      "name": "FURNACE VOW",
+      "instrument": 1,
+      "macros": [
+        17,
+        42,
+        73,
+        123
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 113,
+      "release": 122,
+      "lfo": [
+        1,
+        0,
+        14,
+        22
+      ],
+      "role": "atmosphere",
+      "description": "Slow furnace rise with dark beating overtones.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 79,
+      "name": "SHARD CROWN",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Sharp crystalline shard: sparse high odd-ratio carriers, short bright ping.",
+      "fm_index": 21,
+      "fm_patch": {
+        "operators": [
+          [
+            3,
+            105,
+            0,
+            49,
+            0,
+            37
+          ],
+          [
+            7,
+            70,
+            0,
+            35,
+            0,
+            37
+          ],
+          [
+            11,
+            45,
+            0,
+            28,
+            0,
+            37
+          ],
+          [
+            17,
+            28,
+            0,
+            21,
+            0,
+            37
+          ],
+          [
+            23,
+            17,
+            0,
+            16,
+            0,
+            37
+          ],
+          [
+            31,
+            10,
+            0,
+            11,
+            0,
+            37
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 80,
+      "name": "ANVIL SERAPH",
+      "instrument": 1,
+      "macros": [
+        91,
+        83,
+        38,
+        109
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 8,
+      "release": 111,
+      "lfo": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "role": "keys",
+      "description": "Long resonant anvil with a clear bright initial strike.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 81,
+      "name": "VOLT TEETH",
+      "instrument": 1,
+      "macros": [
+        127,
+        127,
+        100,
+        33
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 25,
+      "lfo": [
+        1,
+        1,
+        119,
+        42
+      ],
+      "role": "keys",
+      "description": "Brittle electrical buzz with fast pulse movement.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 82,
+      "name": "RUST TALON",
+      "instrument": 3,
+      "macros": [
+        70,
+        4,
+        0,
+        15
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Tight claw bass: half-ratio sub plus a short rasp transient.",
+      "fm_index": 22,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            126,
+            0,
+            24,
+            36,
+            32
+          ],
+          [
+            1,
+            73,
+            0,
+            8,
+            0,
+            32
+          ],
+          [
+            3,
+            32,
+            0,
+            13,
+            0,
+            32
+          ],
+          [
+            5,
+            16,
+            0,
+            9,
+            0,
+            32
+          ],
+          [
+            7,
+            8,
+            0,
+            5,
+            0,
+            32
+          ],
+          [
+            11,
+            3,
+            0,
+            4,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 38,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 83,
+      "name": "BLADE REQUIEM",
+      "instrument": 1,
+      "macros": [
+        50,
+        28,
+        118,
+        127
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 121,
+      "release": 126,
+      "lfo": [
+        1,
+        2,
+        19,
+        36
+      ],
+      "role": "atmosphere",
+      "description": "Long bowed-metal sweep, strongly detuned and slow to bloom.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 84,
+      "name": "TOMB CURRENT",
+      "instrument": 3,
+      "macros": [
+        35,
+        0,
+        0,
+        30
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Hollow tomb bass: clean half-ratio body under an octave knock.",
+      "fm_index": 23,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            127,
+            0,
+            94,
+            65,
+            32
+          ],
+          [
+            2,
+            28,
+            0,
+            17,
+            0,
+            32
+          ],
+          [
+            1,
+            78,
+            0,
+            38,
+            8,
+            32
+          ],
+          [
+            3,
+            17,
+            0,
+            12,
+            0,
+            32
+          ],
+          [
+            2,
+            33,
+            0,
+            55,
+            0,
+            32
+          ],
+          [
+            7,
+            8,
+            0,
+            9,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 85,
+      "name": "SLAG PULSE",
+      "instrument": 1,
+      "macros": [
+        28,
+        119,
+        3,
+        9
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 0,
+      "lfo": [
+        1,
+        1,
+        112,
+        25
+      ],
+      "role": "keys",
+      "description": "Short dark industrial pulse; minimal ring.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 86,
+      "name": "QUAKE ENGINE",
+      "instrument": 1,
+      "macros": [
+        7,
+        112,
+        24,
+        120
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 27,
+      "release": 120,
+      "lfo": [
+        1,
+        0,
+        35,
+        6
+      ],
+      "role": "keys",
+      "description": "Low filtered quake with a slow heavy tail.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 87,
+      "name": "HOLLOW ROOT",
+      "instrument": 3,
+      "macros": [
+        20,
+        0,
+        0,
+        10
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Pure decaying sub: low sine body with almost no upper harmonic content.",
+      "fm_index": 24,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            127,
+            0,
+            91,
+            20,
+            32
+          ],
+          [
+            1,
+            10,
+            0,
+            17,
+            0,
+            32
+          ],
+          [
+            2,
+            0,
+            0,
+            5,
+            0,
+            32
+          ],
+          [
+            3,
+            0,
+            0,
+            5,
+            0,
+            32
+          ],
+          [
+            5,
+            0,
+            0,
+            5,
+            0,
+            32
+          ],
+          [
+            7,
+            0,
+            0,
+            5,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 88,
+      "name": "GRIT PILGRIM",
+      "instrument": 1,
+      "macros": [
+        108,
+        127,
+        8,
+        26
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 15,
+      "lfo": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "role": "keys",
+      "description": "Forward gritty strike; narrow pitch beating and short damp.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 89,
+      "name": "OBSIDIAN KEYS",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Obsidian muted electric key: woody transient and fast damping, velocity expressive.",
+      "fm_index": 25,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            122,
+            0,
+            47,
+            0,
+            24
+          ],
+          [
+            2,
+            29,
+            0,
+            12,
+            0,
+            10
+          ],
+          [
+            2,
+            63,
+            0,
+            31,
+            0,
+            19
+          ],
+          [
+            5,
+            17,
+            0,
+            9,
+            0,
+            8
+          ],
+          [
+            3,
+            25,
+            0,
+            22,
+            0,
+            13
+          ],
+          [
+            7,
+            8,
+            0,
+            8,
+            0,
+            6
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 90,
+      "name": "SULFUR TONGUE",
+      "instrument": 3,
+      "macros": [
+        90,
+        8,
+        0,
+        49
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "Sulfur reed: snarling short modulator transient into a nasal sustained carrier.",
+      "fm_index": 26,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            123,
+            0,
+            55,
+            59,
+            32
+          ],
+          [
+            3,
+            89,
+            0,
+            21,
+            12,
+            32
+          ],
+          [
+            1,
+            58,
+            0,
+            82,
+            39,
+            32
+          ],
+          [
+            5,
+            37,
+            0,
+            17,
+            0,
+            32
+          ],
+          [
+            9,
+            16,
+            0,
+            13,
+            0,
+            32
+          ],
+          [
+            13,
+            7,
+            0,
+            9,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 3,
+        "feedback": 64,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 91,
+      "name": "TARNISH BELL",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Tarnished tubular bell: wide noninteger-like partial spacing and very long decay.",
+      "fm_index": 27,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            124,
+            0,
+            126,
+            0,
+            122
+          ],
+          [
+            5,
+            83,
+            0,
+            111,
+            0,
+            100
+          ],
+          [
+            11,
+            54,
+            0,
+            91,
+            0,
+            82
+          ],
+          [
+            17,
+            26,
+            0,
+            70,
+            0,
+            64
+          ],
+          [
+            23,
+            15,
+            0,
+            54,
+            0,
+            51
+          ],
+          [
+            29,
+            7,
+            0,
+            37,
+            0,
+            35
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 13,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 92,
+      "name": "SABLE NEEDLES",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Needle staccato: high bright additive spikes, nearly instant damping.",
+      "fm_index": 28,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            116,
+            0,
+            17,
+            0,
+            6
+          ],
+          [
+            5,
+            73,
+            0,
+            11,
+            0,
+            6
+          ],
+          [
+            9,
+            42,
+            0,
+            8,
+            0,
+            6
+          ],
+          [
+            13,
+            24,
+            0,
+            6,
+            0,
+            6
+          ],
+          [
+            17,
+            15,
+            0,
+            5,
+            0,
+            6
+          ],
+          [
+            25,
+            9,
+            0,
+            4,
+            0,
+            6
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 93,
+      "name": "GRAVE HAMMER",
+      "instrument": 3,
+      "macros": [
+        73,
+        0,
+        0,
+        44
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Heavy hammer bass: brief downward pitch strike followed by a round decay.",
+      "fm_index": 29,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            127,
+            0,
+            63,
+            0,
+            32
+          ],
+          [
+            1,
+            89,
+            0,
+            12,
+            0,
+            32
+          ],
+          [
+            2,
+            38,
+            0,
+            17,
+            0,
+            32
+          ],
+          [
+            3,
+            18,
+            0,
+            10,
+            0,
+            32
+          ],
+          [
+            5,
+            8,
+            0,
+            7,
+            0,
+            32
+          ],
+          [
+            7,
+            4,
+            0,
+            4,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 20,
+        "pitch_depth": 36,
+        "pitch_time": 10
+      },
+      "velocity": true
+    },
+    {
+      "id": 94,
+      "name": "PALLID CHOIR",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "atmosphere",
+      "description": "Pale shifting choir: three unusual carrier ratios with staggered spectral decay.",
+      "fm_index": 30,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            122,
+            31,
+            127,
+            87,
+            119
+          ],
+          [
+            5,
+            73,
+            48,
+            119,
+            49,
+            113
+          ],
+          [
+            2,
+            91,
+            4,
+            44,
+            0,
+            72
+          ],
+          [
+            11,
+            51,
+            23,
+            106,
+            26,
+            105
+          ],
+          [
+            7,
+            46,
+            2,
+            33,
+            0,
+            61
+          ],
+          [
+            19,
+            29,
+            0,
+            21,
+            0,
+            43
+          ]
+        ],
+        "algorithm": 5,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": false
+    },
+    {
+      "id": 95,
+      "name": "MIRROR INK",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "atmosphere",
+      "description": "Mirrored delayed-onset partials: six additive tones arrive at different times and decay independently.",
+      "fm_index": 31,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            100,
+            21,
+            103,
+            0,
+            94
+          ],
+          [
+            2,
+            79,
+            47,
+            84,
+            0,
+            94
+          ],
+          [
+            3,
+            61,
+            68,
+            112,
+            0,
+            94
+          ],
+          [
+            5,
+            42,
+            89,
+            72,
+            0,
+            94
+          ],
+          [
+            7,
+            28,
+            108,
+            95,
+            0,
+            94
+          ],
+          [
+            11,
+            16,
+            124,
+            54,
+            0,
+            94
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": false
+    },
+    {
+      "id": 96,
+      "name": "RIVEN SIGNAL",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "Broken radio pulse: dense nested sidebands, short bright chirp then sparse sustain.",
+      "fm_index": 32,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            118,
+            0,
+            71,
+            31,
+            32
+          ],
+          [
+            7,
+            88,
+            0,
+            18,
+            4,
+            32
+          ],
+          [
+            2,
+            65,
+            0,
+            37,
+            0,
+            32
+          ],
+          [
+            13,
+            44,
+            0,
+            11,
+            0,
+            32
+          ],
+          [
+            5,
+            25,
+            0,
+            9,
+            0,
+            32
+          ],
+          [
+            23,
+            12,
+            0,
+            6,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 0,
+        "feedback": 105,
+        "pitch_depth": 20,
+        "pitch_time": 24
+      },
+      "velocity": true
+    },
+    {
+      "id": 97,
+      "name": "NERVE CHOIR",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "atmosphere",
+      "description": "Breathing FM choir: carrier swells while modulators fade, shifting from rough to pure.",
+      "fm_index": 33,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            118,
+            34,
+            119,
+            72,
+            113
+          ],
+          [
+            2,
+            72,
+            6,
+            48,
+            0,
+            80
+          ],
+          [
+            7,
+            28,
+            0,
+            24,
+            0,
+            40
+          ],
+          [
+            1,
+            98,
+            52,
+            127,
+            65,
+            122
+          ],
+          [
+            3,
+            41,
+            16,
+            74,
+            0,
+            90
+          ],
+          [
+            11,
+            12,
+            1,
+            32,
+            0,
+            52
+          ]
+        ],
+        "algorithm": 1,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": false
+    },
+    {
+      "id": 98,
+      "name": "CRUCIBLE",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "Crucible brass: quick spectral flare into a strong broad held tone.",
+      "fm_index": 34,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            125,
+            0,
+            64,
+            90,
+            32
+          ],
+          [
+            1,
+            102,
+            0,
+            26,
+            36,
+            32
+          ],
+          [
+            2,
+            61,
+            0,
+            39,
+            15,
+            32
+          ],
+          [
+            3,
+            37,
+            0,
+            18,
+            0,
+            32
+          ],
+          [
+            5,
+            21,
+            0,
+            13,
+            0,
+            32
+          ],
+          [
+            7,
+            12,
+            0,
+            9,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 29,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 99,
+      "name": "BONE WIRE",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Bone wire harp: two contrasting plucked strings with nearly absent sustain.",
+      "fm_index": 35,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            119,
+            0,
+            75,
+            0,
+            56
+          ],
+          [
+            3,
+            44,
+            0,
+            21,
+            0,
+            15
+          ],
+          [
+            2,
+            94,
+            0,
+            93,
+            0,
+            75
+          ],
+          [
+            7,
+            31,
+            0,
+            36,
+            0,
+            27
+          ],
+          [
+            3,
+            61,
+            0,
+            109,
+            0,
+            89
+          ],
+          [
+            11,
+            17,
+            0,
+            51,
+            0,
+            42
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 100,
+      "name": "SPECTRAL GRAFT",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "atmosphere",
+      "description": "Spectral graft: staggered FM swells and unequal releases, slowly changing overtone balance.",
+      "fm_index": 36,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            124,
+            57,
+            127,
+            83,
+            123
+          ],
+          [
+            1,
+            88,
+            20,
+            77,
+            0,
+            74
+          ],
+          [
+            3,
+            62,
+            43,
+            103,
+            32,
+            108
+          ],
+          [
+            5,
+            42,
+            5,
+            54,
+            0,
+            50
+          ],
+          [
+            9,
+            27,
+            31,
+            84,
+            0,
+            87
+          ],
+          [
+            17,
+            15,
+            1,
+            36,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 0,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": false
+    },
+    {
+      "id": 101,
+      "name": "TAR MARROW",
+      "instrument": 1,
+      "macros": [
+        5,
+        82,
+        95,
+        78
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 4,
+      "release": 70,
+      "lfo": [
+        1,
+        2,
+        51,
+        27
+      ],
+      "role": "keys",
+      "description": "Thick low tar grind with audible moving sidebands.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 102,
+      "name": "COIL BURROW",
+      "instrument": 3,
+      "macros": [
+        112,
+        0,
+        0,
+        52
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Coiled acid bass: bright short squelch over a low held sub carrier.",
+      "fm_index": 37,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            126,
+            0,
+            76,
+            70,
+            32
+          ],
+          [
+            1,
+            111,
+            0,
+            24,
+            0,
+            32
+          ],
+          [
+            2,
+            73,
+            0,
+            16,
+            0,
+            32
+          ],
+          [
+            3,
+            45,
+            0,
+            11,
+            0,
+            32
+          ],
+          [
+            7,
+            24,
+            0,
+            8,
+            0,
+            32
+          ],
+          [
+            13,
+            11,
+            0,
+            5,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 0,
+        "feedback": 78,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 103,
+      "name": "MOSS CAPACITOR",
+      "instrument": 0,
+      "macros": [
+        35,
+        0,
+        80,
+        62
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 70,
+      "release": 58,
+      "lfo": [
+        1,
+        2,
+        57,
+        30
+      ],
+      "role": "atmosphere",
+      "description": "Damped moss pulse with asymmetrical brightness opening.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 104,
+      "name": "CINDER PISTON",
+      "instrument": 1,
+      "macros": [
+        98,
+        104,
+        5,
+        15
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 8,
+      "lfo": [
+        1,
+        1,
+        127,
+        49
+      ],
+      "role": "keys",
+      "description": "Sharp piston click with rapid gate-like colour.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 105,
+      "name": "HUSK CURRENT",
+      "instrument": 3,
+      "macros": [
+        50,
+        0,
+        0,
+        20
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Dry husk marimba: low, rounded paired plucks with a short upper knock.",
+      "fm_index": 38,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            123,
+            0,
+            67,
+            0,
+            32
+          ],
+          [
+            2,
+            28,
+            0,
+            14,
+            0,
+            32
+          ],
+          [
+            2,
+            77,
+            0,
+            45,
+            0,
+            32
+          ],
+          [
+            3,
+            14,
+            0,
+            10,
+            0,
+            32
+          ],
+          [
+            3,
+            33,
+            0,
+            31,
+            0,
+            32
+          ],
+          [
+            5,
+            7,
+            0,
+            7,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 106,
+      "name": "ROOT TERMINAL",
+      "instrument": 3,
+      "macros": [
+        18,
+        0,
+        0,
+        9
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Terminal sub thud: short filtered amplitude decay and a deep downward pitch transient.",
+      "fm_index": 39,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            127,
+            0,
+            42,
+            0,
+            32
+          ],
+          [
+            1,
+            40,
+            0,
+            17,
+            0,
+            32
+          ],
+          [
+            2,
+            15,
+            0,
+            11,
+            0,
+            32
+          ],
+          [
+            3,
+            5,
+            0,
+            7,
+            0,
+            32
+          ],
+          [
+            5,
+            0,
+            0,
+            5,
+            0,
+            32
+          ],
+          [
+            7,
+            0,
+            0,
+            5,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 43,
+        "pitch_time": 17
+      },
+      "velocity": true
+    },
+    {
+      "id": 107,
+      "name": "FANG RELAY",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "Fanged sync-like lead: harsh nested modulation with a sharp decaying bite.",
+      "fm_index": 40,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            124,
+            0,
+            93,
+            92,
+            32
+          ],
+          [
+            2,
+            113,
+            0,
+            24,
+            17,
+            32
+          ],
+          [
+            1,
+            75,
+            0,
+            111,
+            41,
+            32
+          ],
+          [
+            5,
+            57,
+            0,
+            17,
+            0,
+            32
+          ],
+          [
+            11,
+            31,
+            0,
+            11,
+            0,
+            32
+          ],
+          [
+            19,
+            17,
+            0,
+            7,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 3,
+        "feedback": 114,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 108,
+      "name": "ION STITCH",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "lead",
+      "description": "Ionic rising laser: obvious upward pitch sweep with a bright rapidly thinning tail.",
+      "fm_index": 41,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            122,
+            0,
+            91,
+            18,
+            32
+          ],
+          [
+            5,
+            91,
+            0,
+            32,
+            0,
+            32
+          ],
+          [
+            2,
+            46,
+            0,
+            23,
+            0,
+            32
+          ],
+          [
+            11,
+            27,
+            0,
+            15,
+            0,
+            32
+          ],
+          [
+            19,
+            13,
+            0,
+            9,
+            0,
+            32
+          ],
+          [
+            29,
+            5,
+            0,
+            6,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 0,
+        "pitch_depth": 6,
+        "pitch_time": 38
+      },
+      "velocity": true
+    },
+    {
+      "id": 109,
+      "name": "VELVET FAULT",
+      "instrument": 3,
+      "macros": [
+        37,
+        0,
+        0,
+        18
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Velvet thumb piano: soft low-partial pluck, short release and no held sustain.",
+      "fm_index": 42,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            124,
+            0,
+            61,
+            0,
+            33
+          ],
+          [
+            2,
+            30,
+            0,
+            41,
+            0,
+            33
+          ],
+          [
+            3,
+            13,
+            0,
+            30,
+            0,
+            33
+          ],
+          [
+            4,
+            5,
+            0,
+            23,
+            0,
+            33
+          ],
+          [
+            5,
+            2,
+            0,
+            17,
+            0,
+            33
+          ],
+          [
+            6,
+            1,
+            0,
+            12,
+            0,
+            33
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 110,
+      "name": "SCAR VOLTAGE",
+      "instrument": 1,
+      "macros": [
+        123,
+        58,
+        121,
+        69
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 12,
+      "release": 62,
+      "lfo": [
+        1,
+        0,
+        88,
+        18
+      ],
+      "role": "keys",
+      "description": "Bright scarred stereo tremor with moderate ring.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 111,
+      "name": "MOTH CIRCUIT",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "atmosphere",
+      "description": "Moth shimmer: delayed upper partials, high overtone cluster and soft irregular decay.",
+      "fm_index": 43,
+      "fm_patch": {
+        "operators": [
+          [
+            3,
+            117,
+            4,
+            123,
+            0,
+            114
+          ],
+          [
+            7,
+            96,
+            19,
+            109,
+            0,
+            102
+          ],
+          [
+            11,
+            73,
+            36,
+            92,
+            0,
+            87
+          ],
+          [
+            17,
+            51,
+            58,
+            74,
+            0,
+            71
+          ],
+          [
+            23,
+            34,
+            79,
+            58,
+            0,
+            55
+          ],
+          [
+            31,
+            22,
+            103,
+            43,
+            0,
+            41
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": false
+    },
+    {
+      "id": 112,
+      "name": "NIGHT SUTURE",
+      "instrument": 3,
+      "macros": [
+        25,
+        0,
+        0,
+        50
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Night suture: soft dark struck chord voice with unequal additive decays.",
+      "fm_index": 44,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            124,
+            0,
+            103,
+            0,
+            32
+          ],
+          [
+            2,
+            61,
+            0,
+            72,
+            0,
+            32
+          ],
+          [
+            3,
+            39,
+            0,
+            49,
+            0,
+            32
+          ],
+          [
+            5,
+            21,
+            0,
+            33,
+            0,
+            32
+          ],
+          [
+            7,
+            13,
+            0,
+            22,
+            0,
+            32
+          ],
+          [
+            9,
+            7,
+            0,
+            15,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 113,
+      "name": "BONE SPARKS",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Bone sparks: three tiny bell attacks with very high short sidebands.",
+      "fm_index": 45,
+      "fm_patch": {
+        "operators": [
+          [
+            2,
+            118,
+            0,
+            42,
+            0,
+            21
+          ],
+          [
+            11,
+            66,
+            0,
+            9,
+            0,
+            21
+          ],
+          [
+            5,
+            73,
+            0,
+            28,
+            0,
+            21
+          ],
+          [
+            19,
+            43,
+            0,
+            7,
+            0,
+            21
+          ],
+          [
+            9,
+            35,
+            0,
+            19,
+            0,
+            21
+          ],
+          [
+            31,
+            22,
+            0,
+            5,
+            0,
+            21
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 114,
+      "name": "VELLUM PRONG",
+      "instrument": 3,
+      "macros": [
+        63,
+        0,
+        0,
+        13
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Vellum prong: dry low metallic kalimba with a pitched paper-like transient.",
+      "fm_index": 46,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            125,
+            0,
+            38,
+            0,
+            32
+          ],
+          [
+            7,
+            47,
+            0,
+            13,
+            0,
+            32
+          ],
+          [
+            3,
+            23,
+            0,
+            9,
+            0,
+            32
+          ],
+          [
+            13,
+            11,
+            0,
+            6,
+            0,
+            32
+          ],
+          [
+            17,
+            5,
+            0,
+            4,
+            0,
+            32
+          ],
+          [
+            23,
+            2,
+            0,
+            3,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 0,
+        "pitch_depth": 26,
+        "pitch_time": 4
+      },
+      "velocity": true
+    },
+    {
+      "id": 115,
+      "name": "OXIDE CHIMES",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Oxide chimes: bright six-tone cluster with progressively longer high partial decays.",
+      "fm_index": 47,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            109,
+            0,
+            65,
+            0,
+            62
+          ],
+          [
+            3,
+            82,
+            0,
+            79,
+            0,
+            77
+          ],
+          [
+            5,
+            59,
+            0,
+            93,
+            0,
+            90
+          ],
+          [
+            8,
+            39,
+            0,
+            106,
+            0,
+            102
+          ],
+          [
+            13,
+            24,
+            0,
+            117,
+            0,
+            114
+          ],
+          [
+            21,
+            15,
+            0,
+            127,
+            0,
+            124
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 116,
+      "name": "WICKED FELT",
+      "instrument": 3,
+      "macros": [
+        72,
+        0,
+        0,
+        38
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Wicked felt piano: hard hammer transient into three muted decaying partial pairs.",
+      "fm_index": 48,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            124,
+            0,
+            73,
+            0,
+            47
+          ],
+          [
+            3,
+            48,
+            0,
+            17,
+            0,
+            13
+          ],
+          [
+            2,
+            83,
+            0,
+            55,
+            0,
+            36
+          ],
+          [
+            5,
+            29,
+            0,
+            13,
+            0,
+            10
+          ],
+          [
+            4,
+            39,
+            0,
+            37,
+            0,
+            27
+          ],
+          [
+            9,
+            13,
+            0,
+            9,
+            0,
+            7
+          ]
+        ],
+        "algorithm": 2,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 117,
+      "name": "GLASS VERTEBRA",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Glass vertebra: thin high struck glass with a long low body and short high splinters.",
+      "fm_index": 49,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            123,
+            0,
+            124,
+            0,
+            119
+          ],
+          [
+            9,
+            61,
+            0,
+            38,
+            0,
+            36
+          ],
+          [
+            17,
+            23,
+            0,
+            17,
+            0,
+            16
+          ],
+          [
+            3,
+            66,
+            0,
+            91,
+            0,
+            88
+          ],
+          [
+            13,
+            37,
+            0,
+            24,
+            0,
+            22
+          ],
+          [
+            29,
+            11,
+            0,
+            11,
+            0,
+            10
+          ]
+        ],
+        "algorithm": 1,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 118,
+      "name": "LANTERN RATTLE",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "keys",
+      "description": "Lantern rattle: noisy short falling ring, high feedback and rapidly decaying modulators.",
+      "fm_index": 50,
+      "fm_patch": {
+        "operators": [
+          [
+            1,
+            120,
+            0,
+            44,
+            0,
+            32
+          ],
+          [
+            11,
+            112,
+            0,
+            17,
+            0,
+            32
+          ],
+          [
+            17,
+            83,
+            0,
+            11,
+            0,
+            32
+          ],
+          [
+            23,
+            57,
+            0,
+            8,
+            0,
+            32
+          ],
+          [
+            29,
+            39,
+            0,
+            6,
+            0,
+            32
+          ],
+          [
+            31,
+            25,
+            0,
+            4,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 0,
+        "feedback": 127,
+        "pitch_depth": 31,
+        "pitch_time": 13
+      },
+      "velocity": true
+    },
+    {
+      "id": 119,
+      "name": "DUST CASKET",
+      "instrument": 2,
+      "macros": [
+        107,
+        119,
+        120,
+        7
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 100,
+      "lfo": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "role": "kit",
+      "description": "Long dirty high-body kit: noisy wire and extended ringing decay.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 120,
+      "name": "CHROME FUNERAL",
+      "instrument": 2,
+      "macros": [
+        127,
+        0,
+        16,
+        127
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 0,
+      "release": 8,
+      "lfo": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "role": "kit",
+      "description": "Bright tight tuned kit: raised body pitch, dry wire, sharply damped decay.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": true
+    },
+    {
+      "id": 121,
+      "name": "VEIN WEATHER",
+      "instrument": 0,
+      "macros": [
+        67,
+        9,
+        40,
+        105
+      ],
+      "memory": 80,
+      "fx": 0,
+      "attack": 94,
+      "release": 91,
+      "lfo": [
+        1,
+        1,
+        106,
+        62
+      ],
+      "role": "atmosphere",
+      "description": "Hard-edged pulsing weather: strong square-wave timbral motion.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 122,
+      "name": "NOCTILUCE VAT",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "atmosphere",
+      "description": "Noctiluce bowed glass: very slow additive rise with soft dissonant partial entries.",
+      "fm_index": 51,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            89,
+            60,
+            127,
+            90,
+            127
+          ],
+          [
+            1,
+            116,
+            41,
+            127,
+            108,
+            127
+          ],
+          [
+            3,
+            57,
+            66,
+            113,
+            62,
+            127
+          ],
+          [
+            7,
+            28,
+            29,
+            97,
+            36,
+            127
+          ],
+          [
+            11,
+            15,
+            52,
+            83,
+            17,
+            127
+          ],
+          [
+            17,
+            7,
+            17,
+            69,
+            0,
+            127
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": false
+    },
+    {
+      "id": 123,
+      "name": "LICHEN VECTOR",
+      "instrument": 0,
+      "macros": [
+        83,
+        0,
+        127,
+        82
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 56,
+      "release": 76,
+      "lfo": [
+        1,
+        2,
+        96,
+        41
+      ],
+      "role": "atmosphere",
+      "description": "Fast drifting stereo ramp with a shorter attack than the other pads.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 124,
+      "name": "SUTURE FOG",
+      "instrument": 1,
+      "macros": [
+        8,
+        14,
+        127,
+        113
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 108,
+      "release": 116,
+      "lfo": [
+        1,
+        2,
+        12,
+        8
+      ],
+      "role": "atmosphere",
+      "description": "Soft inharmonic fog, extreme detuning and restrained drive.",
+      "fm_index": null,
+      "fm_patch": null,
+      "velocity": false
+    },
+    {
+      "id": 125,
+      "name": "HOLLOW EMBER",
+      "instrument": 3,
+      "macros": [
+        29,
+        0,
+        0,
+        73
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "bass",
+      "description": "Hollow ember: low decaying sine with a small hot overtone which dies much faster.",
+      "fm_index": 52,
+      "fm_patch": {
+        "operators": [
+          [
+            0,
+            127,
+            0,
+            113,
+            0,
+            32
+          ],
+          [
+            2,
+            51,
+            0,
+            26,
+            0,
+            32
+          ],
+          [
+            5,
+            19,
+            0,
+            14,
+            0,
+            32
+          ],
+          [
+            9,
+            8,
+            0,
+            9,
+            0,
+            32
+          ],
+          [
+            13,
+            3,
+            0,
+            6,
+            0,
+            32
+          ],
+          [
+            19,
+            1,
+            0,
+            4,
+            0,
+            32
+          ]
+        ],
+        "algorithm": 4,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": true
+    },
+    {
+      "id": 126,
+      "name": "PHANTOM LOOM",
+      "instrument": 3,
+      "macros": [
+        115,
+        0,
+        0,
+        40
+      ],
+      "memory": 0,
+      "fx": 0,
+      "attack": 64,
+      "release": 64,
+      "lfo": [
+        0,
+        0,
+        64,
+        0
+      ],
+      "role": "atmosphere",
+      "description": "Phantom loom: slow spectral crossing; modulators swell after the carrier, then thin out.",
+      "fm_index": 53,
+      "fm_patch": {
+        "operators": [
+          [
+            3,
+            82,
+            39,
+            127,
+            67,
+            124
+          ],
+          [
+            5,
+            120,
+            61,
+            98,
+            81,
+            113
+          ],
+          [
+            8,
+            91,
+            54,
+            83,
+            32,
+            119
+          ],
+          [
+            13,
+            63,
+            31,
+            69,
+            17,
+            96
+          ],
+          [
+            21,
+            41,
+            19,
+            53,
+            0,
+            77
+          ],
+          [
+            31,
+            25,
+            7,
+            37,
+            0,
+            59
+          ]
+        ],
+        "algorithm": 6,
+        "feedback": 0,
+        "pitch_depth": 24,
+        "pitch_time": 0
+      },
+      "velocity": false
     }
   ],
-  "catalog_revision": 2,
+  "catalog_revision": 3,
   "original_prefix_sha256": "d2b49ac961ff1b040579df95e75b3ab8063ff68515ec5e1534087ab7d060b8ef",
   "factory_order": [
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    64,
-    25,
-    26,
-    27,
-    28,
-    29,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
     30,
-    31,
-    32,
-    33,
-    34,
-    35,
-    36,
-    37,
-    38,
-    39,
-    40,
-    41,
-    42,
-    43,
-    44,
-    45,
-    46,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
     47,
-    48,
-    49,
-    50,
-    65,
-    52,
-    53,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
     54,
     55,
-    56,
-    57,
-    58,
-    59,
-    60,
-    61,
-    62,
-    63
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126
   ],
   "revision_sources": {
-    "64": 24,
-    "65": 51
+    "66": 0,
+    "67": 1,
+    "68": 2,
+    "69": 3,
+    "70": 4,
+    "71": 5,
+    "72": 6,
+    "73": 7,
+    "74": 8,
+    "75": 9,
+    "76": 10,
+    "77": 11,
+    "78": 12,
+    "79": 13,
+    "80": 14,
+    "81": 15,
+    "82": 16,
+    "83": 17,
+    "84": 18,
+    "85": 19,
+    "86": 20,
+    "87": 21,
+    "88": 22,
+    "89": 23,
+    "90": 24,
+    "91": 25,
+    "92": 26,
+    "93": 27,
+    "94": 28,
+    "95": 29,
+    "96": 31,
+    "97": 32,
+    "98": 33,
+    "99": 34,
+    "100": 35,
+    "101": 36,
+    "102": 37,
+    "103": 38,
+    "104": 39,
+    "105": 40,
+    "106": 41,
+    "107": 42,
+    "108": 43,
+    "109": 44,
+    "110": 45,
+    "111": 46,
+    "112": 47,
+    "113": 48,
+    "114": 49,
+    "115": 50,
+    "116": 51,
+    "117": 52,
+    "118": 53,
+    "119": 56,
+    "120": 57,
+    "121": 58,
+    "122": 59,
+    "123": 60,
+    "124": 61,
+    "125": 62,
+    "126": 63
   }
 }

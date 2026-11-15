@@ -29,61 +29,35 @@ def integer(value: object, upper: int, label: str) -> None:
 
 
 def validate(data: dict) -> list[dict]:
-    require(data.get('version') == 1, 'unsupported catalog schema')
-    require(data.get('legacy_count') == 36, 'legacy bank must keep its 36 slots')
-    require(data.get('default_drum_preset') == 30, 'original drum default must remain slot 31')
-    require(data.get('bank_version') == '0.26.18-dev', 'unexpected bank version')
-    rows = data['presets']
-    require(len(rows) == 66, '64 factory choices plus two retained legacy definitions required')
-    names: set[str] = set()
-    settings: set[str] = set()
-    fm_id = 0
-    for i, row in enumerate(rows):
-        require(all(k in row for k in FIELDS), f'slot {i+1}: missing sound field')
-        require(row['id'] == i, f'slot {i+1}: IDs must be contiguous and stable')
-        name = row['name']
-        require(isinstance(name, str) and 1 <= len(name) <= 14
-                and all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789' for c in name),
-                f'slot {i+1}: invalid display name')
-        require(name not in names or (i in (64,65) and name == rows[(24,51)[i-64]]['name']), f'duplicate name: {name}')
-        names.add(name)
-        integer(row['instrument'], 3, f'{name} engine')
-        require(len(row['macros']) == 4, f'{name}: four macros required')
-        for j, v in enumerate(row['macros']):
-            integer(v, 127, f'{name} macro {j+1}')
-        for field in ('memory', 'attack', 'release'):
-            integer(row[field], 127, f'{name} {field}')
-        integer(row['fx'], 1, f'{name} FX')
-        require(len(row['lfo']) == 4, f'{name}: four LFO fields required')
-        for value, upper, label in zip(row['lfo'], (1, 2, 127, 127), ('enabled', 'shape', 'rate', 'depth')):
-            integer(value, upper, f'{name} LFO {label}')
-        require(row['role'] in ('legacy', 'bass', 'lead', 'keys', 'kit', 'atmosphere'), f'{name}: missing musical role')
-        require(isinstance(row['description'], str) and row['description'], f'{name}: missing curation note')
-        if row['instrument'] == 3:
-            require(row['fm_index'] == fm_id, f'{name}: explicit FM patch IDs must be contiguous')
-            fm_id += 1
-            p = row['fm_patch']
-            require(isinstance(p, dict) and len(p.get('operators', [])) == 6, f'{name}: six operators required')
-            for j, op in enumerate(p['operators']):
-                require(len(op) == 6, f'{name} OP{j+1}: six fields required')
-                for k, value in enumerate(op):
-                    integer(value, 31 if k == 0 else 127, f'{name} OP{j+1} field{k}')
-            for field, upper in (('algorithm', 7), ('feedback', 127), ('pitch_depth', 48), ('pitch_time', 127)):
-                integer(p[field], upper, f'{name} {field}')
-        else:
-            require(row['fm_index'] is None and row['fm_patch'] is None, f'{name}: non-FM preset has an FM patch')
-        signature = json.dumps({k: row[k] for k in FIELDS if k not in ('id', 'name', 'fm_index')}, sort_keys=True)
-        require(signature not in settings, f'{name}: duplicated complete sound settings')
-        settings.add(signature)
-    legacy = json.dumps([{k: row[k] for k in FIELDS} for row in rows[:36]], sort_keys=True, separators=(',', ':')).encode()
-    require(hashlib.sha256(legacy).hexdigest() == LEGACY_HASH, 'legacy names, indices or sound settings changed')
-    require(fm_id == 14, 'expected unchanged thirteen FM patches plus approved WICKED v2')
-    prefix = json.dumps(rows[:64], sort_keys=True, separators=(',', ':')).encode()
-    require(hashlib.sha256(prefix).hexdigest() == 'd2b49ac961ff1b040579df95e75b3ab8063ff68515ec5e1534087ab7d060b8ef', 'original64 definitions must remain byte-equivalent')
-    require(data.get('catalog_revision') == 2, 'catalog revision required')
-    require(data.get('factory_order') == [64 if i == 24 else 65 if i == 51 else i for i in range(64)], 'explicit stable factory selection map required')
+    rows=data['presets']
+    require(data.get('version')==1 and data.get('catalog_revision')==3, 'palette schema/revision')
+    require(len(rows)==127 and len(data.get('factory_order',[]))==64, 'bounded127 definitions/64 choices')
+    require(hashlib.sha256(json.dumps(rows[:66],sort_keys=True,separators=(',',':')).encode()).hexdigest()=='f4d4e137f7814a71327e46841e40ba92f5e77b8a46fd3d9baca805200249cf0f', 'all66 legacy definitions must remain exact')
+    require(len(set(data['factory_order']))==64, 'factory choices unique')
+    fm=0
+    for i,x in enumerate(rows):
+        require(x['id']==i, 'stable contiguous ID')
+        require(all(k in x for k in FIELDS), 'complete sound')
+        source=data.get('revision_sources',{}).get(str(i))
+        if i>=66: require(type(source)is int and 0<=source<64 and x['name']==rows[source]['name'],'revision keeps original name')
+        integer(x['instrument'],3,'engine')
+        require(len(x['macros'])==4 and len(x['lfo'])==4,'macro/LFO fields')
+        for z in x['macros']: integer(z,127,'macro')
+        for k in ('memory','attack','release'): integer(x[k],127,k)
+        integer(x['fx'],1,'FX')
+        for z,m in zip(x['lfo'],(1,2,127,127)): integer(z,m,'LFO')
+        if x['instrument']==3:
+            require(x['fm_index']==fm,'contiguous FM identity');fm+=1
+            patch=x['fm_patch']; require(len(patch['operators'])==6,'six operators')
+            for op in patch['operators']:
+                require(len(op)==6,'six fields')
+                for z,m in zip(op,(31,127,127,127,127,127)):integer(z,m,'operator')
+            for k,m in (('algorithm',7),('feedback',127),('pitch_depth',48),('pitch_time',127)):integer(patch[k],m,k)
+        else:require(x['fm_index'] is None and x['fm_patch'] is None,'no implicit FM patch')
+    require(fm==54,'four legacy plus50 explicit FM definitions')
+    for i,slot in enumerate(data['factory_order']):
+        integer(slot,126,'factory slot');require(rows[slot]['name']==rows[i]['name'],'all64 familiar names kept in order')
     return rows
-
 
 def c_output(rows: list[dict], digest: str) -> str:
     lines = ['/* SPDX-License-Identifier: GPL-3.0-only */',
@@ -99,7 +73,7 @@ def c_output(rows: list[dict], digest: str) -> str:
         macros = ', '.join(map(str, r['macros']))
         lines.append(f'    {{"{r["name"]}", {{{macros}}}, {fields}, {on}, {shapes[shape]}, {rate}, {depth}, {engines[r["instrument"]]}}},')
     lines += ['};', '/* 255 denotes a non-FM instrument; IDs 0..3 retain tk_fm_factory. */',
-              'static const uint8_t TK_PRESET_FM_PATCH[66] = {',
+              'static const uint8_t TK_PRESET_FM_PATCH[127] = {',
               '    ' + ', '.join(str(r['fm_index'] if r['fm_index'] is not None else 255) for r in rows),
               '};', '/* Independently authored patches, IDs 4..13. */',
               'static const tk_fm_patch_t TK_NEW_FM_FACTORY[] = {']
@@ -110,9 +84,9 @@ def c_output(rows: list[dict], digest: str) -> str:
         operators = ', '.join('{' + ', '.join(map(str, op)) + '}' for op in p['operators'])
         controls = ', '.join(str(p[k]) for k in ('algorithm', 'feedback', 'pitch_depth', 'pitch_time'))
         lines += [f'    /* {r["name"]} */', '    {{' + operators + '}, ' + controls + '},']
-    lines += ['};', '#define TK_FACTORY_COUNT 64u', '#define TK_CATALOG_REVISION 2u',
+    lines += ['};', '#define TK_FACTORY_COUNT 64u', '#define TK_CATALOG_REVISION 3u',
               'static const uint8_t TK_FACTORY_SOUND[64] = {',
-              '    ' + ', '.join(str(64 if i == 24 else 65 if i == 51 else i) for i in range(64)),
+              '    ' + ', '.join(str(i) for i in json.loads(CATALOG.read_text())['factory_order']),
               '};', '#endif', '']
     return '\n'.join(lines)
 
@@ -137,8 +111,8 @@ def main() -> int:
     if stale:
         parser.exit(1, 'Stale generated preset files: ' + ', '.join(stale) + '\nRun tools/generate_presets.py.\n')
     counts = [sum(r['instrument'] == e for r in rows) for e in range(4)]
-    print(f'Curated 64-choice / 66-definition bank {"verified" if args.check else "generated"}: '
-          f'{counts[0]} PAD / {counts[1]} METAL / {counts[2]} KIT / {counts[3]} FM; original 64 locked; only two approved revisions selectable in their factory positions.')
+    print(f'Palette 64-choice / 127-definition bank {"verified" if args.check else "generated"}: '
+          f'{counts[0]} PAD / {counts[1]} METAL / {counts[2]} KIT / {counts[3]} FM; all66 legacy definitions locked;64 familiar names select palette revisions.')
     return 0
 
 

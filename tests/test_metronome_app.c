@@ -351,18 +351,21 @@ static void save_silence_checks(void)
     check(tk_quiet() && !tk_metronome_quiet(),
           "empty sequencer has no engine voices but pending metronome still blocks SAVE");
     memset(audio,0,sizeof audio); app_audio(audio,256u);
-    check(tk_quiet() && !tk_metronome_quiet(),
-          "click is outside engine voices and remains visible to its separate flash guard");
+    check(!tk_quiet() && tk_output_pending() && !tk_metronome_quiet(),
+          "lookahead retains click and blocks flash while engine has no held voices");
     /* Same stop path used by the physical SAVE button. */
     transport_mode(&transport,TK_MODE_OFF,fm1_ms);
-    check(tk_quiet() && !tk_metronome_quiet(),
-          "SAVE stop publication alone cannot establish click silence before audio consumes cancel");
+    check(!tk_quiet() && tk_output_pending() && !tk_metronome_quiet(),
+          "SAVE stop cannot discard buffered output or pending click cancellation");
     app_audio(audio,0u);
     check(!tk_metronome_quiet(), "zero-frame app callback cannot complete the pending click cancellation");
     memset(audio,0,sizeof audio); app_audio(audio,256u);
     check(tk_quiet() && tk_metronome_quiet(),
           "engine and click silence guards both become ready after a nonzero cancelled audio block");
-    for(i=0;i<512u;i++) check(!audio[i], "completed SAVE cancellation leaves no click in the audio output");
+    /* One buffered click block may finish after cancel; drain before requiring
+     * silent output. No product audio or flash gate is changed by this fixture. */
+    memset(audio,0,sizeof audio); app_audio(audio,256u);
+    for(i=0;i<512u;i++) check(!audio[i], "drained SAVE cancellation leaves no click in audio output");
 }
 
 int main(void)

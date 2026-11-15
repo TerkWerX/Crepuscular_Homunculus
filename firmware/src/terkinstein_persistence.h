@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* Main-owned complete-song journal. Format3 stamps catalog revision2.
+/* Main-owned complete-song journal. Format3 stamps catalog revision3; revision2 retains its immutable66 definitions.
  * Format1/2 migrate through the immutable original64 prefix with unchanged
  * sound IDs, captured patches, LIVE/GRAFT, banks and swing. No implicit remix. */
 #ifndef TERKINSTEIN_PERSISTENCE_H
@@ -55,11 +55,13 @@ static int tk_persist_save(tk_settings_t *s,tk_transport_t *t,uint32_t keys)
 }
 static int tk_persist_load_slot(tk_settings_t *s,tk_transport_t *t,uint32_t slot)
 {
-    uint8_t meta[TK_PERSIST_META];uint32_t length,generation,core,stage,format;
+    uint8_t meta[TK_PERSIST_META];uint32_t length,generation,core,stage,format,catalog;
     if(tk_store_probe(slot,&length,&generation)||
         tk_store_slice(slot,TK_STORE_HEADER,meta,sizeof meta,0))return -1;
     format=tk_store_u32(meta);core=tk_store_u32(meta+4);stage=tk_store_u32(meta+8);
-    if (tk_store_u32(meta+12) != (format==TK_PERSIST_FORMAT ? TK_CATALOG_REVISION : 0u)) return -1;
+    catalog=tk_store_u32(meta+12);
+    if(format==TK_PERSIST_FORMAT){if(catalog!=2u&&catalog!=TK_CATALOG_REVISION)return -1;}
+    else if(catalog!=0u)return -1;
     if(format==1u){
         if(length!=TK_PERSIST_V1_BYTES||core!=TK_SETTINGS_V12_BYTES||stage!=TK_PERSIST_V1_STAGE)return -1;
     }else if(format==2u||format==TK_PERSIST_FORMAT){
@@ -75,6 +77,11 @@ static int tk_persist_load_slot(tk_settings_t *s,tk_transport_t *t,uint32_t slot
         uint32_t i;
         if(!tk_persist_legacy_valid(s))return -1;
         for(i=0;i<TK_TRACKS;i++)if(tk_bank_pool.stage.patch[i].preset>=64u)return -1;
+    }
+    if(format==TK_PERSIST_FORMAT&&catalog==2u){
+        uint32_t i;
+        if(s->preset>=66u||s->graft_base.preset>=66u||s->graft_target>=66u)return -1;
+        for(i=0;i<TK_TRACKS;i++) if(s->track[i].preset>=66u||tk_bank_pool.stage.patch[i].preset>=66u)return -1;
     }
     tk_song_commit(s,t);return 0;
 }

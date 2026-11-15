@@ -7,7 +7,7 @@ from preview import ROOT,compiler_command
 
 TESTS=('engine','controllers','transport','fm','update_identity','product_label','home_visual_choice','homunculus_intro',
        'homunculus_visual','song_persistence','catalog_revision_app','panel_input_app','panel_track_edit_app',
-       'piano_app','remote_protocol','screen','visual','solo_app','metronome_app','home_reset_app')
+       'piano_app','remote_protocol','screen','visual','solo_app','metronome_app','home_reset_app','night_factory_app')
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--cc',default=os.environ.get('CC'))

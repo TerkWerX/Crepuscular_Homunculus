@@ -5,12 +5,12 @@ legacy import and restart passed; see [validation](TESTING.md).
 
 ## Control and timing
 
-On the **SEQ overview, Knob3 edits SWING0â€“100**. In **SEQ EDIT, Knob3 still
+On the **SEQ overview, Knob3 edits SWING0–100**. In **SEQ EDIT, Knob3 still
 selects steps**. Knob1 BPM, Knob2 length, Knob4 mask, SELECT track and ALGORITHM
 bank retain their roles. REC/import lock swing edits. Physical SAVE retains it
 only after the existing full silence/transport/import guards complete.
 
-One amount applies to all four sequencer tracks and all Aâ€“D banks. Zero is the
+One amount applies to all four sequencer tracks and all A–D banks. Zero is the
 old straight timing, including its integer rounding. At100, pairs approach
 75:25;50 gives approximately62.5:37.5. With base periodP, the long interval is
 P+floor(P*amount/200), the short P-minus-that; the pair always lasts2P. Changes
@@ -50,7 +50,7 @@ represent revised sound IDs; see [catalog compatibility](CATALOG_REVISION_2.md).
 
 ## Protocol and portable song support
 
-GET/SET **0x42**: empty query or one amount 0â€“100; reply including status is
+GET/SET **0x42**: empty query or one amount 0–100; reply including status is
 `[OK,1,amount,100,16]`. Absolute writes mark dirty, no-op writes do not. Writes
 are blocked during REC/import. GET_STATE layout remains unchanged and its
 settings revision includes swing. GET_BANK_STATE changes its contract byte to2
@@ -63,8 +63,9 @@ requires a valid explicit swing stage; missing/malformed fields cannot rescue
 a poisoned import. The catalog/namespaces/wire checksum remain unchanged.
 
 External tools must negotiate the current contract before importing and retain
-explicit swing. Missing swing in a supported legacy song becomes 0. Host tests
-cover the full native command code, all 16 banks and complete captured/FM patches.
+explicit swing. Missing swing in a supported legacy song becomes 0. The native
+firmware includes no companion implementation. Its host tests cover the full
+native command code, all 16 banks and complete captured/FM patches.
 
 Optimized/ASan checks cover zero-swing parity, bounds, grid/gates, REC, time wrap,
 tempo, Stop/Continue, native SAVE/reload and legacy migration. Owner listening,

@@ -10,10 +10,10 @@ git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
   https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git ~/fw-AC79_AIoT_SDK
 export JIELI_TOOLCHAIN="$HOME/.jieli/toolchain"
 export AC79_SDK="$HOME/fw-AC79_AIoT_SDK"
-./build.sh --release 0.26.19
+./build.sh --release 0.26.23-ns1
 ```
 
-On Windows, `build.ps1 -Toolchain <directory> -Sdk <directory>` uses Docker to run the Linux compiler. The builder pins critical SDK file hashes and checks app/RAM size and register/flash guards. The explicit `--release 0.26.19` build above writes `build/terkinstein-0.26.19.fwsc`; a build without `--release` writes `build/terkinstein.fwsc` with the source's default version. The package and app use `FM-1_986`, the loader `ota-FM-1_986`; the shared default and publication checks are documented in IDENTITY.md.
+On Windows, `build.ps1 -Toolchain <directory> -Sdk <directory>` uses Docker to run the Linux compiler. The builder pins critical SDK file hashes and checks app/RAM size and register/flash guards. The explicit `--release 0.26.23-ns1` build above writes `build/terkinstein-0.26.23-ns1.fwsc`; a build without `--release` writes `build/terkinstein.fwsc` with the source's default version. The package and app use `FM-1_986`, the loader `ota-FM-1_986`; the shared default and publication checks are documented in IDENTITY.md.
 
 For a desktop sound and screen preview, use a C compiler, Python and Pillow:
 
@@ -22,7 +22,7 @@ python3 -m pip install pillow
 python3 tools/preview.py --test
 ```
 
-The focused twenty-group firmware suite is `python3 tools/check_host.py`.
+The focused host firmware suite is `python3 tools/check_host.py`.
 Use `--asan` with an AddressSanitizer-capable compiler (MSVC, clang or gcc).
 On Windows, run from the Visual Studio developer environment or pass `--cc`.
 The runner uses fake files only; it never opens MIDI or an audio device.

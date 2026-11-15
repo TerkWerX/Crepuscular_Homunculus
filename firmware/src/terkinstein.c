@@ -5,7 +5,7 @@
  * The compact chord-afterimage experiment is described in docs/DESIGN.md. */
 #define APP_NAME "Crepuscular Homunculus"
 #ifndef APP_VER
-#define APP_VER "0.26.19"
+#define APP_VER "0.26.23-ns1"
 #endif
 #define SETTINGS_MAGIC 0x4E494B54u /* TKIN: never interpret another app's settings */
 #define TERKINSTEIN_SCREEN_MIRROR 1
@@ -55,6 +55,7 @@ static void app_audio(int32_t *out, uint32_t n)
     uint32_t started, elapsed;
 #endif
     tk_params_t p;
+    uint32_t output_sources[2]={0u,0u},output_seen[TK_VOICES],output_v;
     if (!tk_ready) return;
     word = tk_parameter_word;
     p.shade = (uint8_t)word;
@@ -64,8 +65,11 @@ static void app_audio(int32_t *out, uint32_t n)
 #ifndef TERKINSTEIN_HOST
     started = fm1_ticks();
 #endif
+    for(output_v=0;output_v<TK_VOICES;output_v++){tk_voice_t*v=&tk_voice[output_v];output_seen[output_v]=v->seen;if(v->tail&&v->source<64u)output_sources[v->source>>5]|=1u<<(v->source&31u);}
     tk_render(out, n, &p);
     tk_metronome_render(out, n);
+    for(output_v=0;output_v<TK_VOICES;output_v++){tk_voice_t*v=&tk_voice[output_v];if((v->tail||v->seen!=output_seen[output_v])&&v->source<64u)output_sources[v->source>>5]|=1u<<(v->source&31u);}
+    tk_output_process(out,n,output_sources[0],output_sources[1]);
     if (tk_visual_due()) {
         uint32_t i, voices[TK_VIS_VOICES];
         for (i = 0; i < TK_VIS_VOICES; i++) {
@@ -368,6 +372,8 @@ typedef struct {
  * their indices and settings; appended sounds can interleave instrument types. */
 #include "terkinstein_presets.h"
 #define TK_PRESET_COUNT ((uint32_t)(sizeof PRESETS / sizeof PRESETS[0]))
+#include "terkinstein_velocity_defaults.h"
+typedef char tk_velocity_count_matches[(sizeof TK_PRESET_FIXED_VELOCITY==TK_PRESET_COUNT)?1:-1];
 #define TK_KIT_PRESET_INDEX 30u
 /* Only legacy-schema readers use this boundary: schemas before 10 contained
  * the original pre-FM bank. Current dispatch uses each slot's explicit map. */
@@ -380,7 +386,12 @@ typedef char tk_kit_preset_exists[(TK_KIT_PRESET_INDEX < TK_PRESET_COUNT) ? 1 : 
  * 64 current choices; IDs24/51 remain readable old-song definitions. */
 static uint32_t factory_position(uint32_t sound)
 {
-    return sound == 64u ? 24u : sound == 65u ? 51u : sound;
+    uint32_t i;
+    for (i=0u;i<TK_FACTORY_COUNT;++i) if(TK_FACTORY_SOUND[i]==sound) return i;
+    if(sound==112u) return 47u; /* Retained decaying-FM NIGHT SUTURE: OLD. */
+    if(sound==64u) return 24u;
+    if(sound==65u) return 51u;
+    return sound<64u?sound:0u;
 }
 static uint32_t factory_next(uint32_t sound, int32_t delta)
 {
@@ -723,7 +734,7 @@ static void settings_defaults(tk_settings_t *s)
     s->octave = -1; s->tempo = 90;
     settings_fm_defaults(s);
     settings_metro_defaults(s);
-    preset_apply(s, 0);
+    preset_apply(s, TK_FACTORY_SOUND[0]);
     midi_mapping_defaults(s);
     for (track = 0; track < TK_TRACKS; track++) {
         tk_pattern_clear(&s->pattern[track]);
@@ -925,15 +936,20 @@ static int settings_upgrade_v56(tk_settings_t *s, const tk_settings_v6_t *old)
 static void publish_params(const tk_settings_t *s, uint8_t live_shade)
 {
     uint32_t kit = PRESETS[s->preset].instrument == TK_INSTRUMENT_DRUM_KIT;
+    /* Revised definitions use the released VST macro boundary. Retained IDs
+     * keep their historical FX-off PCM and captured-patch behavior. */
+    uint32_t vst_bank = s->preset >= 66u;
     tk_parameter_word = (uint32_t)(kit ? s->p.shade : live_shade)
-        | ((uint32_t)(kit || s->fx ? s->p.fracture : 0u) << 8)
+        | ((uint32_t)(kit || s->fx || vst_bank ? s->p.fracture : 0u) << 8)
         | ((uint32_t)s->p.drift << 16)
-        | ((uint32_t)(kit && !s->fx ? 64u : s->p.bloom) << 24);
+        | ((uint32_t)(kit && !s->fx && !vst_bank ? 64u : s->p.bloom) << 24);
     tk_set_memory(s->memory);
     tk_set_ghost_mask(s->ghost_mask);
     tk_set_fx(s->fx);
     tk_set_envelope(s->attack, s->release);
     tk_set_instrument(PRESETS[s->preset].instrument);
+    tk_set_live_fixed_velocity(TK_PRESET_FIXED_VELOCITY[s->preset]);
+    tk_set_source_fixed_velocity(TK_SOURCE_ARP,TK_PRESET_FIXED_VELOCITY[s->preset]);
     tk_set_source_instrument(TK_SOURCE_ARP, PRESETS[s->preset].instrument);
     tk_clear_source_patch(TK_SOURCE_ARP);
     tk_set_live_fm_patch(&s->fm[0]);
@@ -943,8 +959,9 @@ static void publish_params(const tk_settings_t *s, uint8_t live_shade)
 static void publish_track(const tk_settings_t *s, uint32_t track)
 {
     tk_params_t p = s->track[track].p;
+    tk_set_source_fixed_velocity(TRACK_SOURCE[track],TK_PRESET_FIXED_VELOCITY[s->track[track].preset]);
     tk_arr_apply_params(track, &p);
-    if (!s->track[track].fx) {
+    if (!s->track[track].fx && s->track[track].preset < 66u) {
         if (s->track[track].instrument == TK_INSTRUMENT_DRUM_KIT) p.bloom = 64u;
         else p.fracture = 0;
     }
@@ -961,6 +978,7 @@ static void publish_track(const tk_settings_t *s, uint32_t track)
 static void publish_live_drum(void)
 {
     if (!midi_live_drum_enabled) return;
+    tk_source_fixed_velocity[TK_SOURCE_LIVE_DRUM] = tk_source_fixed_velocity[TK_SOURCE_DRUM];
     tk_source_instrument_control[TK_SOURCE_LIVE_DRUM] = tk_source_instrument_control[TK_SOURCE_DRUM];
     tk_source_patch_word[TK_SOURCE_LIVE_DRUM] = tk_source_patch_word[TK_SOURCE_DRUM];
     tk_source_macro_control[TK_SOURCE_LIVE_DRUM] = tk_source_macro_control[TK_SOURCE_DRUM];
@@ -973,6 +991,7 @@ static void publish_fire_tracks(void)
     uint32_t slot;
     for (slot = 0; slot < 4u; slot++) if (midi_fire_mask & (1u << slot)) {
         uint32_t source = TK_SOURCE_FIRE0 + slot, track = TRACK_SOURCE[tk_fire_track[slot]];
+        tk_source_fixed_velocity[source] = tk_source_fixed_velocity[track];
         tk_source_instrument_control[source] = tk_source_instrument_control[track];
         tk_source_patch_word[source] = tk_source_patch_word[track];
         tk_source_macro_control[source] = tk_source_macro_control[track];
@@ -982,6 +1001,7 @@ static void publish_fire_tracks(void)
     }
     for (slot = 0; slot < 2u; slot++) if (midi_keyboard_mask & (1u << slot)) {
         uint32_t source = TK_SOURCE_KEYBOARD0 + slot, track = TRACK_SOURCE[tk_keyboard_track[slot]];
+        tk_source_fixed_velocity[source] = tk_source_fixed_velocity[track];
         tk_source_instrument_control[source] = tk_source_instrument_control[track];
         tk_source_patch_word[source] = tk_source_patch_word[track];
         tk_source_macro_control[source] = tk_source_macro_control[track];
@@ -2273,21 +2293,23 @@ static void draw_patch_keyboard(uint32_t base, uint32_t lit)
     }
     cv_blit(0, 177);
 }
+static void preset_title(char *title, const tk_settings_t *s)
+{
+    uint32_t position=factory_position(s->preset), at=3u, i=0u;
+    const char *name=PRESETS[s->preset].name;
+    memset(title,0,24u);
+    title[0]=(char)('0'+(position+1u)/10u);
+    title[1]=(char)('0'+(position+1u)%10u);title[2]=' ';
+    while(name[i] && at<23u) title[at++]=name[i++];
+    if(TK_FACTORY_SOUND[position]!=s->preset){
+        const char *suffix=" OLD";i=0u;
+        while(suffix[i] && at<23u) title[at++]=suffix[i++];
+    }
+}
 static void draw_preset_title(const tk_settings_t *s)
 {
-    uint32_t j = 0;
-    const char *name = PRESETS[s->preset].name;
-    char title[24];
-    title[0] = (char)('0' + (factory_position(s->preset) + 1u) / 10u);
-    title[1] = (char)('0' + (factory_position(s->preset) + 1u) % 10u);
-    title[2] = ' ';
-    while (j < sizeof title - 4u && name[j]) { title[3u + j] = name[j]; j++; }
-    if (s->preset == 24u || s->preset == 51u) {
-        const char *suffix = " OLD"; uint32_t k=0;
-        while (suffix[k] && j < sizeof title - 4u) title[3u+j++] = suffix[k++];
-    }
-    title[3u + j] = '\0';
-    draw_text_box(8, 48, 176, &FONT_S, title, C_ACC, 0);
+    char title[24];preset_title(title,s);
+    draw_text_box(8,48,176,&FONT_S,title,C_ACC,0);
 }
 static uint32_t home_preset_drawn = ~0u, home_modified_drawn = ~0u, home_status_drawn = ~0u;
 static uint32_t home_graft_drawn = ~0u;
@@ -3829,7 +3851,7 @@ static void app_main(void)
         if (tk_arr.dirty) { dirty = changed = 1; tk_arr.dirty = 0; }
         /* Dismiss only a previous result, not the SAVE press that creates it.
          * The gesture still performs its normal action; release edges and
-         * read-only host polling cannot erase the confirmation. */
+         * read-only companion polling cannot erase the confirmation. */
         if (tk_save_notice_finished(save_notice) &&
             (save_activity || (save_notice == TK_SAVE_NOTICE_SAVED && dirty)))
             save_notice = TK_SAVE_NOTICE_NONE;

@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "firmware": "0.26.23-ns1",
+  "firmware_whole_ASan_suites": 22,
+  "focused_factory_save_reload_checks": 75,
+  "browser_installer_failure_tests": 34,
+  "previous127_backup_supplement": true,
+  "all127_stored_firmware_raw_PCM_unchanged": true,
+  "VST_firmware_raw_comparison_frames": 6291456,
+  "target_image_bytes": 224016,
+  "target_static_RAM": 86208,
+  "target_pool": 319876,
+  "firmware_sha256": "45ad9a30bec9c0cfddd52b2620b53cd28c6708df0e23e089715c9be4ea4a445c",
+  "source_and_bank_match_qualified_candidate": true,
+  "fresh_public_checkout_ASan_factory_checks": 75,
+  "hardware_qualification": false
+}
