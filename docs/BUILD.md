@@ -10,10 +10,10 @@ git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
   https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git ~/fw-AC79_AIoT_SDK
 export JIELI_TOOLCHAIN="$HOME/.jieli/toolchain"
 export AC79_SDK="$HOME/fw-AC79_AIoT_SDK"
-./build.sh --release 0.26.23-ns2
+./build.sh --release 0.26.24-usb1
 ```
 
-On Windows, `build.ps1 -Toolchain <directory> -Sdk <directory>` uses Docker to run the Linux compiler. The builder pins critical SDK file hashes and checks app/RAM size and register/flash guards. The explicit `--release 0.26.23-ns2` build above writes `build/terkinstein-0.26.23-ns2.fwsc`; a build without `--release` writes `build/terkinstein.fwsc` with the source's default version. The package and app use `FM-1_986`, the loader `ota-FM-1_986`; the shared default and publication checks are documented in IDENTITY.md.
+On Windows, `build.ps1 -Toolchain <directory> -Sdk <directory>` uses Docker to run the Linux compiler. The builder pins critical SDK file hashes and checks app/RAM size and register/flash guards. The explicit `--release 0.26.24-usb1` build above writes `build/terkinstein-0.26.24-usb1.fwsc`; a build without `--release` writes `build/terkinstein.fwsc` with the source's default version. The package and app use `FM-1_986`, the loader `ota-FM-1_986`; the shared default and publication checks are documented in IDENTITY.md.
 
 For a desktop sound and screen preview, use a C compiler, Python and Pillow:
 
@@ -44,7 +44,7 @@ python tools/capture_illustrated_guide.py
 
 The script builds the real application against fake hardware, seeds synthetic
 lesson patterns, checks each setup reply, and writes the versioned PNGs under
-`assets/tutorial/0.26.23-ns2/`. Native frames, scripts and capture provenance stay
+`assets/tutorial/0.26.24-usb1/`. Native frames, scripts and capture provenance stay
 under `build/illustrated-guide/`. That capture directory must not already exist;
 use a fresh checkout for a repeat run. `--cc` selects a compiler and `--host`
 accepts an already-built matching native host. No MIDI/audio devices are opened,

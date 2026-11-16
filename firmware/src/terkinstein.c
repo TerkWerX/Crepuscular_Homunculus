@@ -5,7 +5,7 @@
  * The compact chord-afterimage experiment is described in docs/DESIGN.md. */
 #define APP_NAME "Crepuscular Homunculus"
 #ifndef APP_VER
-#define APP_VER "0.26.23-ns1"
+#define APP_VER "0.26.24-usb1"
 #endif
 #define SETTINGS_MAGIC 0x4E494B54u /* TKIN: never interpret another app's settings */
 #define TERKINSTEIN_SCREEN_MIRROR 1

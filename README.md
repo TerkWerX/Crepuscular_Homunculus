@@ -8,7 +8,7 @@ Turn your FM-1 into an instrument for atmospheric pads, heavy bass, metallic
 textures, synthesized drums and six-operator FM. Play, build patterns and save
 complete songs on the FM-1 itself.
 
-**[Download 0.26.23-ns2](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.23-ns2)**
+**[Download 0.26.24-usb1](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.24-usb1)**
 · **[Try the virtual FM-1](https://terkinstein.com/#play)**
 · **[Visit terkinstein.com](https://terkinstein.com/)**
 
@@ -27,14 +27,17 @@ complete songs on the FM-1 itself.
 
 ## Current release
 
-Version **0.26.23-ns2** includes the redesigned 64-sound factory bank and the
+This preview adds an FM-1 prefix to the USB MIDI name for M-Flasher discovery.
+Read [USB discovery and testing limits](docs/MFLASHER_USB_DISCOVERY.md).
+
+Version **0.26.24-usb1** includes the redesigned 64-sound factory bank and the
 fuller NIGHT SUTURE pad. Existing saved songs retain their stored sounds.
 This preview recognizes both the older 0x856014 and newer 0xB36014 flash IDs. An update and song readback passed on an older-chip FM-1. Saving, updating and recovery on the newer chip remain unverified on hardware; broader playing, CPU and USB testing is also pending. Read the [release and compatibility
 guide](docs/NIGHT_SUTURE.md) before updating.
 
 ## Get started
 
-1. **Download** the `.fwsc` firmware from the [0.26.23-ns2 release](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.23-ns2).
+1. **Download** the `.fwsc` firmware from the [0.26.24-usb1 release](https://github.com/TerkWerX/Crepuscular_Homunculus/releases/tag/v0.26.24-usb1).
 2. **Protect your music.** Stop playback, release keys and pedals, press SAVE and wait for SAVED. Keep a separate backup and your previous firmware.
 3. **Install from a computer** using the [installation guide](docs/INSTALL.md).
 4. **Start playing** with the [illustrated tutorial](docs/ILLUSTRATED_GUIDE.md), or use the shorter [quick start](docs/QUICK_START.md).
@@ -71,7 +74,7 @@ This repository contains only Crepuscular Homunculus firmware, artwork, platform
 and update code, build tools, tests and documentation for this instrument.
 
 Developers can start with the [build guide](docs/BUILD.md) and [architecture](docs/DESIGN.md).
-The complete source for this release is at tag **v0.26.23-ns2**.
+The complete source for this release is at tag **v0.26.24-usb1**.
 
 Licensed under **GPL-3.0-only**. Derived from Dinghy, with Felucca/SLOOP platform
 work; see [licensing and credits](LICENSING.md). M-VAVE and FM-1 are trademarks of

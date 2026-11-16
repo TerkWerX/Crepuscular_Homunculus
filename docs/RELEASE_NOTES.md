@@ -1,3 +1,5 @@
+[0.26.24-usb1 USB discovery preview](MFLASHER_USB_DISCOVERY.md)
+
 [0.26.23-ns2 flash compatibility preview](FLASH_COMPATIBILITY_NS2.md)
 
 # Crepuscular Homunculus 0.26.23-ns1
