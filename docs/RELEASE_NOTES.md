@@ -1,3 +1,5 @@
+[0.26.23-ns2 flash compatibility preview](FLASH_COMPATIBILITY_NS2.md)
+
 # Crepuscular Homunculus 0.26.23-ns1
 
 The current 64-sound bank matches the Homunculus VST definitions, including the fuller NIGHT SUTURE pad. Original stored sounds remain playable; no existing song is silently remixed. Read [current release, backup and compatibility details](NIGHT_SUTURE.md). This exact build is an offline-validated preview; older hardware observations below apply only to their named builds.
